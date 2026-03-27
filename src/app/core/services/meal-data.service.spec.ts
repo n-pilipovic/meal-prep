@@ -204,4 +204,95 @@ describe('MealDataService', () => {
     expect(service.loading()).toBe(false);
     expect(service.plan()).toBeNull();
   });
+
+  it('should auto-assign seed plan to user named Ivana', () => {
+    const req = httpTesting.expectOne('assets/data/weekly-plan.json');
+    req.flush(MOCK_PLAN);
+
+    const householdService = TestBed.inject(HouseholdService);
+    householdService.createHousehold('Ivana');
+
+    const createReq = httpTesting.expectOne(r => r.url.includes('/api/household') && r.method === 'POST');
+    createReq.flush({
+      code: 'SEED01',
+      userId: 'ivana-1',
+      household: {
+        code: 'SEED01',
+        members: [{ id: 'ivana-1', name: 'Ivana', color: '#2d6a4f' }],
+        createdAt: '2026-03-27T00:00:00Z',
+      },
+    });
+
+    // Flush effects so loadFromRemote fires
+    TestBed.flushEffects();
+
+    const plansReq = httpTesting.expectOne(r => r.url.includes('/api/household/SEED01/plans'));
+    plansReq.flush({});
+
+    // Flush effects so seed assignment fires
+    TestBed.flushEffects();
+
+    const saveReq = httpTesting.expectOne(r => r.url.includes('/api/user/ivana-1/plan') && r.method === 'PUT');
+    expect(saveReq.request.body.weekLabel).toBe('Test Week');
+    saveReq.flush({ ok: true });
+  });
+
+  it('should auto-assign seed plan to user named Ica', () => {
+    const req = httpTesting.expectOne('assets/data/weekly-plan.json');
+    req.flush(MOCK_PLAN);
+
+    const householdService = TestBed.inject(HouseholdService);
+    householdService.createHousehold('Ica');
+
+    const createReq = httpTesting.expectOne(r => r.url.includes('/api/household') && r.method === 'POST');
+    createReq.flush({
+      code: 'SEED02',
+      userId: 'ica-1',
+      household: {
+        code: 'SEED02',
+        members: [{ id: 'ica-1', name: 'Ica', color: '#2d6a4f' }],
+        createdAt: '2026-03-27T00:00:00Z',
+      },
+    });
+
+    TestBed.flushEffects();
+
+    const plansReq = httpTesting.expectOne(r => r.url.includes('/api/household/SEED02/plans'));
+    plansReq.flush({});
+
+    TestBed.flushEffects();
+
+    const saveReq = httpTesting.expectOne(r => r.url.includes('/api/user/ica-1/plan') && r.method === 'PUT');
+    expect(saveReq.request.body.weekLabel).toBe('Test Week');
+    saveReq.flush({ ok: true });
+  });
+
+  it('should not auto-assign seed plan to other users', () => {
+    const req = httpTesting.expectOne('assets/data/weekly-plan.json');
+    req.flush(MOCK_PLAN);
+
+    const householdService = TestBed.inject(HouseholdService);
+    householdService.createHousehold('Novica');
+
+    const createReq = httpTesting.expectOne(r => r.url.includes('/api/household') && r.method === 'POST');
+    createReq.flush({
+      code: 'SEED03',
+      userId: 'novica-1',
+      household: {
+        code: 'SEED03',
+        members: [{ id: 'novica-1', name: 'Novica', color: '#2d6a4f' }],
+        createdAt: '2026-03-27T00:00:00Z',
+      },
+    });
+
+    TestBed.flushEffects();
+
+    const plansReq = httpTesting.expectOne(r => r.url.includes('/api/household/SEED03/plans'));
+    plansReq.flush({});
+
+    TestBed.flushEffects();
+
+    // No save request should be made for non-Ivana/Ica users
+    httpTesting.expectNone(r => r.url.includes('/api/user/novica-1/plan'));
+  });
 });

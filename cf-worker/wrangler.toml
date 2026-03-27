@@ -4,8 +4,8 @@ compatibility_date = "2024-12-01"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+id = "33dd3a3f6b1e40ea8b2722ad7d89e13a"
+preview_id = "d3f1a027984d410a969378c4b3daec46"
 
 [triggers]
 crons = [
@@ -17,7 +17,7 @@ crons = [
 ]
 
 [vars]
-VAPID_SUBJECT = "mailto:your-email@example.com"
+VAPID_SUBJECT = "mailto:javasoftwaredeveloper85@gmail.com"
 # VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY should be set as secrets:
 #   wrangler secret put VAPID_PUBLIC_KEY
 #   wrangler secret put VAPID_PRIVATE_KEY

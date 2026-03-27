@@ -1,5 +1,7 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { of } from 'rxjs';
 import { WeeklyPlan, DayPlan, Meal, MealType } from '../models/meal.model';
 import { HouseholdService } from './household.service';
 import { ApiService } from './api.service';
@@ -16,11 +18,7 @@ export class MealDataService {
   readonly currentDayIndex = signal(this.todayDayIndex());
   readonly loading = signal(true);
 
-  /** All household members' plans keyed by userId */
-  private readonly allPlans = signal<Record<string, WeeklyPlan>>({});
-
   readonly plan = this.weeklyPlan.asReadonly();
-  readonly householdPlans = this.allPlans.asReadonly();
 
   readonly currentDayPlan = computed<DayPlan | null>(() => {
     const plan = this.weeklyPlan();
@@ -36,15 +34,54 @@ export class MealDataService {
     return this.weeklyPlan()?.recipes ?? [];
   });
 
+  /** Fetch household plans from KV — auto-cancels on param change */
+  private readonly remotePlans = rxResource<Record<string, WeeklyPlan> | null, { userId: string | null; code: string | null }>({
+    params: () => ({
+      userId: this.householdService.currentUserId(),
+      code: this.householdService.householdCode(),
+    }),
+    stream: ({ params: { userId, code } }) => {
+      if (!userId || !code) return of(null);
+      return this.api.getHouseholdPlans(code);
+    },
+  });
+
+  /** Local overrides from savePlanForUser — merged on top of remote data */
+  private readonly localPlanOverrides = signal<Record<string, WeeklyPlan>>({});
+
+  /** Merged view: remote plans + local overrides */
+  readonly householdPlans = computed<Record<string, WeeklyPlan>>(() => {
+    const remote = this.remotePlans.value() ?? {};
+    const local = this.localPlanOverrides();
+    return { ...remote, ...local };
+  });
+
+  private seedAssigned = false;
+
   constructor() {
     this.loadPlan();
 
-    // When household logs in, try to fetch plan from KV
+    // When remote plans arrive, update the current user's local plan
     effect(() => {
+      const plans = this.remotePlans.value();
       const userId = this.householdService.currentUserId();
-      const code = this.householdService.householdCode();
-      if (userId && code) {
-        this.loadFromRemote(userId, code);
+      if (plans && userId && plans[userId]) {
+        this.weeklyPlan.set(plans[userId]);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(plans[userId]));
+      }
+    });
+
+    // Auto-assign seed plan to Ivana/Ica on first login
+    effect(() => {
+      const user = this.householdService.currentUser();
+      const plan = this.weeklyPlan();
+      const name = user?.name.toLowerCase();
+      if (user && plan && (name === 'ivana' || name === 'ica') && !this.seedAssigned) {
+        const plans = this.householdPlans();
+        if (!plans[user.id]) {
+          this.seedAssigned = true;
+          this.savePlanForUser(user.id, plan);
+        }
       }
     });
   }
@@ -64,7 +101,7 @@ export class MealDataService {
 
   /** Get a specific user's meal for a day (for multi-user views) */
   getMealForUser(userId: string, dayIndex: number, mealType: MealType): Meal | null {
-    const plan = this.allPlans()[userId];
+    const plan = this.householdPlans()[userId];
     if (!plan) return null;
     const day = plan.days[dayIndex];
     return day?.meals.find(m => m.type === mealType) ?? null;
@@ -72,7 +109,7 @@ export class MealDataService {
 
   /** Get a specific user's day plan */
   getDayPlanForUser(userId: string, dayIndex: number): DayPlan | null {
-    const plan = this.allPlans()[userId];
+    const plan = this.householdPlans()[userId];
     return plan?.days[dayIndex] ?? null;
   }
 
@@ -89,8 +126,8 @@ export class MealDataService {
 
   /** Save a plan for a specific user (multi-user import/edit) */
   savePlanForUser(userId: string, plan: WeeklyPlan): void {
-    // Update local allPlans cache
-    this.allPlans.update(plans => ({ ...plans, [userId]: plan }));
+    // Update local overlay
+    this.localPlanOverrides.update(overrides => ({ ...overrides, [userId]: plan }));
 
     // If this is the current user, also update the local plan
     if (userId === this.householdService.currentUserId()) {
@@ -121,19 +158,6 @@ export class MealDataService {
       },
       error: () => {
         this.loading.set(false);
-      },
-    });
-  }
-
-  private loadFromRemote(userId: string, householdCode: string): void {
-    this.api.getHouseholdPlans(householdCode).subscribe({
-      next: (plans) => {
-        this.allPlans.set(plans);
-        // If user has a remote plan, use it
-        if (plans[userId]) {
-          this.weeklyPlan.set(plans[userId]);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(plans[userId]));
-        }
       },
     });
   }

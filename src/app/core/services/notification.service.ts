@@ -5,12 +5,9 @@ import { HouseholdService } from './household.service';
 import { MealDataService } from './meal-data.service';
 import { MealType, MEAL_LABELS, MEAL_TIMES } from '../models/meal.model';
 import { NotificationPreferences } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 const PREFS_STORAGE_KEY = 'meal-prep:notification-prefs';
-const VAPID_PUBLIC_KEY_STORAGE_KEY = 'meal-prep:vapid-public-key';
-
-// Default VAPID public key placeholder — must be replaced with actual key
-const DEFAULT_VAPID_PUBLIC_KEY = '';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -198,8 +195,7 @@ export class NotificationService {
   }
 
   private getVapidPublicKey(): string | null {
-    const stored = localStorage.getItem(VAPID_PUBLIC_KEY_STORAGE_KEY);
-    return stored || DEFAULT_VAPID_PUBLIC_KEY || null;
+    return environment.vapidPublicKey || null;
   }
 
   private loadPreferences(): NotificationPreferences {
