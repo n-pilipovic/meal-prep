@@ -5,9 +5,14 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "deploy": "ng deploy --base-href=/meal-prep/"
+    "build:prod": "ng build --base-href=/meal-prep/",
+    "test": "ng test --watch=false",
+    "test:watch": "ng test",
+    "e2e": "npx playwright test",
+    "e2e:headed": "npx playwright test --headed",
+    "deploy": "ng deploy --base-href=/meal-prep/",
+    "worker:dev": "cd cf-worker && npm run dev",
+    "worker:deploy": "cd cf-worker && npm run deploy"
   },
   "private": true,
   "packageManager": "npm@10.8.2",

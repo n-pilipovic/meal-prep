@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2d6a4f"/>
+      <stop offset="100%" stop-color="#1b4332"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <!-- Plate (circle) -->
+  <circle cx="256" cy="270" r="155" fill="#faf8f1" opacity="0.95"/>
+  <circle cx="256" cy="270" r="130" fill="none" stroke="#e8e2d4" stroke-width="2"/>
+  <!-- Fork (left) -->
+  <g transform="translate(145, 120) rotate(0)">
+    <rect x="18" y="0" width="6" height="70" rx="3" fill="#faf8f1"/>
+    <rect x="30" y="0" width="6" height="70" rx="3" fill="#faf8f1"/>
+    <rect x="42" y="0" width="6" height="70" rx="3" fill="#faf8f1"/>
+    <rect x="24" y="60" width="18" height="120" rx="9" fill="#faf8f1"/>
+  </g>
+  <!-- Knife (right) -->
+  <g transform="translate(310, 120) rotate(0)">
+    <path d="M15 0 C15 0, 30 25, 30 70 L30 70 C30 75, 25 80, 20 80 L20 180 C20 188, 32 188, 32 180 L32 80 C32 80, 35 75, 35 70 L35 0 Z" fill="#faf8f1"/>
+  </g>
+  <!-- Food items on plate -->
+  <!-- Leaf/salad -->
+  <path d="M220 240 Q256 200 292 240 Q256 220 220 240Z" fill="#40916c" opacity="0.9"/>
+  <path d="M230 260 Q260 225 290 260 Q260 240 230 260Z" fill="#52b788" opacity="0.8"/>
+  <!-- Meat/protein circle -->
+  <ellipse cx="256" cy="290" rx="45" ry="30" fill="#e76f51" opacity="0.85"/>
+  <ellipse cx="256" cy="288" rx="38" ry="25" fill="#f4845f" opacity="0.6"/>
+  <!-- Small garnish dots -->
+  <circle cx="225" cy="310" r="8" fill="#e9c46a" opacity="0.8"/>
+  <circle cx="290" cy="305" r="6" fill="#e9c46a" opacity="0.8"/>
+  <circle cx="245" cy="320" r="5" fill="#264653" opacity="0.5"/>
+</svg>
