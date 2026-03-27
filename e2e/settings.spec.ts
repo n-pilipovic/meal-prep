@@ -22,7 +22,7 @@ test.describe('Settings', () => {
   });
 
   test('should show notifications section', async ({ page }) => {
-    await expect(page.getByText('Obaveštenja')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Obaveštenja' })).toBeVisible();
   });
 
   test('should show editor link', async ({ page }) => {
