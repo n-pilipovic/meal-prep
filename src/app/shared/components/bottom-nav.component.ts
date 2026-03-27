@@ -5,7 +5,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   selector: 'app-bottom-nav',
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex justify-around items-center h-16 z-50"
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex justify-around items-start pt-2 z-50"
          style="padding-bottom: env(safe-area-inset-bottom)">
       @for (item of navItems; track item.route) {
         <a [routerLink]="item.route"
