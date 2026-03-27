@@ -1,0 +1,467 @@
+{
+  "weekLabel": "Nedelja 1",
+  "days": [
+    {
+      "dayIndex": 0,
+      "dayName": "Ponedeljak",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pečenica sendvič",
+          "description": "Pečenica 50g, puter 10g, hleb 70g, grčki jogurt, sveže povrće npr rotkvica, krastavac ili paradajz",
+          "ingredients": [
+            { "name": "Pečenica", "quantity": 50, "unit": "g", "category": "meat" },
+            { "name": "Puter", "quantity": 10, "unit": "g", "category": "dairy" },
+            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" },
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Sveže povrće (rotkvica, krastavac ili paradajz)", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Jabuka + bademi",
+          "description": "Jabuka 150g + 20g badema",
+          "ingredients": [
+            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
+            { "name": "Bademi", "quantity": 20, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Bolonjeze špagete",
+          "description": "Izdinstati crni luk na 2 kašičice ulja, dodati mlevenu junetinu 100g, pri kraju pelat 100g, špagete suvo premerene 80g, čeri paradajz",
+          "ingredients": [
+            { "name": "Crni luk", "quantity": 1, "unit": "kom", "category": "produce" },
+            { "name": "Ulje", "quantity": 2, "unit": "kašičica", "category": "oil" },
+            { "name": "Mlevena junetina", "quantity": 100, "unit": "g", "category": "meat" },
+            { "name": "Pelat", "quantity": 100, "unit": "g", "category": "pantry" },
+            { "name": "Špagete", "quantity": 80, "unit": "g", "category": "grain" },
+            { "name": "Čeri paradajz", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Tunjevina",
+          "description": "Tunjevina 120g, hleb 50g, masline 20g, seckan crveni luk, sveža paprika ili dr povrće",
+          "ingredients": [
+            { "name": "Tunjevina", "quantity": 120, "unit": "g", "category": "meat" },
+            { "name": "Hleb", "quantity": 50, "unit": "g", "category": "grain" },
+            { "name": "Masline", "quantity": 20, "unit": "g", "category": "pantry" },
+            { "name": "Crveni luk", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Sveža paprika", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 1,
+      "dayName": "Utorak",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pečenica sendvič",
+          "description": "Pečenica 50g, puter 10g, hleb 70g, grčki jogurt, sveže povrće npr rotkvica, krastavac ili paradajz",
+          "ingredients": [
+            { "name": "Pečenica", "quantity": 50, "unit": "g", "category": "meat" },
+            { "name": "Puter", "quantity": 10, "unit": "g", "category": "dairy" },
+            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" },
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Sveže povrće (rotkvica, krastavac ili paradajz)", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "ABC sir + hleb + masline",
+          "description": "ABC sir 40g, integralni hleb 30g, masline 10g",
+          "ingredients": [
+            { "name": "ABC sir", "quantity": 40, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 30, "unit": "g", "category": "grain" },
+            { "name": "Masline", "quantity": 10, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Pasulj + kupus salata",
+          "description": "Pasulj 150g spremljenog, ulje za dinstanje jela 2 kašičice za meru od 2 dana, salata kupus + kašičica ulja i jabučnog sirćeta, hleb integralni 50g",
+          "ingredients": [
+            { "name": "Pasulj (spremljen)", "quantity": 150, "unit": "g", "category": "pantry" },
+            { "name": "Ulje", "quantity": 2, "unit": "kašičica", "category": "oil" },
+            { "name": "Kupus", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Jabučno sirće", "quantity": 1, "unit": "kašičica", "category": "pantry" },
+            { "name": "Hleb integralni", "quantity": 50, "unit": "g", "category": "grain" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Piletina sa senfom",
+          "description": "Piletina 130g. Piletinu operete i iseckajte na kockice. Uzmite 2 kašičice senfa, 100ml vode, biljne začine i razmutite. Luk izdinstati na vodi i dodati sitno seckanu papriku. Zatim dodati meso i dinstati, dolivati vodu sa senfom i biljnim začinima. Na kraju dodati kašičicu susama i izdinstati dok susam ne promeni boju. Služiti uz povrće i salatu. Hleb integralni 40g, grilovano povrće (tikvica, pečurke, paprika).",
+          "ingredients": [
+            { "name": "Pileće meso", "quantity": 130, "unit": "g", "category": "meat" },
+            { "name": "Senf", "quantity": 2, "unit": "kašičica", "category": "pantry" },
+            { "name": "Biljni začini", "quantity": null, "unit": "", "category": "spice" },
+            { "name": "Crni luk", "quantity": 1, "unit": "kom", "category": "produce" },
+            { "name": "Paprika", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Susam", "quantity": 1, "unit": "kašičica", "category": "pantry" },
+            { "name": "Hleb integralni", "quantity": 40, "unit": "g", "category": "grain" },
+            { "name": "Tikvica", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Pečurke", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "dayName": "Sreda",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pileća pašteta",
+          "description": "Pileća pašteta – mera za 2 dana (belo meso kuvano 120g, susam pečeni 20g, pavlaka 50g, skuvati belo meso, dodati susam i pavlaku i po potrebi vodu u kojoj se kuvalo meso i izmiksati), hleb integralni 70g, sveže povrće",
+          "ingredients": [
+            { "name": "Pileća pašteta", "quantity": null, "unit": "", "category": "meat" },
+            { "name": "Hleb integralni", "quantity": 70, "unit": "g", "category": "grain" },
+            { "name": "Sveže povrće", "quantity": null, "unit": "", "category": "produce" }
+          ],
+          "recipeRef": "pileca-pasteta"
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Čoko mus / jagode",
+          "description": "Čoko mus: banana 80g, sir ABC 20g, kakao 5g, lešnik puter 10g. Ili jagode 200g + lešnik 20g",
+          "ingredients": [
+            { "name": "Banana", "quantity": 80, "unit": "g", "category": "produce" },
+            { "name": "ABC sir", "quantity": 20, "unit": "g", "category": "dairy" },
+            { "name": "Kakao", "quantity": 5, "unit": "g", "category": "pantry" },
+            { "name": "Lešnik puter", "quantity": 10, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Pasulj + zelena salata",
+          "description": "Pasulj kuvan 150g spremljenog, hleb 50g, salata kristalka zelena + kašičica maslinovog ulja i limuna",
+          "ingredients": [
+            { "name": "Pasulj (spremljen)", "quantity": 150, "unit": "g", "category": "pantry" },
+            { "name": "Hleb integralni", "quantity": 50, "unit": "g", "category": "grain" },
+            { "name": "Zelena salata", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
+            { "name": "Limun", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Taratur salata",
+          "description": "Bareno jaje 2 kom, pečen susam 2 kašičice ili 10g, svež krastavac – sve ovo preliti kiselim mlekom 150g, hleb integralni 40g",
+          "ingredients": [
+            { "name": "Jaje", "quantity": 2, "unit": "kom", "category": "dairy" },
+            { "name": "Susam pečeni", "quantity": 10, "unit": "g", "category": "pantry" },
+            { "name": "Krastavac", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Kiselo mleko", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 40, "unit": "g", "category": "grain" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "dayName": "Četvrtak",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pašteta od mesa",
+          "description": "Pašteta od mesa, hleb integralni 70g, sveže povrće",
+          "ingredients": [
+            { "name": "Pileća pašteta", "quantity": null, "unit": "", "category": "meat" },
+            { "name": "Hleb integralni", "quantity": 70, "unit": "g", "category": "grain" },
+            { "name": "Sveže povrće", "quantity": null, "unit": "", "category": "produce" }
+          ],
+          "recipeRef": "pileca-pasteta"
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Jabuka + orasi",
+          "description": "Jabuka 150g + orasi 15g",
+          "ingredients": [
+            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
+            { "name": "Orasi", "quantity": 15, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Pileći batak pečen",
+          "description": "Pileći batak 150g sirovo premerenog bez kosti pečen u kesi sa belim lukom, hleb integralni 60g, brokoli karfiol + preko 2 kašičice ulja",
+          "ingredients": [
+            { "name": "Pileći batak", "quantity": 150, "unit": "g", "category": "meat" },
+            { "name": "Beli luk", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" },
+            { "name": "Brokoli", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Karfiol", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Ulje", "quantity": 2, "unit": "kašičica", "category": "oil" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Bareno jaje + kiselo mleko",
+          "description": "Bareno jaje 2 kom, pečen susam 2 kašičice ili 10g, svež krastavac – sve ovo preliti kiselim mlekom 150g, hleb integralni 40g",
+          "ingredients": [
+            { "name": "Jaje", "quantity": 2, "unit": "kom", "category": "dairy" },
+            { "name": "Susam pečeni", "quantity": 10, "unit": "g", "category": "pantry" },
+            { "name": "Krastavac", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Kiselo mleko", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 40, "unit": "g", "category": "grain" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 4,
+      "dayName": "Petak",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pogačice + kiselo mleko",
+          "description": "Pogačice 7 kom + kiselo mleko ili jogurt 250ml",
+          "ingredients": [
+            { "name": "Pogačice", "quantity": 7, "unit": "kom", "category": "grain" },
+            { "name": "Kiselo mleko", "quantity": 250, "unit": "ml", "category": "dairy" }
+          ],
+          "recipeRef": "pogacice"
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Nar + lešnik",
+          "description": "Nar 200g + lešnik 15g",
+          "ingredients": [
+            { "name": "Nar", "quantity": 200, "unit": "g", "category": "produce" },
+            { "name": "Lešnik", "quantity": 15, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Skuša pečena",
+          "description": "Skuša pečena 160g, hleb 60g, ulje za pripremu i salatu 3 kašičice, kupus salata",
+          "ingredients": [
+            { "name": "Skuša", "quantity": 160, "unit": "g", "category": "meat" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" },
+            { "name": "Ulje", "quantity": 3, "unit": "kašičica", "category": "oil" },
+            { "name": "Kupus", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Feta sir + ajvar",
+          "description": "Feta sir 70g, ajvar 50g, hleb integralni 60g",
+          "ingredients": [
+            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
+            { "name": "Ajvar", "quantity": 50, "unit": "g", "category": "pantry" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 5,
+      "dayName": "Subota",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Omlet na slanini",
+          "description": "Omlet od 2 jajeta na 30g slanine, hleb 70g, grčki jogurt 150g, mladi luk",
+          "ingredients": [
+            { "name": "Jaje", "quantity": 2, "unit": "kom", "category": "dairy" },
+            { "name": "Slanina", "quantity": 30, "unit": "g", "category": "meat" },
+            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" },
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Mladi luk", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Jagode + orasi",
+          "description": "Jagode 200g + orasi 20g",
+          "ingredients": [
+            { "name": "Jagode", "quantity": 200, "unit": "g", "category": "produce" },
+            { "name": "Orasi", "quantity": 20, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Svinjski file",
+          "description": "Svinjski file 150g, ulje za pripremu i salatu 1.5 kašika, integralni hleb 80g. Izdinstati file na kockice, dodati crni luk pa dinstati sa mesom, začini biber, majčina dušica, peršun, salata kupus",
+          "ingredients": [
+            { "name": "Svinjski file", "quantity": 150, "unit": "g", "category": "meat" },
+            { "name": "Ulje", "quantity": 1.5, "unit": "kašika", "category": "oil" },
+            { "name": "Hleb integralni", "quantity": 80, "unit": "g", "category": "grain" },
+            { "name": "Crni luk", "quantity": 1, "unit": "kom", "category": "produce" },
+            { "name": "Biber", "quantity": null, "unit": "", "category": "spice" },
+            { "name": "Majčina dušica", "quantity": null, "unit": "", "category": "spice" },
+            { "name": "Peršun", "quantity": null, "unit": "", "category": "spice" },
+            { "name": "Kupus", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Bela čorba",
+          "description": "Smrznuta mešavina za belu čorbu prokuvaj prema uputstvu 5-10 min, umuti 1 jaje + 150g grčkog jogurta. Polako dodaj malo tople čorbe u jogurt i jaje. Vratiti u šerpu i mešati na laganoj vatri, dodaj maslinovo ulje 1 kašičicu, hleb prepeci 70g",
+          "ingredients": [
+            { "name": "Mešavina za belu čorbu (smrznuta)", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Jaje", "quantity": 1, "unit": "kom", "category": "dairy" },
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
+            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" }
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 6,
+      "dayName": "Nedelja",
+      "meals": [
+        {
+          "type": "dorucak",
+          "time": "09:00",
+          "name": "Pogačice + kiselo mleko",
+          "description": "Pogačice 7 kom + kiselo mleko 250ml",
+          "ingredients": [
+            { "name": "Pogačice", "quantity": 7, "unit": "kom", "category": "grain" },
+            { "name": "Kiselo mleko", "quantity": 250, "unit": "ml", "category": "dairy" }
+          ],
+          "recipeRef": "pogacice"
+        },
+        {
+          "type": "uzina",
+          "time": "11:00",
+          "name": "Jabuka + orasi",
+          "description": "Jabuka 150g + orasi 15g",
+          "ingredients": [
+            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
+            { "name": "Orasi", "quantity": 15, "unit": "g", "category": "pantry" }
+          ]
+        },
+        {
+          "type": "rucak",
+          "time": "14:00",
+          "name": "Pileći file + feta salata",
+          "description": "Pileći file 150g + 3 kašičice ulja za pripremu i salatu, salata paradajz, krastavac, luk + 2 kašičice ulja + feta 40g, hleb 80g",
+          "ingredients": [
+            { "name": "Pileći file", "quantity": 150, "unit": "g", "category": "meat" },
+            { "name": "Ulje", "quantity": 3, "unit": "kašičica", "category": "oil" },
+            { "name": "Paradajz", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Krastavac", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Luk", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Feta sir", "quantity": 40, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 80, "unit": "g", "category": "grain" }
+          ]
+        },
+        {
+          "type": "vecera",
+          "time": "18:00",
+          "name": "Brušketi / Kapri salata",
+          "description": "Brušketi: Hleb integralni 60g, maslinovo ulje kašičica, feta 70g namazati na hleb, paradajz na kolutove, origano i zapeći u rerni. Ili Salata kapri sa dresingom: dresing kiselo mleko 100g, kašičica ulja, kašičica senfa, so, limun, beli luk – preliti preko salate i ubaciti belo meso 120g, hleb 60g",
+          "ingredients": [
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" },
+            { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
+            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
+            { "name": "Paradajz", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Origano", "quantity": null, "unit": "", "category": "spice" }
+          ]
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "id": "pogacice",
+      "name": "Pogačice",
+      "servings": "35 pogačica (svaka ~50 kcal)",
+      "ingredients": [
+        { "name": "Puter", "quantity": 125, "unit": "g", "category": "dairy" },
+        { "name": "Speltino brašno", "quantity": 250, "unit": "g", "category": "grain" },
+        { "name": "Sitan sir (kravica)", "quantity": 250, "unit": "g", "category": "dairy" },
+        { "name": "Prašak za pecivo", "quantity": 10, "unit": "g", "category": "pantry" },
+        { "name": "Sok od limuna", "quantity": 10, "unit": "ml", "category": "produce" },
+        { "name": "Morska so", "quantity": 5, "unit": "g", "category": "spice" },
+        { "name": "Susam", "quantity": null, "unit": "", "category": "pantry" },
+        { "name": "Jaje (za premaz)", "quantity": 1, "unit": "kom", "category": "dairy" }
+      ],
+      "instructions": [
+        "U činiji sjediniti brašno, omekšani puter, sir, prašak za pecivo, so i sok od limuna.",
+        "Pobrašnjaviti podlogu pa umešano testo rastanjiti na 1cm debljine.",
+        "Vaditi modlom prečnika 5cm (treba da ih ispadne 35).",
+        "Premazati jajetom i posuti susamom.",
+        "Peći na 220 stepeni 20 minuta.",
+        "Ispeći, zamrznuti i vaditi po potrebi."
+      ]
+    },
+    {
+      "id": "pileca-pasteta",
+      "name": "Pileća pašteta",
+      "servings": "Mera za 2 dana",
+      "ingredients": [
+        { "name": "Belo pileće meso (kuvano)", "quantity": 120, "unit": "g", "category": "meat" },
+        { "name": "Susam pečeni", "quantity": 20, "unit": "g", "category": "pantry" },
+        { "name": "Pavlaka", "quantity": 50, "unit": "g", "category": "dairy" }
+      ],
+      "instructions": [
+        "Skuvati belo meso.",
+        "Dodati susam i pavlaku.",
+        "Po potrebi dodati vodu u kojoj se kuvalo meso.",
+        "Izmiksati sve zajedno."
+      ]
+    },
+    {
+      "id": "cureci-gulas",
+      "name": "Ćureći gulaš",
+      "servings": "Mera za 2 dana",
+      "ingredients": [
+        { "name": "Meso ćuretine (krila, batak, karabatak)", "quantity": 300, "unit": "g", "category": "meat" },
+        { "name": "Crni luk", "quantity": 1, "unit": "kom", "category": "produce" },
+        { "name": "Beli luk", "quantity": 1, "unit": "čen", "category": "produce" },
+        { "name": "Pelat paradajza", "quantity": 150, "unit": "g", "category": "pantry" },
+        { "name": "Ulje", "quantity": 4, "unit": "kašičica", "category": "oil" },
+        { "name": "Makarone integralne", "quantity": 200, "unit": "g", "category": "grain" },
+        { "name": "So", "quantity": null, "unit": "", "category": "spice" },
+        { "name": "Biber", "quantity": null, "unit": "", "category": "spice" },
+        { "name": "Lovorov list", "quantity": null, "unit": "", "category": "spice" },
+        { "name": "Ruzmarin", "quantity": null, "unit": "", "category": "spice" }
+      ],
+      "instructions": [
+        "Iseći ćureće meso na kockice.",
+        "Na iseckani crni luk dodati meso i dinstati na 4 kašičice ulja oko 30 minuta uz povremeno mešanje.",
+        "Posoliti, pobiberiti i začiniti po volji.",
+        "Dodati iseckani beli luk i paradajz.",
+        "Dalje kuvati sve dok meso skroz ne omekša.",
+        "Dodati lovorov list i ruzmarin po volji.",
+        "Spremljene makarone u tanjiru preliti sa gulašem.",
+        "Služiti sa zelenom salatom + kašičica ulja i limuna."
+      ]
+    }
+  ],
+  "extras": {
+    "dessert": "Grčki jogurt 150g + 100g maline ili kupine",
+    "drink": "Limunada"
+  }
+}
