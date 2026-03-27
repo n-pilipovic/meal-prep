@@ -1,8 +1,18 @@
-# Priprema Obroka
+<p align="center">
+  <img src="public/icons/icon-192x192.png" width="96" alt="Priprema Obroka" />
+</p>
 
-Multi-user meal preparation PWA for planning weekly meals, sharing shopping lists, and dividing prep tasks between household members. Built from a Serbian nutritionist's weekly meal plan.
+<h1 align="center">Priprema Obroka</h1>
 
-**Live:** [n-pilipovic.github.io/meal-prep](https://n-pilipovic.github.io/meal-prep/)
+<p align="center">
+  Multi-user meal preparation PWA for planning weekly meals, sharing shopping lists,<br/>and dividing prep tasks between household members. Built from a Serbian nutritionist's weekly meal plan.
+</p>
+
+<p align="center">
+  <a href="https://n-pilipovic.github.io/meal-prep/">
+    <img src="https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Demo-n--pilipovic.github.io%2Fmeal--prep-2d6a4f?style=for-the-badge&labelColor=1b4332" alt="Live Demo" />
+  </a>
+</p>
 
 ## Features
 
