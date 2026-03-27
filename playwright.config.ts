@@ -6,8 +6,7 @@ export default defineConfig({
   retries: 0,
   use: {
     baseURL: 'http://localhost:4200',
-    // Default: headed when running locally (override with --headed / --headless CLI flag)
-    headless: false,
+    headless: !!process.env['CI'],
     trace: 'on-first-retry',
   },
   projects: [

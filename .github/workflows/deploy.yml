@@ -35,7 +35,7 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
-        run: npx playwright test --headless
+        run: CI=true npx playwright test
 
       - name: Upload Playwright report
         if: failure()
