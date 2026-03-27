@@ -46,10 +46,7 @@ jobs:
       #     retention-days: 7
 
       - name: Build production
-        run: npx ng build --base-href /meal-preparation/
-
-      - name: Copy 404.html for SPA routing
-        run: cp dist/meal-preparation/browser/index.html dist/meal-preparation/browser/404.html
+        run: npx ng build --base-href /meal-prep/
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'

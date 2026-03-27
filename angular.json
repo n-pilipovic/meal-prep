@@ -80,7 +80,7 @@
         "deploy": {
           "builder": "angular-cli-ghpages:deploy",
           "options": {
-            "baseHref": "/meal-preparation/"
+            "baseHref": "/meal-prep/"
           }
         }
       }
