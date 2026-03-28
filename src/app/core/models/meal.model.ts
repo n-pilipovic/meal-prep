@@ -12,6 +12,7 @@ export enum MealType {
   Breakfast = 'dorucak',
   Snack = 'uzina',
   Lunch = 'rucak',
+  AfternoonSnack = 'uzina2',
   Dinner = 'vecera',
 }
 
@@ -19,6 +20,7 @@ export const MEAL_TIMES: Record<MealType, string> = {
   [MealType.Breakfast]: '09:00',
   [MealType.Snack]: '11:00',
   [MealType.Lunch]: '14:00',
+  [MealType.AfternoonSnack]: '16:00',
   [MealType.Dinner]: '18:00',
 };
 
@@ -26,6 +28,7 @@ export const MEAL_LABELS: Record<MealType, string> = {
   [MealType.Breakfast]: 'Doručak',
   [MealType.Snack]: 'Užina',
   [MealType.Lunch]: 'Ručak',
+  [MealType.AfternoonSnack]: 'Užina 2',
   [MealType.Dinner]: 'Večera',
 };
 

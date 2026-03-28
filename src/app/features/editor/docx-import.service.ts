@@ -33,6 +33,7 @@ export class DocxImportService {
         this.createEmptyMeal(MealType.Breakfast),
         this.createEmptyMeal(MealType.Snack),
         this.createEmptyMeal(MealType.Lunch),
+        this.createEmptyMeal(MealType.AfternoonSnack),
         this.createEmptyMeal(MealType.Dinner),
       ],
     }));
@@ -46,6 +47,9 @@ export class DocxImportService {
     }
     if (sections.lunch.length > 0) {
       this.assignMeals(days, MealType.Lunch, sections.lunch);
+    }
+    if (sections.afternoonSnack.length > 0) {
+      this.assignMeals(days, MealType.AfternoonSnack, sections.afternoonSnack);
     }
     if (sections.dinner.length > 0) {
       this.assignMeals(days, MealType.Dinner, sections.dinner);
@@ -64,6 +68,7 @@ export class DocxImportService {
     breakfast: string[];
     snack: string[];
     lunch: string[];
+    afternoonSnack: string[];
     dinner: string[];
     extra: string[];
   } {
@@ -71,6 +76,7 @@ export class DocxImportService {
       breakfast: [] as string[],
       snack: [] as string[],
       lunch: [] as string[],
+      afternoonSnack: [] as string[],
       dinner: [] as string[],
       extra: [] as string[],
     };
@@ -89,6 +95,9 @@ export class DocxImportService {
       } else if (this.isSectionHeader(lower, 'r', '14')) {
         current = 'lunch';
         continue;
+      } else if (this.isSectionHeader(lower, 'u', '16') || this.isAfternoonSnackHeader(lower)) {
+        current = 'afternoonSnack';
+        continue;
       } else if (this.isSectionHeader(lower, 'v', '18')) {
         current = 'dinner';
         continue;
@@ -100,6 +109,11 @@ export class DocxImportService {
     }
 
     return result;
+  }
+
+  private isAfternoonSnackHeader(line: string): boolean {
+    const stripped = line.replace(/\s+/g, '');
+    return stripped.startsWith('u16') || stripped.startsWith('u2') || stripped.includes('uzina2');
   }
 
   private isSectionHeader(line: string, letter: string, hour: string): boolean {

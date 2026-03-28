@@ -43,6 +43,7 @@ export class MealCardComponent {
       dorucak: '🍳',
       uzina: '🍎',
       rucak: '🍽️',
+      uzina2: '🍪',
       vecera: '🌙',
     };
     return icons[this.meal().type] ?? '';

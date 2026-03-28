@@ -154,6 +154,7 @@ export class SettingsComponent {
     { type: MealType.Breakfast, label: MEAL_LABELS[MealType.Breakfast], time: '09:00' },
     { type: MealType.Snack, label: MEAL_LABELS[MealType.Snack], time: '11:00' },
     { type: MealType.Lunch, label: MEAL_LABELS[MealType.Lunch], time: '14:00' },
+    { type: MealType.AfternoonSnack, label: MEAL_LABELS[MealType.AfternoonSnack], time: '16:00' },
     { type: MealType.Dinner, label: MEAL_LABELS[MealType.Dinner], time: '18:00' },
   ];
 

@@ -97,7 +97,7 @@ export class NotificationService {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
     const now = new Date();
-    const mealTypes = [MealType.Breakfast, MealType.Snack, MealType.Lunch, MealType.Dinner];
+    const mealTypes = [MealType.Breakfast, MealType.Snack, MealType.Lunch, MealType.AfternoonSnack, MealType.Dinner];
 
     for (const mealType of mealTypes) {
       const mealPref = prefs.mealReminders[mealType];
@@ -218,6 +218,7 @@ export class NotificationService {
         [MealType.Breakfast]: { enabled: true, minutesBefore: 30 },
         [MealType.Snack]: { enabled: true, minutesBefore: 30 },
         [MealType.Lunch]: { enabled: true, minutesBefore: 30 },
+        [MealType.AfternoonSnack]: { enabled: true, minutesBefore: 30 },
         [MealType.Dinner]: { enabled: true, minutesBefore: 30 },
       },
     };

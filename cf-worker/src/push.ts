@@ -34,7 +34,7 @@ interface VapidConfig {
 
 export async function sendScheduledPush(
   kv: KVNamespace,
-  cronType: 'daily' | 'dorucak' | 'uzina' | 'rucak' | 'vecera',
+  cronType: 'daily' | 'dorucak' | 'uzina' | 'rucak' | 'uzina2' | 'vecera',
   vapid: VapidConfig,
 ): Promise<void> {
   const householdKeys = await kv.list({ prefix: 'household:' });
@@ -73,12 +73,14 @@ export async function sendScheduledPush(
           dorucak: 'Doručak',
           uzina: 'Užina',
           rucak: 'Ručak',
+          uzina2: 'Užina 2',
           vecera: 'Večera',
         };
         const mealTimes: Record<string, string> = {
           dorucak: '09:00',
           uzina: '11:00',
           rucak: '14:00',
+          uzina2: '16:00',
           vecera: '18:00',
         };
 

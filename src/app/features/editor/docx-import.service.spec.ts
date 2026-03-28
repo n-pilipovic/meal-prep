@@ -53,14 +53,15 @@ Brusketi , hleb int 60 g , feta 70 g`;
     expect(plan.days.length).toBe(7);
   });
 
-  it('should assign 4 meals per day', () => {
+  it('should assign 5 meals per day', () => {
     const plan = service.parseText(SAMPLE_TEXT);
     for (const day of plan.days) {
-      expect(day.meals.length).toBe(4);
+      expect(day.meals.length).toBe(5);
       const types = day.meals.map(m => m.type);
       expect(types).toContain(MealType.Breakfast);
       expect(types).toContain(MealType.Snack);
       expect(types).toContain(MealType.Lunch);
+      expect(types).toContain(MealType.AfternoonSnack);
       expect(types).toContain(MealType.Dinner);
     }
   });

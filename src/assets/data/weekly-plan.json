@@ -43,6 +43,13 @@
           ]
         },
         {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "—",
+          "description": "Nema popodnevne užine ovog dana",
+          "ingredients": []
+        },
+        {
           "type": "vecera",
           "time": "18:00",
           "name": "Tunjevina",
@@ -77,13 +84,9 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "ABC sir + hleb + masline",
-          "description": "ABC sir 40g, integralni hleb 30g, masline 10g",
-          "ingredients": [
-            { "name": "ABC sir", "quantity": 40, "unit": "g", "category": "dairy" },
-            { "name": "Hleb integralni", "quantity": 30, "unit": "g", "category": "grain" },
-            { "name": "Masline", "quantity": 10, "unit": "g", "category": "pantry" }
-          ]
+          "name": "—",
+          "description": "Nema užine ovog dana",
+          "ingredients": []
         },
         {
           "type": "rucak",
@@ -97,6 +100,13 @@
             { "name": "Jabučno sirće", "quantity": 1, "unit": "kašičica", "category": "pantry" },
             { "name": "Hleb integralni", "quantity": 50, "unit": "g", "category": "grain" }
           ]
+        },
+        {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "—",
+          "description": "Nema popodnevne užine ovog dana",
+          "ingredients": []
         },
         {
           "type": "vecera",
@@ -136,13 +146,12 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "Čoko mus / jagode",
-          "description": "Čoko mus: banana 80g, sir ABC 20g, kakao 5g, lešnik puter 10g. Ili jagode 200g + lešnik 20g",
+          "name": "ABC sir + hleb + masline",
+          "description": "ABC sir 40g, integralni hleb 30g, masline 10g",
           "ingredients": [
-            { "name": "Banana", "quantity": 80, "unit": "g", "category": "produce" },
-            { "name": "ABC sir", "quantity": 20, "unit": "g", "category": "dairy" },
-            { "name": "Kakao", "quantity": 5, "unit": "g", "category": "pantry" },
-            { "name": "Lešnik puter", "quantity": 10, "unit": "g", "category": "pantry" }
+            { "name": "ABC sir", "quantity": 40, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 30, "unit": "g", "category": "grain" },
+            { "name": "Masline", "quantity": 10, "unit": "g", "category": "pantry" }
           ]
         },
         {
@@ -156,6 +165,16 @@
             { "name": "Zelena salata", "quantity": null, "unit": "", "category": "produce" },
             { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
             { "name": "Limun", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "Grčki jogurt + bobice",
+          "description": "Grčki jogurt 150g + 100g malina ili kupina",
+          "ingredients": [
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Maline ili kupine", "quantity": 100, "unit": "g", "category": "produce" }
           ]
         },
         {
@@ -192,11 +211,13 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "Jabuka + orasi",
-          "description": "Jabuka 150g + orasi 15g",
+          "name": "Čoko mus / jagode",
+          "description": "Čoko mus: banana 80g, sir ABC 20g, kakao 5g, lešnik puter 10g. Ili jagode 200g + lešnik 20g",
           "ingredients": [
-            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
-            { "name": "Orasi", "quantity": 15, "unit": "g", "category": "pantry" }
+            { "name": "Banana", "quantity": 80, "unit": "g", "category": "produce" },
+            { "name": "ABC sir", "quantity": 20, "unit": "g", "category": "dairy" },
+            { "name": "Kakao", "quantity": 5, "unit": "g", "category": "pantry" },
+            { "name": "Lešnik puter", "quantity": 10, "unit": "g", "category": "pantry" }
           ]
         },
         {
@@ -214,16 +235,23 @@
           ]
         },
         {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "Limunada",
+          "description": "Limunada domaća",
+          "ingredients": [
+            { "name": "Limun", "quantity": null, "unit": "", "category": "produce" }
+          ]
+        },
+        {
           "type": "vecera",
           "time": "18:00",
-          "name": "Bareno jaje + kiselo mleko",
-          "description": "Bareno jaje 2 kom, pečen susam 2 kašičice ili 10g, svež krastavac – sve ovo preliti kiselim mlekom 150g, hleb integralni 40g",
+          "name": "Feta sir + ajvar",
+          "description": "Feta sir 70g, ajvar 50g, hleb integralni 60g",
           "ingredients": [
-            { "name": "Jaje", "quantity": 2, "unit": "kom", "category": "dairy" },
-            { "name": "Susam pečeni", "quantity": 10, "unit": "g", "category": "pantry" },
-            { "name": "Krastavac", "quantity": null, "unit": "", "category": "produce" },
-            { "name": "Kiselo mleko", "quantity": 150, "unit": "g", "category": "dairy" },
-            { "name": "Hleb integralni", "quantity": 40, "unit": "g", "category": "grain" }
+            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
+            { "name": "Ajvar", "quantity": 50, "unit": "g", "category": "pantry" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" }
           ]
         }
       ]
@@ -246,11 +274,11 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "Nar + lešnik",
-          "description": "Nar 200g + lešnik 15g",
+          "name": "Jabuka + orasi",
+          "description": "Jabuka 150g + orasi 15g",
           "ingredients": [
-            { "name": "Nar", "quantity": 200, "unit": "g", "category": "produce" },
-            { "name": "Lešnik", "quantity": 15, "unit": "g", "category": "pantry" }
+            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
+            { "name": "Orasi", "quantity": 15, "unit": "g", "category": "pantry" }
           ]
         },
         {
@@ -266,14 +294,23 @@
           ]
         },
         {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "—",
+          "description": "Nema popodnevne užine ovog dana",
+          "ingredients": []
+        },
+        {
           "type": "vecera",
           "time": "18:00",
-          "name": "Feta sir + ajvar",
-          "description": "Feta sir 70g, ajvar 50g, hleb integralni 60g",
+          "name": "Bela čorba",
+          "description": "Smrznuta mešavina za belu čorbu prokuvaj prema uputstvu 5-10 min, umuti 1 jaje + 150g grčkog jogurta. Polako dodaj malo tople čorbe u jogurt i jaje. Vratiti u šerpu i mešati na laganoj vatri, dodaj maslinovo ulje 1 kašičicu, hleb prepeci 70g",
           "ingredients": [
-            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
-            { "name": "Ajvar", "quantity": 50, "unit": "g", "category": "pantry" },
-            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" }
+            { "name": "Mešavina za belu čorbu (smrznuta)", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Jaje", "quantity": 1, "unit": "kom", "category": "dairy" },
+            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
+            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" }
           ]
         }
       ]
@@ -298,11 +335,11 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "Jagode + orasi",
-          "description": "Jagode 200g + orasi 20g",
+          "name": "Nar + lešnik",
+          "description": "Nar 200g + lešnik 15g",
           "ingredients": [
-            { "name": "Jagode", "quantity": 200, "unit": "g", "category": "produce" },
-            { "name": "Orasi", "quantity": 20, "unit": "g", "category": "pantry" }
+            { "name": "Nar", "quantity": 200, "unit": "g", "category": "produce" },
+            { "name": "Lešnik", "quantity": 15, "unit": "g", "category": "pantry" }
           ]
         },
         {
@@ -322,16 +359,23 @@
           ]
         },
         {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "—",
+          "description": "Nema popodnevne užine ovog dana",
+          "ingredients": []
+        },
+        {
           "type": "vecera",
           "time": "18:00",
-          "name": "Bela čorba",
-          "description": "Smrznuta mešavina za belu čorbu prokuvaj prema uputstvu 5-10 min, umuti 1 jaje + 150g grčkog jogurta. Polako dodaj malo tople čorbe u jogurt i jaje. Vratiti u šerpu i mešati na laganoj vatri, dodaj maslinovo ulje 1 kašičicu, hleb prepeci 70g",
+          "name": "Brušketi",
+          "description": "Hleb integralni 60g, maslinovo ulje kašičica, feta 70g namazati na hleb, paradajz na kolutove, origano i zapeći u rerni",
           "ingredients": [
-            { "name": "Mešavina za belu čorbu (smrznuta)", "quantity": null, "unit": "", "category": "produce" },
-            { "name": "Jaje", "quantity": 1, "unit": "kom", "category": "dairy" },
-            { "name": "Grčki jogurt", "quantity": 150, "unit": "g", "category": "dairy" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" },
             { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
-            { "name": "Hleb", "quantity": 70, "unit": "g", "category": "grain" }
+            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
+            { "name": "Paradajz", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Origano", "quantity": null, "unit": "", "category": "spice" }
           ]
         }
       ]
@@ -354,11 +398,11 @@
         {
           "type": "uzina",
           "time": "11:00",
-          "name": "Jabuka + orasi",
-          "description": "Jabuka 150g + orasi 15g",
+          "name": "Jagode + orasi",
+          "description": "Jagode 200g + orasi 20g",
           "ingredients": [
-            { "name": "Jabuka", "quantity": 150, "unit": "g", "category": "produce" },
-            { "name": "Orasi", "quantity": 15, "unit": "g", "category": "pantry" }
+            { "name": "Jagode", "quantity": 200, "unit": "g", "category": "produce" },
+            { "name": "Orasi", "quantity": 20, "unit": "g", "category": "pantry" }
           ]
         },
         {
@@ -377,16 +421,25 @@
           ]
         },
         {
+          "type": "uzina2",
+          "time": "16:00",
+          "name": "—",
+          "description": "Nema popodnevne užine ovog dana",
+          "ingredients": []
+        },
+        {
           "type": "vecera",
           "time": "18:00",
-          "name": "Brušketi / Kapri salata",
-          "description": "Brušketi: Hleb integralni 60g, maslinovo ulje kašičica, feta 70g namazati na hleb, paradajz na kolutove, origano i zapeći u rerni. Ili Salata kapri sa dresingom: dresing kiselo mleko 100g, kašičica ulja, kašičica senfa, so, limun, beli luk – preliti preko salate i ubaciti belo meso 120g, hleb 60g",
+          "name": "Salata kapri sa dresingom",
+          "description": "Dresing: kiselo mleko 100g, kašičica ulja, kašičica senfa, so, limun, beli luk – preliti preko salate i ubaciti belo meso 120g, hleb 60g",
           "ingredients": [
-            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" },
-            { "name": "Maslinovo ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
-            { "name": "Feta sir", "quantity": 70, "unit": "g", "category": "dairy" },
-            { "name": "Paradajz", "quantity": null, "unit": "", "category": "produce" },
-            { "name": "Origano", "quantity": null, "unit": "", "category": "spice" }
+            { "name": "Kiselo mleko", "quantity": 100, "unit": "g", "category": "dairy" },
+            { "name": "Ulje", "quantity": 1, "unit": "kašičica", "category": "oil" },
+            { "name": "Senf", "quantity": 1, "unit": "kašičica", "category": "pantry" },
+            { "name": "Limun", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Beli luk", "quantity": null, "unit": "", "category": "produce" },
+            { "name": "Belo pileće meso", "quantity": 120, "unit": "g", "category": "meat" },
+            { "name": "Hleb integralni", "quantity": 60, "unit": "g", "category": "grain" }
           ]
         }
       ]

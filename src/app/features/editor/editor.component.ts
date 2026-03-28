@@ -362,6 +362,7 @@ export class EditorComponent {
           { type: MealType.Breakfast, time: MEAL_TIMES[MealType.Breakfast], name: '', description: '', ingredients: [] },
           { type: MealType.Snack, time: MEAL_TIMES[MealType.Snack], name: '', description: '', ingredients: [] },
           { type: MealType.Lunch, time: MEAL_TIMES[MealType.Lunch], name: '', description: '', ingredients: [] },
+          { type: MealType.AfternoonSnack, time: MEAL_TIMES[MealType.AfternoonSnack], name: '', description: '', ingredients: [] },
           { type: MealType.Dinner, time: MEAL_TIMES[MealType.Dinner], name: '', description: '', ingredients: [] },
         ],
       })),

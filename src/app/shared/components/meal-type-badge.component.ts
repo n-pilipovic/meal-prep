@@ -28,6 +28,7 @@ export class MealTypeBadgeComponent {
       [MealType.Breakfast]: '🍳',
       [MealType.Snack]: '🍎',
       [MealType.Lunch]: '🍽️',
+      [MealType.AfternoonSnack]: '🍪',
       [MealType.Dinner]: '🌙',
     };
     return icons[this.mealType()] ?? '';
@@ -38,6 +39,7 @@ export class MealTypeBadgeComponent {
       [MealType.Breakfast]: 'bg-amber-50 text-amber-800',
       [MealType.Snack]: 'bg-green-50 text-green-800',
       [MealType.Lunch]: 'bg-blue-50 text-blue-800',
+      [MealType.AfternoonSnack]: 'bg-orange-50 text-orange-800',
       [MealType.Dinner]: 'bg-purple-50 text-purple-800',
     };
     return classes[this.mealType()] ?? '';

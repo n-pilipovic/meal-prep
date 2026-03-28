@@ -148,11 +148,12 @@ export default {
     const hour = new Date(event.scheduledTime).getUTCHours();
     const minute = new Date(event.scheduledTime).getUTCMinutes();
 
-    let cronType: 'daily' | 'dorucak' | 'uzina' | 'rucak' | 'vecera';
+    let cronType: 'daily' | 'dorucak' | 'uzina' | 'rucak' | 'uzina2' | 'vecera';
     if (hour === 7 && minute === 0) cronType = 'daily';
     else if (hour === 8 && minute === 30) cronType = 'dorucak';
     else if (hour === 10 && minute === 30) cronType = 'uzina';
     else if (hour === 13 && minute === 30) cronType = 'rucak';
+    else if (hour === 15 && minute === 30) cronType = 'uzina2';
     else if (hour === 17 && minute === 30) cronType = 'vecera';
     else return;
 
