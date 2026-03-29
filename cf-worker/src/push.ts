@@ -26,6 +26,12 @@ interface MealPlan {
   }[];
 }
 
+interface NotificationPreferences {
+  enabled: boolean;
+  dailySummary: boolean;
+  mealReminders: boolean;
+}
+
 interface VapidConfig {
   publicKey: string;
   privateKey: string;
@@ -46,6 +52,12 @@ export async function sendScheduledPush(
     for (const member of household.members) {
       const sub = await getJSON<PushSubscription>(kv, `subscription:${member.id}`);
       if (!sub) continue;
+
+      // Check user's notification preferences
+      const notifPrefs = await getJSON<NotificationPreferences>(kv, `notif-prefs:${member.id}`);
+      if (notifPrefs && !notifPrefs.enabled) continue;
+      if (cronType === 'daily' && notifPrefs && !notifPrefs.dailySummary) continue;
+      if (cronType !== 'daily' && notifPrefs && !notifPrefs.mealReminders) continue;
 
       const plan = await getJSON<MealPlan>(kv, `plan:${member.id}`);
       if (!plan) continue;

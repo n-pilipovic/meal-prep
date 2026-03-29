@@ -1,9 +1,8 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HouseholdService } from '../../core/services/household.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { MealType, MEAL_LABELS } from '../../core/models/meal.model';
 import { UserAvatarComponent } from '../../shared/components/user-avatar.component';
 
 @Component({
@@ -71,37 +70,38 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
           }
 
           @if (notificationService.pushSupported() && !notificationService.needsInstallPrompt()) {
-            @if (!notificationService.isSubscribed()) {
+            @if (!notificationService.isSubscribed() && notificationService.permissionState() !== 'granted') {
               <button
                 (click)="enableNotifications()"
                 [disabled]="!notificationService.canRequestPermission()"
                 class="w-full py-3 bg-green-primary text-white font-medium rounded-xl min-h-11 disabled:opacity-40 mb-3">
                 Omogući podsetnike
               </button>
-            }
-
-            @if (notificationService.isSubscribed() || notificationService.permissionState() === 'granted') {
-              <!-- Notification preferences -->
+            } @else {
               <div class="space-y-3">
-                <!-- Daily summary toggle -->
+                <!-- Priprema sastojaka toggle (daily summary at 7:00) -->
                 <label class="flex items-center justify-between">
-                  <span class="text-sm text-text-primary">Dnevni pregled (07:00)</span>
+                  <div>
+                    <span class="text-sm font-medium text-text-primary block">Priprema sastojaka</span>
+                    <span class="text-xs text-text-muted">Dnevni pregled svih sastojaka u 07:00</span>
+                  </div>
                   <input type="checkbox"
-                         [ngModel]="prefs().dailySummary.enabled"
+                         [ngModel]="prefs().dailySummary"
                          (ngModelChange)="toggleDailySummary($event)"
                          class="w-5 h-5 accent-green-primary" />
                 </label>
 
-                <!-- Per-meal toggles -->
-                @for (meal of mealTypes; track meal.type) {
-                  <label class="flex items-center justify-between">
-                    <span class="text-sm text-text-primary">{{ meal.label }} ({{ meal.time }})</span>
-                    <input type="checkbox"
-                           [ngModel]="prefs().mealReminders[meal.type]?.enabled"
-                           (ngModelChange)="toggleMealReminder(meal.type, $event)"
-                           class="w-5 h-5 accent-green-primary" />
-                  </label>
-                }
+                <!-- Podsetnici za obroke toggle (per-meal reminders) -->
+                <label class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-text-primary block">Podsetnici za obroke</span>
+                    <span class="text-xs text-text-muted">30 min pre svakog obroka</span>
+                  </div>
+                  <input type="checkbox"
+                         [ngModel]="prefs().mealReminders"
+                         (ngModelChange)="toggleMealReminders($event)"
+                         class="w-5 h-5 accent-green-primary" />
+                </label>
               </div>
             }
           } @else if (!notificationService.pushSupported() && !notificationService.needsInstallPrompt()) {
@@ -150,16 +150,7 @@ export class SettingsComponent {
 
   readonly prefs = this.notificationService.preferences;
 
-  readonly mealTypes = [
-    { type: MealType.Breakfast, label: MEAL_LABELS[MealType.Breakfast], time: '09:00' },
-    { type: MealType.Snack, label: MEAL_LABELS[MealType.Snack], time: '11:00' },
-    { type: MealType.Lunch, label: MEAL_LABELS[MealType.Lunch], time: '14:00' },
-    { type: MealType.AfternoonSnack, label: MEAL_LABELS[MealType.AfternoonSnack], time: '16:00' },
-    { type: MealType.Dinner, label: MEAL_LABELS[MealType.Dinner], time: '18:00' },
-  ];
-
   constructor() {
-    // Capture Chrome install prompt
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeinstallprompt', (e: Event) => {
         e.preventDefault();
@@ -174,21 +165,16 @@ export class SettingsComponent {
   }
 
   toggleDailySummary(enabled: boolean): void {
-    const current = this.prefs();
     this.notificationService.updatePreferences({
-      ...current,
-      dailySummary: { ...current.dailySummary, enabled },
+      ...this.prefs(),
+      dailySummary: enabled,
     });
   }
 
-  toggleMealReminder(mealType: MealType, enabled: boolean): void {
-    const current = this.prefs();
+  toggleMealReminders(enabled: boolean): void {
     this.notificationService.updatePreferences({
-      ...current,
-      mealReminders: {
-        ...current.mealReminders,
-        [mealType]: { ...current.mealReminders[mealType], enabled },
-      },
+      ...this.prefs(),
+      mealReminders: enabled,
     });
   }
 

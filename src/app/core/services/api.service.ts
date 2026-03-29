@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Household, SharedState } from '../models/user.model';
+import { Household, SharedState, NotificationPreferences } from '../models/user.model';
 import { WeeklyPlan } from '../models/meal.model';
 import { MealPlanPreferences } from '../models/ai-plan.model';
 
@@ -47,6 +47,19 @@ export class ApiService {
     return this.http.post<{ ok: boolean }>(
       `${this.baseUrl}/api/user/${userId}/subscription`,
       subscription,
+    );
+  }
+
+  deleteSubscription(userId: string): Observable<{ ok: boolean }> {
+    return this.http.delete<{ ok: boolean }>(
+      `${this.baseUrl}/api/user/${userId}/subscription`,
+    );
+  }
+
+  saveNotificationPrefs(userId: string, prefs: NotificationPreferences): Observable<{ ok: boolean }> {
+    return this.http.put<{ ok: boolean }>(
+      `${this.baseUrl}/api/user/${userId}/notification-prefs`,
+      prefs,
     );
   }
 

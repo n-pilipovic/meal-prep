@@ -18,7 +18,6 @@ VAPID_SUBJECT = "mailto:javasoftwaredeveloper85@gmail.com"
 # Secrets (set via wrangler secret put):
 #   wrangler secret put VAPID_PUBLIC_KEY
 #   wrangler secret put VAPID_PRIVATE_KEY
-#   wrangler secret put GEMINI_API_KEY    # https://aistudio.google.com/apikey
+#   wrangler secret put GEMINI_API_KEY     # https://aistudio.google.com/apikey
 #   wrangler secret put GROQ_API_KEY      # https://console.groq.com/keys
 # Generate VAPID keys with: npx web-push generate-vapid-keys
-# AI: tries Gemini first, falls back to Groq. At least one key required.

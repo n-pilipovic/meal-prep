@@ -1,15 +1,15 @@
 import { getJSON, putJSON, type KVNamespace } from './kv-helpers';
 import { sendScheduledPush } from './push';
-import { generateMealPlan } from './gemini';
 import { generateMealPlanGroq } from './groq';
+import { generateMealPlanGemini } from './gemini';
 
 interface Env {
   KV: KVNamespace;
   VAPID_SUBJECT: string;
   VAPID_PUBLIC_KEY: string;
   VAPID_PRIVATE_KEY: string;
+  GROQ_API_KEY: string;
   GEMINI_API_KEY?: string;
-  GROQ_API_KEY?: string;
 }
 
 interface Household {
@@ -22,7 +22,7 @@ interface Household {
 // 'Access-Control-Allow-Origin': 'https://YOUR_USERNAME.github.io'
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -114,12 +114,26 @@ export default {
       return json(plans);
     }
 
-    // POST /api/user/:id/subscription — save push subscription
+    // POST/DELETE /api/user/:id/subscription — save or remove push subscription
     const subMatch = path.match(/^\/api\/user\/([^/]+)\/subscription$/);
     if (request.method === 'POST' && subMatch) {
       const userId = subMatch[1];
       const subscription = await request.json();
       await putJSON(env.KV, `subscription:${userId}`, subscription);
+      return json({ ok: true });
+    }
+    if (request.method === 'DELETE' && subMatch) {
+      const userId = subMatch[1];
+      await env.KV.delete(`subscription:${userId}`);
+      return json({ ok: true });
+    }
+
+    // PUT /api/user/:id/notification-prefs — save notification preferences
+    const notifPrefsMatch = path.match(/^\/api\/user\/([^/]+)\/notification-prefs$/);
+    if (request.method === 'PUT' && notifPrefsMatch) {
+      const userId = notifPrefsMatch[1];
+      const prefs = await request.json();
+      await putJSON(env.KV, `notif-prefs:${userId}`, prefs);
       return json({ ok: true });
     }
 
@@ -145,42 +159,31 @@ export default {
       return json({ ok: true });
     }
 
-    // POST /api/generate-plan — AI meal plan generation (Gemini → Groq fallback)
+    // POST /api/generate-plan — AI meal plan generation (Gemini primary, Groq fallback)
     if (request.method === 'POST' && path === '/api/generate-plan') {
-      if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY) {
-        return json({ error: 'No AI API key configured' }, 500);
+      const prefs = await request.json();
+
+      // Try Gemini first
+      if (env.GEMINI_API_KEY) {
+        try {
+          const plan = await generateMealPlanGemini(env.GEMINI_API_KEY, prefs as any);
+          return json(plan);
+        } catch (err: any) {
+          console.error('Gemini failed, falling back to Groq:', err.message);
+        }
       }
-      try {
-        const prefs = await request.json();
-        let plan: unknown = null;
-        let lastError = '';
 
-        // Try Gemini first
-        if (env.GEMINI_API_KEY) {
-          console.log('Trying Gemini...');
-          plan = await generateMealPlan(env.GEMINI_API_KEY, prefs as any);
-          if (!plan) console.log('Gemini failed, falling back');
+      // Fallback to Groq
+      if (env.GROQ_API_KEY) {
+        try {
+          const plan = await generateMealPlanGroq(env.GROQ_API_KEY, prefs as any);
+          return json(plan);
+        } catch (err: any) {
+          return json({ error: err.message ?? 'Failed to generate plan' }, 500);
         }
-
-        // Fall back to Groq
-        if (!plan && env.GROQ_API_KEY) {
-          console.log('Trying Groq...');
-          try {
-            plan = await generateMealPlanGroq(env.GROQ_API_KEY, prefs as any);
-          } catch (err: any) {
-            lastError = err.message;
-            console.log('Groq failed:', lastError);
-          }
-        }
-
-        if (!plan) {
-          return json({ error: lastError || 'AI servis nije dostupan' }, 500);
-        }
-
-        return json(plan);
-      } catch (err: any) {
-        return json({ error: err.message ?? 'Failed to generate plan' }, 500);
       }
+
+      return json({ error: 'No AI provider configured' }, 500);
     }
 
     return json({ error: 'Not found' }, 404);

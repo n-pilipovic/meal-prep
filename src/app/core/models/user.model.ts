@@ -26,14 +26,8 @@ export interface SharedState {
 
 export interface NotificationPreferences {
   enabled: boolean;
-  dailySummary: {
-    enabled: boolean;
-    time: string;
-  };
-  mealReminders: Record<string, {
-    enabled: boolean;
-    minutesBefore: number;
-  }>;
+  dailySummary: boolean;
+  mealReminders: boolean;
 }
 
 export const USER_COLORS = [

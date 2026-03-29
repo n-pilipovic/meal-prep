@@ -32,7 +32,6 @@ export class NotificationService {
   });
 
   readonly needsInstallPrompt = computed(() => {
-    // iOS needs PWA installed for push notifications
     return this.isIOS() && !this.isStandalone();
   });
 
@@ -50,7 +49,6 @@ export class NotificationService {
         serverPublicKey: vapidKey,
       });
 
-      // Save subscription to server
       const userId = this.householdService.currentUserId();
       if (userId) {
         this.api.saveSubscription(userId, sub.toJSON()).subscribe();
@@ -59,9 +57,6 @@ export class NotificationService {
       this.isSubscribed.set(true);
       this.permissionState.set('granted');
       this.updatePreferences({ ...this.preferences(), enabled: true });
-
-      // Start foreground scheduling as fallback
-      this.scheduleForegroundReminders();
 
       return true;
     } catch (err) {
@@ -73,9 +68,37 @@ export class NotificationService {
     }
   }
 
+  async unsubscribe(): Promise<void> {
+    try {
+      const userId = this.householdService.currentUserId();
+      if (userId) {
+        this.api.deleteSubscription(userId).subscribe();
+      }
+
+      await new Promise<void>((resolve) => {
+        this.swPush.subscription.subscribe(sub => {
+          if (sub) sub.unsubscribe().then(() => resolve());
+          else resolve();
+        });
+      });
+    } catch (err) {
+      console.error('Unsubscribe failed:', err);
+    }
+
+    this.isSubscribed.set(false);
+    this.clearForegroundTimers();
+    this.updatePreferences({ ...this.preferences(), enabled: false });
+  }
+
   updatePreferences(prefs: NotificationPreferences): void {
     this.preferences.set(prefs);
     localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(prefs));
+
+    // Sync preferences to KV so the worker knows what to send
+    const userId = this.householdService.currentUserId();
+    if (userId) {
+      this.api.saveNotificationPrefs(userId, prefs).subscribe();
+    }
 
     if (prefs.enabled) {
       this.scheduleForegroundReminders();
@@ -84,11 +107,6 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Foreground setTimeout-based reminders as fallback.
-   * These fire local notifications when the app is open,
-   * independent of push notifications from the Cloudflare Worker.
-   */
   scheduleForegroundReminders(): void {
     this.clearForegroundTimers();
 
@@ -97,32 +115,32 @@ export class NotificationService {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
     const now = new Date();
-    const mealTypes = [MealType.Breakfast, MealType.Snack, MealType.Lunch, MealType.AfternoonSnack, MealType.Dinner];
 
-    for (const mealType of mealTypes) {
-      const mealPref = prefs.mealReminders[mealType];
-      if (!mealPref?.enabled) continue;
+    // Meal reminders (30 min before each meal)
+    if (prefs.mealReminders) {
+      const mealTypes = [MealType.Breakfast, MealType.Snack, MealType.Lunch, MealType.AfternoonSnack, MealType.Dinner];
 
-      const time = MEAL_TIMES[mealType];
-      const [hours, minutes] = time.split(':').map(Number);
-      const reminderTime = new Date(now);
-      reminderTime.setHours(hours, minutes - mealPref.minutesBefore, 0, 0);
+      for (const mealType of mealTypes) {
+        const time = MEAL_TIMES[mealType];
+        const [hours, minutes] = time.split(':').map(Number);
+        const reminderTime = new Date(now);
+        reminderTime.setHours(hours, minutes - 30, 0, 0);
 
-      const delay = reminderTime.getTime() - now.getTime();
-      if (delay <= 0) continue; // Already passed today
+        const delay = reminderTime.getTime() - now.getTime();
+        if (delay <= 0) continue;
 
-      const timer = setTimeout(() => {
-        this.showLocalNotification(mealType);
-      }, delay);
+        const timer = setTimeout(() => {
+          this.showLocalNotification(mealType);
+        }, delay);
 
-      this.foregroundTimers.push(timer);
+        this.foregroundTimers.push(timer);
+      }
     }
 
     // Daily summary at 7:00
-    if (prefs.dailySummary.enabled) {
-      const [h, m] = prefs.dailySummary.time.split(':').map(Number);
+    if (prefs.dailySummary) {
       const summaryTime = new Date(now);
-      summaryTime.setHours(h, m, 0, 0);
+      summaryTime.setHours(7, 0, 0, 0);
 
       const delay = summaryTime.getTime() - now.getTime();
       if (delay > 0) {
@@ -213,14 +231,8 @@ export class NotificationService {
   private defaultPreferences(): NotificationPreferences {
     return {
       enabled: false,
-      dailySummary: { enabled: true, time: '07:00' },
-      mealReminders: {
-        [MealType.Breakfast]: { enabled: true, minutesBefore: 30 },
-        [MealType.Snack]: { enabled: true, minutesBefore: 30 },
-        [MealType.Lunch]: { enabled: true, minutesBefore: 30 },
-        [MealType.AfternoonSnack]: { enabled: true, minutesBefore: 30 },
-        [MealType.Dinner]: { enabled: true, minutesBefore: 30 },
-      },
+      dailySummary: true,
+      mealReminders: true,
     };
   }
 }
