@@ -1,11 +1,15 @@
 import { getJSON, putJSON, type KVNamespace } from './kv-helpers';
 import { sendScheduledPush } from './push';
+import { generateMealPlan } from './gemini';
+import { generateMealPlanGroq } from './groq';
 
 interface Env {
   KV: KVNamespace;
   VAPID_SUBJECT: string;
   VAPID_PUBLIC_KEY: string;
   VAPID_PRIVATE_KEY: string;
+  GEMINI_API_KEY?: string;
+  GROQ_API_KEY?: string;
 }
 
 interface Household {
@@ -139,6 +143,44 @@ export default {
       const shared = await request.json();
       await putJSON(env.KV, `shared:${code}`, shared);
       return json({ ok: true });
+    }
+
+    // POST /api/generate-plan — AI meal plan generation (Gemini → Groq fallback)
+    if (request.method === 'POST' && path === '/api/generate-plan') {
+      if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY) {
+        return json({ error: 'No AI API key configured' }, 500);
+      }
+      try {
+        const prefs = await request.json();
+        let plan: unknown = null;
+        let lastError = '';
+
+        // Try Gemini first
+        if (env.GEMINI_API_KEY) {
+          console.log('Trying Gemini...');
+          plan = await generateMealPlan(env.GEMINI_API_KEY, prefs as any);
+          if (!plan) console.log('Gemini failed, falling back');
+        }
+
+        // Fall back to Groq
+        if (!plan && env.GROQ_API_KEY) {
+          console.log('Trying Groq...');
+          try {
+            plan = await generateMealPlanGroq(env.GROQ_API_KEY, prefs as any);
+          } catch (err: any) {
+            lastError = err.message;
+            console.log('Groq failed:', lastError);
+          }
+        }
+
+        if (!plan) {
+          return json({ error: lastError || 'AI servis nije dostupan' }, 500);
+        }
+
+        return json(plan);
+      } catch (err: any) {
+        return json({ error: err.message ?? 'Failed to generate plan' }, 500);
+      }
     }
 
     return json({ error: 'Not found' }, 404);

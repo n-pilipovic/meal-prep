@@ -8,17 +8,18 @@ import { JsonExportService } from './json-export.service';
 import { MealFormComponent } from './meal-form.component';
 import { RecipeFormComponent } from './recipe-form.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar.component';
+import { AiPlanFormComponent } from './ai-plan-form.component';
 import {
   WeeklyPlan, DayPlan, Meal, MealType, Recipe,
   DAY_NAMES, MEAL_TIMES, IngredientCategory,
 } from '../../core/models/meal.model';
 import { UserProfile } from '../../core/models/user.model';
 
-type EditorTab = 'meals' | 'recipes' | 'import';
+type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
 @Component({
   selector: 'app-editor',
-  imports: [FormsModule, MealFormComponent, RecipeFormComponent, UserAvatarComponent],
+  imports: [FormsModule, MealFormComponent, RecipeFormComponent, UserAvatarComponent, AiPlanFormComponent],
   template: `
     <div class="px-4 py-4 pb-24">
       <div class="flex items-center justify-between mb-4">
@@ -175,6 +176,10 @@ type EditorTab = 'meals' | 'recipes' | 'import';
             </div>
           </div>
         }
+
+        @case ('ai') {
+          <app-ai-plan-form (planGenerated)="onAiPlanGenerated($event)" />
+        }
       }
 
       <!-- Save status -->
@@ -204,6 +209,7 @@ export class EditorComponent {
     { value: 'meals', label: 'Obroci' },
     { value: 'recipes', label: 'Recepti' },
     { value: 'import', label: 'Uvoz' },
+    { value: 'ai', label: 'AI Plan' },
   ];
 
   readonly dayTabs = DAY_NAMES.map((name, i) => ({
@@ -332,6 +338,13 @@ export class EditorComponent {
 
   exportJson(): void {
     this.jsonExport.exportPlan(this.editingPlan());
+  }
+
+  onAiPlanGenerated(plan: WeeklyPlan): void {
+    this.applyImportedPlan(plan);
+    this.saveStatus.set('AI plan generisan!');
+    this.activeTab.set('meals');
+    setTimeout(() => this.saveStatus.set(''), 2000);
   }
 
   private applyImportedPlan(plan: WeeklyPlan): void {

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Household, SharedState } from '../models/user.model';
 import { WeeklyPlan } from '../models/meal.model';
+import { MealPlanPreferences } from '../models/ai-plan.model';
 
 import { environment } from '../../../environments/environment';
 
@@ -59,6 +60,13 @@ export class ApiService {
     return this.http.put<{ ok: boolean }>(
       `${this.baseUrl}/api/household/${code}/shared`,
       state,
+    );
+  }
+
+  generatePlan(prefs: MealPlanPreferences): Observable<WeeklyPlan> {
+    return this.http.post<WeeklyPlan>(
+      `${this.baseUrl}/api/generate-plan`,
+      prefs,
     );
   }
 }

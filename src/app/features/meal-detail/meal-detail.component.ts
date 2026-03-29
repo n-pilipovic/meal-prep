@@ -35,7 +35,7 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
           @for (ing of m.ingredients; track ing.name) {
             <li class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
               <input type="checkbox"
-                     [checked]="checked()[ing.name] ?? false"
+                     [checked]="!!checked()[ing.name]"
                      (change)="toggleIngredient(ing.name)"
                      class="w-5 h-5 rounded accent-green-primary" />
               <span [class.line-through]="checked()[ing.name]"
