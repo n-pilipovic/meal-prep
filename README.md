@@ -16,7 +16,7 @@
 
 ## Features
 
-- **Daily & weekly views** — 4 meals/day (breakfast 9h, snack 11h, lunch 14h, dinner 18h) with ingredient lists and recipes
+- **Daily & weekly views** — 5 meals/day (breakfast 9h, snack 11h, lunch 14h, afternoon snack 16h, dinner 18h) with ingredient lists and recipes
 - **Multi-user households** — create or join with a 6-character invite code, each member has their own meal plan
 - **Shared shopping list** — aggregated ingredients across all users, assignable per person, checkable with real-time sync
 - **Prep checklist** — daily preparation divided between users at 3 levels (by plan, by meal, by item)
@@ -36,7 +36,7 @@
 | PWA | @angular/pwa (service worker, manifest) |
 | Tests | Vitest (unit), Playwright (E2E — iPhone 14, iPhone 13 Mini, desktop) |
 | Hosting | GitHub Pages |
-| CI/CD | GitHub Actions |
+| CI/CD | GitHub Actions (Angular deploy + Cloudflare Worker deploy) |
 
 ## Development
 
@@ -61,7 +61,7 @@ npm run deploy                  # Deploy to Cloudflare
 ```
 src/app/
   core/
-    models/          # WeeklyPlan, Household, SharedState, MealType
+    models/          # WeeklyPlan, Household, SharedState, MealType (5 types)
     services/        # MealData, Household, Api, Sync, ShoppingList, Notification
     guards/          # Onboarding guard
   features/
@@ -74,7 +74,7 @@ src/app/
     editor/          # Meal plan editor + .docx import
     settings/        # Notifications, household, PWA install
   shared/
-    components/      # BottomNav, DayNavigator, UserAvatar, IoS install prompt
+    components/      # BottomNav, DayNavigator, UserAvatar, iOS install prompt
     pipes/           # Quantity formatting
 
 cf-worker/           # Cloudflare Worker (API + push notifications)
@@ -99,11 +99,13 @@ All data stored in Cloudflare KV. No database needed.
 
 ## Deployment
 
-### GitHub Pages
+### GitHub Pages + Cloudflare Worker
 
-Automatic via GitHub Actions on push to `main` — builds, runs unit tests, and deploys.
+Both deploy automatically via GitHub Actions on push to `main`:
+- **Angular app** — builds, runs unit tests, deploys to GitHub Pages
+- **Cloudflare Worker** — deploys via Wrangler using `CLOUDFLARE_API_TOKEN` secret
 
-### Cloudflare Worker
+### Initial Cloudflare Setup
 
 ```bash
 cd cf-worker
@@ -115,8 +117,10 @@ npx wrangler secret put VAPID_PRIVATE_KEY
 npm run deploy
 ```
 
+Add `CLOUDFLARE_API_TOKEN` to GitHub repo secrets (Settings → Secrets → Actions) for CI/CD.
+
 Update `src/environments/environment.prod.ts` with the worker URL after deploying.
 
 ## Language
 
-All UI text is in **Serbian** (Latin script). Meal types: doručak, užina, ručak, večera.
+All UI text is in **Serbian** (Latin script). Meal types: doručak, užina, ručak, užina 2, večera.
