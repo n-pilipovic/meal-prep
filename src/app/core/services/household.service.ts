@@ -1,27 +1,29 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
 import { Household, UserProfile } from '../models/user.model';
 
 const STORAGE_KEY_HOUSEHOLD = 'meal-prep:household-code';
-const STORAGE_KEY_USER = 'meal-prep:user-id';
 
 @Injectable({ providedIn: 'root' })
 export class HouseholdService {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   private readonly household = signal<Household | null>(null);
-  private readonly userId = signal<string | null>(null);
 
   readonly currentHousehold = this.household.asReadonly();
-  readonly currentUserId = this.userId.asReadonly();
+
+  // User ID comes from Firebase auth
+  readonly currentUserId = computed(() => this.auth.uid());
 
   readonly isLoggedIn = computed(() => {
-    return this.household() !== null && this.userId() !== null;
+    return this.auth.isLoggedIn() && this.household() !== null;
   });
 
   readonly currentUser = computed<UserProfile | null>(() => {
     const h = this.household();
-    const uid = this.userId();
+    const uid = this.auth.uid();
     if (!h || !uid) return null;
     return h.members.find(m => m.id === uid) ?? null;
   });
@@ -35,25 +37,34 @@ export class HouseholdService {
   });
 
   constructor() {
-    this.restoreSession();
+    // When Firebase auth state changes, try to restore the household session
+    effect(() => {
+      const uid = this.auth.uid();
+      const ready = this.auth.isReady();
+      if (!ready) return;
+
+      if (uid) {
+        this.restoreSession();
+      } else {
+        this.household.set(null);
+      }
+    });
   }
 
   createHousehold(name: string): void {
     this.api.createHousehold(name).subscribe({
-      next: ({ code, userId, household }) => {
-        this.saveSession(code, userId);
+      next: ({ code, household }) => {
+        this.saveSession(code);
         this.household.set(household);
-        this.userId.set(userId);
       },
     });
   }
 
   joinHousehold(code: string, name: string): void {
     this.api.joinHousehold(code.toUpperCase(), name).subscribe({
-      next: ({ userId, household }) => {
-        this.saveSession(household.code, userId);
+      next: ({ household }) => {
+        this.saveSession(household.code);
         this.household.set(household);
-        this.userId.set(userId);
       },
     });
   }
@@ -68,28 +79,37 @@ export class HouseholdService {
 
   logout(): void {
     localStorage.removeItem(STORAGE_KEY_HOUSEHOLD);
-    localStorage.removeItem(STORAGE_KEY_USER);
     this.household.set(null);
-    this.userId.set(null);
+    this.auth.signOutUser();
   }
 
   private restoreSession(): void {
     const code = localStorage.getItem(STORAGE_KEY_HOUSEHOLD);
-    const uid = localStorage.getItem(STORAGE_KEY_USER);
-    if (!code || !uid) return;
+    if (code) {
+      // Have a local code — fetch household by code
+      this.api.getHousehold(code).subscribe({
+        next: (household) => this.household.set(household),
+        error: () => this.resolveFromServer(),
+      });
+    } else {
+      // No local code — ask server for this user's household
+      this.resolveFromServer();
+    }
+  }
 
-    this.userId.set(uid);
-    this.api.getHousehold(code).subscribe({
-      next: (household) => this.household.set(household),
+  private resolveFromServer(): void {
+    this.api.getMyHousehold().subscribe({
+      next: (household) => {
+        this.saveSession(household.code);
+        this.household.set(household);
+      },
       error: () => {
-        // Household not found on server — keep local-only mode
         this.household.set(null);
       },
     });
   }
 
-  private saveSession(code: string, userId: string): void {
+  private saveSession(code: string): void {
     localStorage.setItem(STORAGE_KEY_HOUSEHOLD, code);
-    localStorage.setItem(STORAGE_KEY_USER, userId);
   }
 }

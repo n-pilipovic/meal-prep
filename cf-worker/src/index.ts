@@ -2,6 +2,7 @@ import { getJSON, putJSON, type KVNamespace } from './kv-helpers';
 import { sendScheduledPush } from './push';
 import { generateMealPlanGroq } from './groq';
 import { generateMealPlanGemini } from './gemini';
+import { Auth, WorkersKVStoreSingle } from 'firebase-auth-cloudflare-workers';
 
 interface Env {
   KV: KVNamespace;
@@ -10,6 +11,7 @@ interface Env {
   VAPID_PRIVATE_KEY: string;
   GROQ_API_KEY: string;
   GEMINI_API_KEY?: string;
+  FIREBASE_PROJECT_ID: string;
 }
 
 interface Household {
@@ -18,12 +20,10 @@ interface Household {
   createdAt: string;
 }
 
-// In production, restrict to your GitHub Pages domain:
-// 'Access-Control-Allow-Origin': 'https://YOUR_USERNAME.github.io'
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 function json(data: unknown, status = 200): Response {
@@ -37,11 +37,25 @@ function generateCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-function generateId(): string {
-  return crypto.randomUUID();
-}
-
 const USER_COLORS = ['#2d6a4f', '#e76f51', '#264653', '#e9c46a', '#6a4c93'];
+
+async function getFirebaseUid(request: Request, env: Env): Promise<string | null> {
+  const authorization = request.headers.get('Authorization');
+  if (!authorization?.startsWith('Bearer ')) return null;
+
+  const jwt = authorization.slice(7);
+
+  try {
+    const auth = Auth.getOrInitialize(
+      env.FIREBASE_PROJECT_ID,
+      WorkersKVStoreSingle.getOrInitialize('firebase-public-jwk-cache', env.KV as any),
+    );
+    const token = await auth.verifyIdToken(jwt);
+    return token.uid;
+  } catch {
+    return null;
+  }
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -52,33 +66,56 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // POST /api/household — create household
+    // POST /api/household — create household (requires auth)
     if (request.method === 'POST' && path === '/api/household') {
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
       const { name } = (await request.json()) as { name: string };
       const code = generateCode();
-      const userId = generateId();
       const household: Household = {
         code,
-        members: [{ id: userId, name, color: USER_COLORS[0] }],
+        members: [{ id: uid, name, color: USER_COLORS[0] }],
         createdAt: new Date().toISOString(),
       };
       await putJSON(env.KV, `household:${code}`, household);
-      return json({ code, userId, household });
+      await env.KV.put(`user-household:${uid}`, code);
+      return json({ code, userId: uid, household });
     }
 
-    // POST /api/household/:code/join — join household
+    // POST /api/household/:code/join — join household (requires auth)
     const joinMatch = path.match(/^\/api\/household\/([A-Z0-9]+)\/join$/);
     if (request.method === 'POST' && joinMatch) {
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
       const code = joinMatch[1];
       const { name } = (await request.json()) as { name: string };
       const household = await getJSON<Household>(env.KV, `household:${code}`);
       if (!household) return json({ error: 'Household not found' }, 404);
 
-      const userId = generateId();
-      const colorIndex = household.members.length % USER_COLORS.length;
-      household.members.push({ id: userId, name, color: USER_COLORS[colorIndex] });
-      await putJSON(env.KV, `household:${code}`, household);
-      return json({ userId, household });
+      // Prevent duplicate joins
+      if (!household.members.some(m => m.id === uid)) {
+        const colorIndex = household.members.length % USER_COLORS.length;
+        household.members.push({ id: uid, name, color: USER_COLORS[colorIndex] });
+        await putJSON(env.KV, `household:${code}`, household);
+      }
+      await env.KV.put(`user-household:${uid}`, code);
+      return json({ userId: uid, household });
+    }
+
+    // GET /api/me/household — resolve current user's household from Firebase UID
+    if (request.method === 'GET' && path === '/api/me/household') {
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const code = await env.KV.get(`user-household:${uid}`);
+      if (!code) return json({ error: 'No household' }, 404);
+
+      const household = await getJSON<Household>(env.KV, `household:${code}`);
+      if (!household) return json({ error: 'Household not found' }, 404);
+
+      return json(household);
     }
 
     // GET /api/household/:code — get household info

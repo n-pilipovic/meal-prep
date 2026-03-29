@@ -30,6 +30,10 @@ export class ApiService {
     return this.http.get<Household>(`${this.baseUrl}/api/household/${code}`);
   }
 
+  getMyHousehold(): Observable<Household> {
+    return this.http.get<Household>(`${this.baseUrl}/api/me/household`);
+  }
+
   savePlan(userId: string, plan: WeeklyPlan): Observable<{ ok: boolean }> {
     return this.http.put<{ ok: boolean }>(
       `${this.baseUrl}/api/user/${userId}/plan`,

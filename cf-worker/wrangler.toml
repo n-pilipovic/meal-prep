@@ -15,6 +15,7 @@ crons = [
 
 [vars]
 VAPID_SUBJECT = "mailto:javasoftwaredeveloper85@gmail.com"
+FIREBASE_PROJECT_ID = "meal-prep-37753"
 # Secrets (set via wrangler secret put):
 #   wrangler secret put VAPID_PUBLIC_KEY
 #   wrangler secret put VAPID_PRIVATE_KEY
