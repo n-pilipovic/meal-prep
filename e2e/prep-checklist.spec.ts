@@ -14,6 +14,8 @@ test.describe('Prep Checklist', () => {
     await page.goto('/today');
     await page.getByText('Pripremi sastojke').click();
     await expect(page).toHaveURL(/\/day\/\d+\/checklist/);
+    // Wait for meal data to fully render before each test
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible();
   });
 
   test('should display prep checklist title', async ({ page }) => {
@@ -28,7 +30,6 @@ test.describe('Prep Checklist', () => {
 
   test('should show progress bar', async ({ page }) => {
     await expect(page.getByText('Napredak')).toBeVisible();
-    // Should show 0/N initially
     const text = await page.textContent('body');
     expect(text).toMatch(/0\/\d+/);
   });
