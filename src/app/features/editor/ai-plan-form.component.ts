@@ -5,12 +5,14 @@ import { WeeklyPlan } from '../../core/models/meal.model';
 import {
   MealPlanPreferences,
   DIETARY_RESTRICTIONS,
+  COMMON_ALLERGENS,
   DEFAULT_PREFERENCES,
   AGE_GROUPS,
 } from '../../core/models/ai-plan.model';
 
 interface AiPlanFormModel {
   calories: number;
+  allergyInput: string;
   preferredInput: string;
   avoidInput: string;
   note: string;
@@ -82,6 +84,51 @@ interface AiPlanFormModel {
               </button>
             }
           </div>
+        </div>
+
+        <!-- Allergies -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-text-primary mb-2">
+            Alergije
+          </label>
+          <div class="flex flex-wrap gap-2 mb-2">
+            @for (a of allergens; track a.key) {
+              <button
+                (click)="toggleAllergen(a.key)"
+                [attr.aria-pressed]="selectedAllergens().includes(a.key)"
+                class="px-3 py-1.5 rounded-full text-sm transition-colors min-h-9"
+                [class.bg-red-500]="selectedAllergens().includes(a.key)"
+                [class.text-white]="selectedAllergens().includes(a.key)"
+                [class.bg-cream-light]="!selectedAllergens().includes(a.key)"
+                [class.text-text-secondary]="!selectedAllergens().includes(a.key)">
+                {{ a.label }}
+              </button>
+            }
+          </div>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [formField]="planForm.allergyInput"
+              (keydown.enter)="addCustomAllergy()"
+              placeholder="npr. jagode, med..."
+              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
+            <button
+              (click)="addCustomAllergy()"
+              aria-label="Dodaj alergiju"
+              class="px-3 py-2 bg-red-500 text-white rounded-lg text-sm min-h-11">
+              +
+            </button>
+          </div>
+          @if (customAllergies().length > 0) {
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              @for (item of customAllergies(); track item) {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                  {{ item }}
+                  <button (click)="removeCustomAllergy(item)" [attr.aria-label]="'Ukloni alergiju ' + item" class="text-red-600 hover:text-red-900">&times;</button>
+                </span>
+              }
+            </div>
+          }
         </div>
 
         <!-- Preferred ingredients -->
@@ -186,9 +233,11 @@ export class AiPlanFormComponent {
 
   readonly restrictions = DIETARY_RESTRICTIONS;
   readonly ageGroups = AGE_GROUPS;
+  readonly allergens = COMMON_ALLERGENS;
 
   readonly formModel = signal<AiPlanFormModel>({
     calories: DEFAULT_PREFERENCES.calories,
+    allergyInput: '',
     preferredInput: '',
     avoidInput: '',
     note: '',
@@ -200,6 +249,8 @@ export class AiPlanFormComponent {
     AGE_GROUPS.find(ag => ag.key === this.selectedAgeGroup()) ?? AGE_GROUPS[AGE_GROUPS.length - 1],
   );
   readonly selectedRestrictions = signal<string[]>([]);
+  readonly selectedAllergens = signal<string[]>([]);
+  readonly customAllergies = signal<string[]>([]);
   readonly preferred = signal<string[]>([]);
   readonly avoided = signal<string[]>([]);
 
@@ -216,6 +267,24 @@ export class AiPlanFormComponent {
     this.selectedRestrictions.update(list =>
       list.includes(key) ? list.filter(k => k !== key) : [...list, key],
     );
+  }
+
+  toggleAllergen(key: string): void {
+    this.selectedAllergens.update(list =>
+      list.includes(key) ? list.filter(k => k !== key) : [...list, key],
+    );
+  }
+
+  addCustomAllergy(): void {
+    const val = this.formModel().allergyInput.trim();
+    if (val && !this.customAllergies().includes(val)) {
+      this.customAllergies.update(list => [...list, val]);
+    }
+    this.formModel.update(m => ({ ...m, allergyInput: '' }));
+  }
+
+  removeCustomAllergy(item: string): void {
+    this.customAllergies.update(list => list.filter(i => i !== item));
   }
 
   addPreferred(): void {
@@ -247,10 +316,14 @@ export class AiPlanFormComponent {
     this.error.set('');
 
     const { calories, note } = this.formModel();
+    const allergenLabels = this.selectedAllergens().map(
+      key => COMMON_ALLERGENS.find(a => a.key === key)?.label ?? key,
+    );
     const prefs: MealPlanPreferences = {
       calories,
       ageGroup: this.selectedAgeGroup(),
       restrictions: this.selectedRestrictions(),
+      allergies: [...allergenLabels, ...this.customAllergies()],
       preferredIngredients: this.preferred(),
       avoidIngredients: this.avoided(),
       note: note.trim(),

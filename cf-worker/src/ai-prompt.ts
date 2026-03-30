@@ -2,6 +2,7 @@ export interface MealPlanPreferences {
   calories: number;
   ageGroup: string;
   restrictions: string[];
+  allergies: string[];
   preferredIngredients: string[];
   avoidIngredients: string[];
   note: string;
@@ -104,6 +105,9 @@ export function buildUserPrompt(prefs: MealPlanPreferences): string {
 
   if (prefs.restrictions.length > 0) {
     parts.push(`- Ograničenja u ishrani: ${prefs.restrictions.join(', ')}`);
+  }
+  if (prefs.allergies && prefs.allergies.length > 0) {
+    parts.push(`- ⚠️ ALERGIJE (STROGO ZABRANJENO — ni u tragovima): ${prefs.allergies.join(', ')}. NIJEDAN obrok, sastojak ili recept NE SME sadržati ove namirnice ni njihove derivate. Ovo je zdravstveni zahtev.`);
   }
   if (prefs.preferredIngredients.length > 0) {
     parts.push(`- Poželjni sastojci: ${prefs.preferredIngredients.join(', ')}`);

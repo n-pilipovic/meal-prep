@@ -2,10 +2,26 @@ export interface MealPlanPreferences {
   calories: number;
   ageGroup: string;
   restrictions: string[];
+  allergies: string[];
   preferredIngredients: string[];
   avoidIngredients: string[];
   note: string;
 }
+
+export const COMMON_ALLERGENS = [
+  { key: 'gluten', label: 'Gluten' },
+  { key: 'mleko', label: 'Kravlje mleko' },
+  { key: 'sir', label: 'Sir' },
+  { key: 'jogurt', label: 'Jogurt' },
+  { key: 'jaja', label: 'Jaja' },
+  { key: 'kikiriki', label: 'Kikiriki' },
+  { key: 'orašasti', label: 'Orašasti plodovi' },
+  { key: 'soja', label: 'Soja' },
+  { key: 'riba', label: 'Riba' },
+  { key: 'školjke', label: 'Školjke / rakovi' },
+  { key: 'sezam', label: 'Sezam' },
+  { key: 'celer', label: 'Celer' },
+] as const;
 
 export const AGE_GROUPS = [
   { key: 'blw', label: 'BLW beba (6–12 mes.)', minCal: 600, maxCal: 900, defaultCal: 700 },
@@ -33,6 +49,7 @@ export const DEFAULT_PREFERENCES: MealPlanPreferences = {
   calories: 2000,
   ageGroup: 'adult',
   restrictions: [],
+  allergies: [],
   preferredIngredients: [],
   avoidIngredients: [],
   note: '',

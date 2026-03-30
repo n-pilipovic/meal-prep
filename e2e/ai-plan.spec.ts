@@ -117,6 +117,46 @@ test.describe('AI Plan Generator', () => {
     await expect(tags).toHaveCount(1);
   });
 
+  test('should show common allergen buttons', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Gluten', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kravlje mleko' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Jaja' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kikiriki' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Orašasti plodovi' })).toBeVisible();
+  });
+
+  test('should toggle allergen on and off', async ({ page }) => {
+    const jajaBtn = page.getByRole('button', { name: 'Jaja' });
+    await expect(jajaBtn).toHaveAttribute('aria-pressed', 'false');
+
+    await jajaBtn.click();
+    await expect(jajaBtn).toHaveAttribute('aria-pressed', 'true');
+
+    await jajaBtn.click();
+    await expect(jajaBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('should select multiple allergens', async ({ page }) => {
+    await page.getByRole('button', { name: 'Jaja' }).click();
+    await page.getByRole('button', { name: 'Kikiriki' }).click();
+
+    await expect(page.getByRole('button', { name: 'Jaja' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Kikiriki' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Soja' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('should add and remove custom allergies', async ({ page }) => {
+    const input = page.getByPlaceholder('npr. jagode, med...');
+    await input.fill('jagode');
+    await page.getByRole('button', { name: 'Dodaj alergiju' }).click();
+
+    await expect(page.getByText('jagode')).toBeVisible();
+    await expect(input).toHaveValue('');
+
+    await page.getByRole('button', { name: 'Ukloni alergiju jagode' }).click();
+    await expect(page.getByText('jagode')).not.toBeVisible();
+  });
+
   test('should add and remove avoided ingredients', async ({ page }) => {
     const input = page.getByPlaceholder('npr. ljuto, gljive...');
     await input.fill('gljive');
