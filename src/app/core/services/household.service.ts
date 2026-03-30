@@ -11,8 +11,11 @@ export class HouseholdService {
   private readonly auth = inject(AuthService);
 
   private readonly household = signal<Household | null>(null);
+  private readonly _sessionReady = signal(false);
 
   readonly currentHousehold = this.household.asReadonly();
+  /** True once the initial auth + household restoration attempt has completed */
+  readonly sessionReady = this._sessionReady.asReadonly();
 
   // User ID comes from Firebase auth
   readonly currentUserId = computed(() => this.auth.uid());
@@ -47,6 +50,7 @@ export class HouseholdService {
         this.restoreSession();
       } else {
         this.household.set(null);
+        this._sessionReady.set(true);
       }
     });
   }
@@ -88,7 +92,10 @@ export class HouseholdService {
     if (code) {
       // Have a local code — fetch household by code
       this.api.getHousehold(code).subscribe({
-        next: (household) => this.household.set(household),
+        next: (household) => {
+          this.household.set(household);
+          this._sessionReady.set(true);
+        },
         error: () => this.resolveFromServer(),
       });
     } else {
@@ -102,9 +109,11 @@ export class HouseholdService {
       next: (household) => {
         this.saveSession(household.code);
         this.household.set(household);
+        this._sessionReady.set(true);
       },
       error: () => {
         this.household.set(null);
+        this._sessionReady.set(true);
       },
     });
   }
