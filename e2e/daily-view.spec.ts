@@ -54,8 +54,7 @@ test.describe('Daily View', () => {
 
     if (initialIndex < 6) {
       await page.getByRole('button', { name: 'Sledeći dan' }).click();
-      const newDay = await page.locator('h2').first().textContent();
-      expect(newDay).toContain(dayNames[initialIndex + 1]);
+      await expect(page.locator('h2').first()).toContainText(dayNames[initialIndex + 1]);
     }
   });
 
@@ -66,8 +65,7 @@ test.describe('Daily View', () => {
 
     if (initialIndex > 0) {
       await page.getByRole('button', { name: 'Prethodni dan' }).click();
-      const newDay = await page.locator('h2').first().textContent();
-      expect(newDay).toContain(dayNames[initialIndex - 1]);
+      await expect(page.locator('h2').first()).toContainText(dayNames[initialIndex - 1]);
     }
   });
 
