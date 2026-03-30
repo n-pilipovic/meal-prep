@@ -7,18 +7,20 @@ import { DAY_NAMES } from '../../core/models/meal.model';
     <div class="flex items-center justify-between px-4 py-3">
       <button
         (click)="prev()"
+        aria-label="Prethodni dan"
         class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
         [disabled]="dayIndex() <= 0">
-        <span class="text-lg">‹</span>
+        <span class="text-lg" aria-hidden="true">‹</span>
       </button>
-      <div class="text-center">
+      <div class="text-center" aria-live="polite">
         <h2 class="text-lg font-semibold text-text-primary">{{ dayName() }}</h2>
       </div>
       <button
         (click)="next()"
+        aria-label="Sledeći dan"
         class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
         [disabled]="dayIndex() >= 6">
-        <span class="text-lg">›</span>
+        <span class="text-lg" aria-hidden="true">›</span>
       </button>
     </div>
   `,

@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
   await page.goto('/today');
 };
@@ -19,25 +20,26 @@ test.describe('Daily View', () => {
     expect(dayNames.some(d => dayText?.includes(d))).toBe(true);
   });
 
-  test('should display 4 meal cards', async ({ page }) => {
+  test('should display 5 meal cards', async ({ page }) => {
     const mealCards = page.locator('app-meal-card');
-    await expect(mealCards).toHaveCount(4);
+    await expect(mealCards).toHaveCount(5);
   });
 
   test('should show meal times on cards', async ({ page }) => {
     await expect(page.getByText('09:00')).toBeVisible();
     await expect(page.getByText('11:00')).toBeVisible();
     await expect(page.getByText('14:00')).toBeVisible();
+    await expect(page.getByText('16:00')).toBeVisible();
     await expect(page.getByText('18:00')).toBeVisible();
   });
 
   test('should show meal type labels on cards', async ({ page }) => {
     const cards = page.locator('app-meal-card');
-    await expect(cards).toHaveCount(4);
-    // Check each card has its meal label via the badge text
+    await expect(cards).toHaveCount(5);
     await expect(cards.filter({ has: page.getByText('Doručak', { exact: true }) })).toBeVisible();
     await expect(cards.filter({ has: page.getByText('Užina', { exact: true }) })).toBeVisible();
     await expect(cards.filter({ has: page.getByText('Ručak', { exact: true }) })).toBeVisible();
+    await expect(cards.filter({ has: page.getByText('Užina 2', { exact: true }) })).toBeVisible();
     await expect(cards.filter({ has: page.getByText('Večera', { exact: true }) })).toBeVisible();
   });
 
@@ -51,7 +53,7 @@ test.describe('Daily View', () => {
     const initialIndex = dayNames.findIndex(d => initialDay?.includes(d));
 
     if (initialIndex < 6) {
-      await page.locator('button:has-text("›")').click();
+      await page.getByRole('button', { name: 'Sledeći dan' }).click();
       const newDay = await page.locator('h2').first().textContent();
       expect(newDay).toContain(dayNames[initialIndex + 1]);
     }
@@ -63,7 +65,7 @@ test.describe('Daily View', () => {
     const initialIndex = dayNames.findIndex(d => initialDay?.includes(d));
 
     if (initialIndex > 0) {
-      await page.locator('button:has-text("‹")').click();
+      await page.getByRole('button', { name: 'Prethodni dan' }).click();
       const newDay = await page.locator('h2').first().textContent();
       expect(newDay).toContain(dayNames[initialIndex - 1]);
     }
@@ -82,24 +84,25 @@ test.describe('Daily View', () => {
   });
 
   test('should show bottom navigation', async ({ page }) => {
-    await expect(page.getByText('Danas')).toBeVisible();
-    await expect(page.getByText('Nedelja')).toBeVisible();
-    await expect(page.getByText('Kupovina')).toBeVisible();
-    await expect(page.getByText('Podešavanja')).toBeVisible();
+    const nav = page.locator('nav');
+    await expect(nav.getByText('Danas')).toBeVisible();
+    await expect(nav.getByText('Nedelja', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Kupovina')).toBeVisible();
+    await expect(nav.getByText('Podešavanja')).toBeVisible();
   });
 
   test('should navigate to weekly view via bottom nav', async ({ page }) => {
-    await page.getByText('Nedelja').click();
+    await page.getByRole('link', { name: 'Nedelja' }).click();
     await expect(page).toHaveURL(/\/week/);
   });
 
   test('should navigate to shopping list via bottom nav', async ({ page }) => {
-    await page.getByText('Kupovina').click();
+    await page.getByRole('link', { name: 'Kupovina' }).click();
     await expect(page).toHaveURL(/\/shopping/);
   });
 
   test('should navigate to settings via bottom nav', async ({ page }) => {
-    await page.getByText('Podešavanja').click();
+    await page.getByRole('link', { name: 'Podešavanja' }).click();
     await expect(page).toHaveURL(/\/settings/);
   });
 });

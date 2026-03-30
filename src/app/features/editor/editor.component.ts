@@ -43,6 +43,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
         @for (tab of tabs; track tab.value) {
           <button
             (click)="activeTab.set(tab.value)"
+            [attr.aria-pressed]="activeTab() === tab.value"
             class="px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-11"
             [class.bg-green-primary]="activeTab() === tab.value"
             [class.text-white]="activeTab() === tab.value"
@@ -60,6 +61,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
             @for (day of dayTabs; track day.index) {
               <button
                 (click)="selectedDay.set(day.index)"
+                [attr.aria-pressed]="selectedDay() === day.index"
                 class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-9"
                 [class.bg-orange-primary]="selectedDay() === day.index"
                 [class.text-white]="selectedDay() === day.index"
@@ -111,6 +113,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                     @for (member of members(); track member.id) {
                       <button
                         (click)="importTargetUser.set(member)"
+                        [attr.aria-pressed]="importTargetUser()?.id === member.id"
                         class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors min-h-11"
                         [class.ring-2]="importTargetUser()?.id === member.id"
                         [style.--tw-ring-color]="member.color"
@@ -126,14 +129,17 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                 </div>
               }
 
-              <input
-                type="file"
-                accept=".docx"
-                (change)="onDocxSelected($event)"
-                class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+              <label>
+                <span class="sr-only">Izaberi .docx fajl za uvoz</span>
+                <input
+                  type="file"
+                  accept=".docx"
+                  (change)="onDocxSelected($event)"
+                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+              </label>
 
               @if (importStatus()) {
-                <p class="mt-2 text-sm" [class.text-green-primary]="!importError()" [class.text-red-500]="importError()">
+                <p role="status" aria-live="polite" class="mt-2 text-sm" [class.text-green-primary]="!importError()" [class.text-red-500]="importError()">
                   {{ importStatus() }}
                 </p>
               }
@@ -153,6 +159,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                     @for (member of members(); track member.id) {
                       <button
                         (click)="importTargetUser.set(member)"
+                        [attr.aria-pressed]="importTargetUser()?.id === member.id"
                         class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors min-h-11"
                         [class.ring-2]="importTargetUser()?.id === member.id"
                         [style.--tw-ring-color]="member.color"
@@ -168,11 +175,14 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                 </div>
               }
 
-              <input
-                type="file"
-                accept=".json"
-                (change)="onJsonSelected($event)"
-                class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+              <label>
+                <span class="sr-only">Izaberi JSON fajl za uvoz</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  (change)="onJsonSelected($event)"
+                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+              </label>
             </div>
           </div>
         }
@@ -184,7 +194,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
       <!-- Save status -->
       @if (saveStatus()) {
-        <div class="fixed bottom-20 left-4 right-4 bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse">
+        <div role="status" aria-live="polite" class="fixed bottom-20 left-4 right-4 bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse">
           {{ saveStatus() }}
         </div>
       }

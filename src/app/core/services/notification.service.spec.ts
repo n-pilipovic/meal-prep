@@ -49,22 +49,15 @@ describe('NotificationService', () => {
     const { service } = setup();
     const prefs = service.preferences();
     expect(prefs.enabled).toBe(false);
-    expect(prefs.dailySummary.enabled).toBe(true);
-    expect(prefs.dailySummary.time).toBe('07:00');
-    expect(prefs.mealReminders[MealType.Breakfast].enabled).toBe(true);
-    expect(prefs.mealReminders[MealType.Lunch].minutesBefore).toBe(30);
+    expect(prefs.dailySummary).toBe(true);
+    expect(prefs.mealReminders).toBe(true);
   });
 
   it('should load saved preferences from localStorage', () => {
     const saved = {
       enabled: true,
-      dailySummary: { enabled: false, time: '06:30' },
-      mealReminders: {
-        [MealType.Breakfast]: { enabled: false, minutesBefore: 15 },
-        [MealType.Snack]: { enabled: true, minutesBefore: 30 },
-        [MealType.Lunch]: { enabled: true, minutesBefore: 30 },
-        [MealType.Dinner]: { enabled: true, minutesBefore: 30 },
-      },
+      dailySummary: false,
+      mealReminders: false,
     };
 
     const { service } = setup(() => {
@@ -72,8 +65,8 @@ describe('NotificationService', () => {
     });
 
     expect(service.preferences().enabled).toBe(true);
-    expect(service.preferences().dailySummary.enabled).toBe(false);
-    expect(service.preferences().mealReminders[MealType.Breakfast].enabled).toBe(false);
+    expect(service.preferences().dailySummary).toBe(false);
+    expect(service.preferences().mealReminders).toBe(false);
   });
 
   it('should update preferences and persist to localStorage', () => {
@@ -81,17 +74,17 @@ describe('NotificationService', () => {
     const updated = {
       ...service.preferences(),
       enabled: true,
-      dailySummary: { enabled: false, time: '08:00' },
+      dailySummary: false,
     };
 
     service.updatePreferences(updated);
 
     expect(service.preferences().enabled).toBe(true);
-    expect(service.preferences().dailySummary.time).toBe('08:00');
+    expect(service.preferences().dailySummary).toBe(false);
 
     const stored = JSON.parse(localStorage.getItem('meal-prep:notification-prefs')!);
     expect(stored.enabled).toBe(true);
-    expect(stored.dailySummary.time).toBe('08:00');
+    expect(stored.dailySummary).toBe(false);
   });
 
   it('should detect iOS by user agent', () => {
@@ -119,7 +112,7 @@ describe('NotificationService', () => {
 
     // Should fall back to defaults
     expect(service.preferences().enabled).toBe(false);
-    expect(service.preferences().dailySummary.enabled).toBe(true);
+    expect(service.preferences().dailySummary).toBe(true);
   });
 
   it('should compute needsInstallPrompt as false for non-iOS', () => {

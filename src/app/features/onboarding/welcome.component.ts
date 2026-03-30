@@ -14,7 +14,7 @@ type AuthMode = 'initial' | 'login' | 'register';
     <div class="min-h-screen flex flex-col items-center justify-center px-6 bg-cream">
       <div class="w-full max-w-sm">
         <div class="text-center mb-8">
-          <span class="text-5xl mb-3 block">🍽️</span>
+          <span class="text-5xl mb-3 block" aria-hidden="true">🍽️</span>
           <h1 class="text-2xl font-bold text-text-primary">Priprema Obroka</h1>
           <p class="text-sm text-text-secondary mt-1">Planiraj, pripremi, podeli</p>
         </div>
@@ -57,16 +57,24 @@ type AuthMode = 'initial' | 'login' | 'register';
                   ‹ Nazad
                 </button>
                 <h2 class="text-lg font-semibold text-text-primary">Prijava</h2>
-                <input
-                  type="email"
-                  [(ngModel)]="emailInput"
-                  placeholder="Email adresa"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
-                <input
-                  type="password"
-                  [(ngModel)]="passwordInput"
-                  placeholder="Lozinka"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                <label>
+                  <span class="sr-only">Email adresa</span>
+                  <input
+                    type="email"
+                    [(ngModel)]="emailInput"
+                    placeholder="Email adresa"
+                    autocomplete="email"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                </label>
+                <label>
+                  <span class="sr-only">Lozinka</span>
+                  <input
+                    type="password"
+                    [(ngModel)]="passwordInput"
+                    placeholder="Lozinka"
+                    autocomplete="current-password"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                </label>
                 <button
                   (click)="signInWithEmail()"
                   [disabled]="!emailInput().trim() || passwordInput().length < 6 || loading()"
@@ -87,21 +95,33 @@ type AuthMode = 'initial' | 'login' | 'register';
                   ‹ Nazad
                 </button>
                 <h2 class="text-lg font-semibold text-text-primary">Registracija</h2>
-                <input
-                  type="text"
-                  [(ngModel)]="nameInput"
-                  placeholder="Tvoje ime"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
-                <input
-                  type="email"
-                  [(ngModel)]="emailInput"
-                  placeholder="Email adresa"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
-                <input
-                  type="password"
-                  [(ngModel)]="passwordInput"
-                  placeholder="Lozinka (min. 6 karaktera)"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                <label>
+                  <span class="sr-only">Tvoje ime</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="nameInput"
+                    placeholder="Tvoje ime"
+                    autocomplete="name"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                </label>
+                <label>
+                  <span class="sr-only">Email adresa</span>
+                  <input
+                    type="email"
+                    [(ngModel)]="emailInput"
+                    placeholder="Email adresa"
+                    autocomplete="email"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                </label>
+                <label>
+                  <span class="sr-only">Lozinka (min. 6 karaktera)</span>
+                  <input
+                    type="password"
+                    [(ngModel)]="passwordInput"
+                    placeholder="Lozinka (min. 6 karaktera)"
+                    autocomplete="new-password"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-12" />
+                </label>
                 <button
                   (click)="registerWithEmail()"
                   [disabled]="!nameInput().trim() || !emailInput().trim() || passwordInput().length < 6 || loading()"
@@ -110,7 +130,7 @@ type AuthMode = 'initial' | 'login' | 'register';
                 </button>
 
                 @if (error()) {
-                  <p class="text-red-500 text-sm text-center">{{ error() }}</p>
+                  <p role="alert" class="text-red-500 text-sm text-center">{{ error() }}</p>
                 }
               </div>
             }
@@ -164,7 +184,7 @@ type AuthMode = 'initial' | 'login' | 'register';
                 </button>
 
                 @if (error()) {
-                  <p class="text-red-500 text-sm text-center">{{ error() }}</p>
+                  <p role="alert" class="text-red-500 text-sm text-center">{{ error() }}</p>
                 }
               </div>
             }
@@ -175,12 +195,16 @@ type AuthMode = 'initial' | 'login' | 'register';
                   ‹ Nazad
                 </button>
                 <h2 class="text-lg font-semibold text-text-primary">Pridruži se domaćinstvu</h2>
-                <input
-                  type="text"
-                  [(ngModel)]="joinCode"
-                  placeholder="Kod domaćinstva"
-                  maxlength="6"
-                  class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary uppercase tracking-widest text-center text-lg font-mono min-h-[48px]" />
+                <label>
+                  <span class="sr-only">Kod domaćinstva</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="joinCode"
+                    placeholder="Kod domaćinstva"
+                    maxlength="6"
+                    autocomplete="off"
+                    class="w-full px-4 py-3 bg-white rounded-xl border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary uppercase tracking-widest text-center text-lg font-mono min-h-[48px]" />
+                </label>
                 <button
                   (click)="join()"
                   [disabled]="joinCode().length < 6 || loading()"
@@ -189,7 +213,7 @@ type AuthMode = 'initial' | 'login' | 'register';
                 </button>
 
                 @if (error()) {
-                  <p class="text-red-500 text-sm text-center">{{ error() }}</p>
+                  <p role="alert" class="text-red-500 text-sm text-center">{{ error() }}</p>
                 }
               </div>
             }

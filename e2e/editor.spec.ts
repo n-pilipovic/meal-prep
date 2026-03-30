@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
 };
 
@@ -29,32 +30,33 @@ test.describe('Editor', () => {
   });
 
   test('should show day selector tabs', async ({ page }) => {
-    await expect(page.getByText('Pon')).toBeVisible();
-    await expect(page.getByText('Uto')).toBeVisible();
-    await expect(page.getByText('Sre')).toBeVisible();
-    await expect(page.getByText('Čet')).toBeVisible();
-    await expect(page.getByText('Pet')).toBeVisible();
-    await expect(page.getByText('Sub')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pon' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Uto' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sre' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Čet' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pet' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sub' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ned' })).toBeVisible();
   });
 
-  test('should show 4 meal forms on meals tab', async ({ page }) => {
+  test('should show 5 meal forms on meals tab', async ({ page }) => {
     const mealForms = page.locator('app-meal-form');
-    await expect(mealForms).toHaveCount(4);
+    await expect(mealForms).toHaveCount(5);
   });
 
   test('should show meal type labels in forms', async ({ page }) => {
     await expect(page.getByText('Doručak · 09:00')).toBeVisible();
     await expect(page.getByText('Užina · 11:00')).toBeVisible();
     await expect(page.getByText('Ručak · 14:00')).toBeVisible();
+    await expect(page.getByText('Užina 2 · 16:00')).toBeVisible();
     await expect(page.getByText('Večera · 18:00')).toBeVisible();
   });
 
   test('should switch between days', async ({ page }) => {
-    await page.getByText('Uto').click();
-    // Form should still show 4 meal forms
+    await page.getByRole('button', { name: 'Uto' }).click();
+    // Form should still show 5 meal forms
     const mealForms = page.locator('app-meal-form');
-    await expect(mealForms).toHaveCount(4);
+    await expect(mealForms).toHaveCount(5);
   });
 
   test('should edit meal name', async ({ page }) => {
@@ -96,7 +98,7 @@ test.describe('Editor', () => {
   });
 
   test('should show file inputs on import tab', async ({ page }) => {
-    await page.getByText('Uvoz').click();
+    await page.getByRole('button', { name: 'Uvoz' }).click();
     const fileInputs = page.locator('input[type="file"]');
     await expect(fileInputs).toHaveCount(2);
   });

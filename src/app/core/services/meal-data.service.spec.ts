@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal, computed, WritableSignal } from '@angular/core';
 import { MealDataService } from './meal-data.service';
 import { HouseholdService } from './household.service';
+import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 import { WeeklyPlan, MealType } from '../models/meal.model';
 
@@ -63,17 +65,29 @@ const MOCK_PLAN: WeeklyPlan = {
   ],
 };
 
+let mockAuthUid: WritableSignal<string | null>;
+
 describe('MealDataService', () => {
   let service: MealDataService;
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
     localStorage.clear();
+    mockAuthUid = signal(null);
 
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        {
+          provide: AuthService,
+          useValue: {
+            uid: computed(() => mockAuthUid()),
+            isLoggedIn: computed(() => mockAuthUid() !== null),
+            isReady: computed(() => false),
+            signOutUser: () => Promise.resolve(),
+          },
+        },
         MealDataService,
         HouseholdService,
         ApiService,
@@ -209,6 +223,7 @@ describe('MealDataService', () => {
     const req = httpTesting.expectOne('assets/data/weekly-plan.json');
     req.flush(MOCK_PLAN);
 
+    mockAuthUid.set('ivana-1');
     const householdService = TestBed.inject(HouseholdService);
     householdService.createHousehold('Ivana');
 
@@ -241,6 +256,7 @@ describe('MealDataService', () => {
     const req = httpTesting.expectOne('assets/data/weekly-plan.json');
     req.flush(MOCK_PLAN);
 
+    mockAuthUid.set('ica-1');
     const householdService = TestBed.inject(HouseholdService);
     householdService.createHousehold('Ica');
 
@@ -271,6 +287,7 @@ describe('MealDataService', () => {
     const req = httpTesting.expectOne('assets/data/weekly-plan.json');
     req.flush(MOCK_PLAN);
 
+    mockAuthUid.set('novica-1');
     const householdService = TestBed.inject(HouseholdService);
     householdService.createHousehold('Novica');
 

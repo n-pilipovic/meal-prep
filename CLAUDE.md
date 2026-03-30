@@ -26,12 +26,14 @@ npm run deploy                  # Deploy Angular app to GitHub Pages
 ## Deployment
 
 ### GitHub Pages (Angular app)
+
 - CI/CD via `.github/workflows/deploy.yml` — builds, tests, and deploys on push to `main`
 - Uses `actions/deploy-pages@v4` with GitHub Pages environment
 - SPA routing: `public/404.html` redirects all paths to `index.html`
 - Base href: `/meal-preparation/`
 
 ### Cloudflare Worker
+
 ```bash
 cd cf-worker
 npm ci
@@ -43,11 +45,13 @@ npx wrangler secret put VAPID_PUBLIC_KEY    # Set as secret
 npx wrangler secret put VAPID_PRIVATE_KEY   # Set as secret
 npm run deploy                              # Deploy worker
 ```
+
 After deploying, update `src/environments/environment.prod.ts` with the worker URL.
 
 ## Architecture
 
 ### Angular App (`src/app/`)
+
 - **Angular v21** with standalone components, signals, and signal-based forms
 - **TailwindCSS v4** with CSS-based config (no tailwind.config.js), PostCSS via `.postcssrc.json`
 - Custom theme tokens in `src/styles.css` under `@theme` (cream, green-primary, orange-primary palette)
@@ -56,22 +60,27 @@ After deploying, update `src/environments/environment.prod.ts` with the worker U
 - All state management via Angular signals (no NgRx)
 
 ### Cloudflare Worker (`cf-worker/`)
+
 - Lightweight API for multi-user household management + push notifications
 - KV namespace keys: `household:{code}`, `plan:{userId}`, `subscription:{userId}`, `shared:{householdCode}`
 - 5 cron triggers for push notifications (daily summary 7:00, per-meal reminders 30min before)
 - CORS enabled for GitHub Pages origin
 
 ### Data Flow
+
 - Meal plan source: `Ivana.docx` → transcribed into `src/assets/data/weekly-plan.json`
 - Per-user plans stored in Cloudflare KV, synced via `ApiService`
 - Shared state (shopping checks, prep assignments) synced to KV
 
 ### Key Models (`src/app/core/models/`)
+
 - `meal.model.ts`: `WeeklyPlan > DayPlan > Meal > Ingredient`, plus `Recipe`, `MealType` enum, `DAY_NAMES`
 - `user.model.ts`: `Household`, `UserProfile`, `SharedState`, `PrepAssignments` (3-level: byUserPlan > byMeal > byItem)
 
 ### Feature Modules (`src/app/features/`)
+
 Each feature is a lazy-loaded standalone component:
+
 - `daily-view/` — main home view with meal cards + day navigation
 - `meal-detail/` — full ingredient list + recipe instructions
 - `weekly-view/` — 7-day overview grid
@@ -87,3 +96,7 @@ Each feature is a lazy-loaded standalone component:
 - Mobile-first design: 375-430px primary target, safe area insets for iOS
 - Minimum 44x44px touch targets
 - Division default: each user prepares their own plan; override priority: byItem > byMeal > byUserPlan
+
+## Each code change
+
+- run unit and e2e tests after any code change.

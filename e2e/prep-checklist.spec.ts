@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
 };
 
@@ -61,11 +62,11 @@ test.describe('Prep Checklist', () => {
   });
 
   test('should have back button', async ({ page }) => {
-    await expect(page.getByText('Nazad')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Nazad' })).toBeVisible();
   });
 
   test('should navigate back to daily view', async ({ page }) => {
-    await page.getByText('Nazad').click();
+    await page.getByRole('button', { name: 'Nazad' }).click();
     await expect(page).toHaveURL(/\/today/);
   });
 });

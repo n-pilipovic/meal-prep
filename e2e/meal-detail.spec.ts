@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
 };
 
@@ -42,17 +43,17 @@ test.describe('Meal Detail', () => {
   });
 
   test('should have a back button', async ({ page }) => {
-    const backBtn = page.getByText('Nazad');
+    const backBtn = page.getByRole('button', { name: 'Nazad' });
     await expect(backBtn).toBeVisible();
   });
 
   test('should navigate back to daily view', async ({ page }) => {
-    await page.getByText('Nazad').click();
+    await page.getByRole('button', { name: 'Nazad' }).click();
     await expect(page).toHaveURL(/\/today/);
   });
 
   test('should show time badge', async ({ page }) => {
-    const times = ['09:00', '11:00', '14:00', '18:00'];
+    const times = ['09:00', '11:00', '14:00', '16:00', '18:00'];
     const pageText = await page.textContent('body');
     expect(times.some(t => pageText?.includes(t))).toBe(true);
   });

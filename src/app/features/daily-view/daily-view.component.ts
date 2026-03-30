@@ -12,7 +12,7 @@ import { DayPlan } from '../../core/models/meal.model';
   imports: [DayNavigatorComponent, UserSwitcherComponent, MealCardComponent],
   template: `
     @if (mealData.loading()) {
-      <div class="flex items-center justify-center h-64">
+      <div class="flex items-center justify-center h-64" role="status" aria-live="polite">
         <span class="text-text-muted">Učitavanje...</span>
       </div>
     } @else {

@@ -15,6 +15,7 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
         @for (opt of scopes; track opt.value) {
           <button
             (click)="shoppingService.scope.set(opt.value)"
+            [attr.aria-pressed]="shoppingService.scope() === opt.value"
             class="px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-11"
             [class.bg-green-primary]="shoppingService.scope() === opt.value"
             [class.text-white]="shoppingService.scope() === opt.value"
@@ -31,6 +32,7 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
           @for (opt of filters; track opt.value) {
             <button
               (click)="shoppingService.filter.set(opt.value)"
+              [attr.aria-pressed]="shoppingService.filter() === opt.value"
               class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-9"
               [class.bg-green-primary]="shoppingService.filter() === opt.value"
               [class.text-white]="shoppingService.filter() === opt.value"
@@ -52,32 +54,36 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
         </h2>
         <ul class="flex flex-col gap-1.5">
           @for (ing of group.items; track ing.key) {
-            <li class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
-              <input type="checkbox"
-                     [checked]="shoppingService.checked()[ing.key]"
-                     (change)="shoppingService.toggleChecked(ing.key)"
-                     class="w-5 h-5 rounded accent-green-primary shrink-0" />
-              <div class="flex-1 min-w-0">
-                <span [class.line-through]="shoppingService.checked()[ing.key]"
-                      [class.text-text-muted]="shoppingService.checked()[ing.key]"
-                      class="text-sm">
-                  {{ ing | quantity }}
-                </span>
-                @if (isMultiUser() && ing.sources.length > 0) {
-                  <div class="flex gap-1 mt-0.5">
-                    @for (source of uniqueSources(ing.sources); track source.userId) {
-                      <span class="text-[10px] px-1.5 py-0.5 rounded-full"
-                            [style.background-color]="getMemberColor(source.userId) + '15'"
-                            [style.color]="getMemberColor(source.userId)">
-                        {{ source.userName }}
-                      </span>
+            <li class="bg-white rounded-xl shadow-sm">
+              <div class="flex items-center gap-3 px-4 py-3">
+                <label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                  <input type="checkbox"
+                         [checked]="shoppingService.checked()[ing.key]"
+                         (change)="shoppingService.toggleChecked(ing.key)"
+                         class="w-5 h-5 rounded accent-green-primary shrink-0" />
+                  <div class="flex-1 min-w-0">
+                    <span [class.line-through]="shoppingService.checked()[ing.key]"
+                          [class.text-text-muted]="shoppingService.checked()[ing.key]"
+                          class="text-sm">
+                      {{ ing | quantity }}
+                    </span>
+                    @if (isMultiUser() && ing.sources.length > 0) {
+                      <div class="flex gap-1 mt-0.5">
+                        @for (source of uniqueSources(ing.sources); track source.userId) {
+                          <span class="text-[10px] px-1.5 py-0.5 rounded-full"
+                                [style.background-color]="getMemberColor(source.userId) + '15'"
+                                [style.color]="getMemberColor(source.userId)">
+                            {{ source.userName }}
+                          </span>
+                        }
+                      </div>
                     }
                   </div>
-                }
+                </label>
+                <app-assignment-badge
+                  [assignedUserId]="shoppingService.assignments()[ing.key]"
+                  (assign)="shoppingService.assignToUser(ing.key, $event)" />
               </div>
-              <app-assignment-badge
-                [assignedUserId]="shoppingService.assignments()[ing.key]"
-                (assign)="shoppingService.assignToUser(ing.key, $event)" />
             </li>
           }
         </ul>

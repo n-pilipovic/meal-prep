@@ -62,7 +62,7 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
           }
 
           @if (notificationService.permissionState() === 'denied') {
-            <div class="bg-red-50 rounded-xl p-3 mb-3">
+            <div class="bg-red-50 rounded-xl p-3 mb-3" role="alert">
               <p class="text-sm text-red-600">
                 Obaveštenja su blokirana. Omogućite ih u podešavanjima pretraživača.
               </p>

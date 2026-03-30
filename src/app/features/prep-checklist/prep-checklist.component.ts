@@ -32,8 +32,8 @@ interface PrepUserSection {
   imports: [QuantityPipe, AssignmentBadgeComponent, UserAvatarComponent],
   template: `
     <div class="px-4 py-4">
-      <button (click)="goBack()" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-11 flex items-center">
-        ‹ Nazad
+      <button (click)="goBack()" aria-label="Nazad" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-11 flex items-center">
+        <span aria-hidden="true">‹</span>&nbsp;Nazad
       </button>
 
       <h1 class="text-xl font-bold text-text-primary mb-1">Priprema za danas</h1>
@@ -47,6 +47,7 @@ interface PrepUserSection {
             @for (opt of filterOptions; track opt.value) {
               <button
                 (click)="filter.set(opt.value)"
+                [attr.aria-pressed]="filter() === opt.value"
                 class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-9"
                 [class.bg-green-primary]="filter() === opt.value"
                 [class.text-white]="filter() === opt.value"
@@ -62,11 +63,16 @@ interface PrepUserSection {
         <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
           <div class="flex justify-between items-center">
             <span class="text-sm text-text-secondary">Napredak</span>
-            <span class="text-sm font-semibold text-green-primary">
+            <span class="text-sm font-semibold text-green-primary" aria-live="polite">
               {{ checkedCount() }}/{{ totalCount() }}
             </span>
           </div>
-          <div class="mt-2 h-2 bg-cream-dark rounded-full overflow-hidden">
+          <div class="mt-2 h-2 bg-cream-dark rounded-full overflow-hidden"
+               role="progressbar"
+               [attr.aria-valuenow]="progressPercent()"
+               aria-valuemin="0"
+               aria-valuemax="100"
+               [attr.aria-label]="'Priprema ' + progressPercent().toFixed(0) + '% završena'">
             <div class="h-full bg-green-primary rounded-full transition-all duration-300"
                  [style.width.%]="progressPercent()"></div>
           </div>
@@ -78,6 +84,7 @@ interface PrepUserSection {
             @for (opt of divisionModes; track opt.value) {
               <button
                 (click)="divisionMode.set(opt.value)"
+                [attr.aria-pressed]="divisionMode() === opt.value"
                 class="px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap min-h-9"
                 [class.bg-orange-primary]="divisionMode() === opt.value"
                 [class.text-white]="divisionMode() === opt.value"
@@ -129,22 +136,26 @@ interface PrepUserSection {
                 </div>
                 <ul class="flex flex-col gap-1.5">
                   @for (item of group.items; track item.key) {
-                    <li class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
-                      <input type="checkbox"
-                             [checked]="isChecked(item.key)"
-                             (change)="toggleCheck(item.key)"
-                             class="w-5 h-5 rounded accent-green-primary shrink-0" />
-                      <span [class.line-through]="isChecked(item.key)"
-                            [class.text-text-muted]="isChecked(item.key)"
-                            class="text-sm flex-1">
-                        {{ item.ingredient | quantity }}
-                      </span>
-                      <!-- Item-level assignment -->
-                      @if (divisionMode() === 'byItem') {
-                        <app-assignment-badge
-                          [assignedUserId]="getItemAssignee(item.key)"
-                          (assign)="assignItem(item.key, $event)" />
-                      }
+                    <li class="bg-white rounded-xl shadow-sm">
+                      <div class="flex items-center gap-3 px-4 py-3">
+                        <label class="flex items-center gap-3 flex-1 cursor-pointer">
+                          <input type="checkbox"
+                                 [checked]="isChecked(item.key)"
+                                 (change)="toggleCheck(item.key)"
+                                 class="w-5 h-5 rounded accent-green-primary shrink-0" />
+                          <span [class.line-through]="isChecked(item.key)"
+                                [class.text-text-muted]="isChecked(item.key)"
+                                class="text-sm">
+                            {{ item.ingredient | quantity }}
+                          </span>
+                        </label>
+                        <!-- Item-level assignment -->
+                        @if (divisionMode() === 'byItem') {
+                          <app-assignment-badge
+                            [assignedUserId]="getItemAssignee(item.key)"
+                            (assign)="assignItem(item.key, $event)" />
+                        }
+                      </div>
                     </li>
                   }
                 </ul>
@@ -159,16 +170,18 @@ interface PrepUserSection {
             </h2>
             <ul class="flex flex-col gap-1.5">
               @for (item of group.items; track item.key) {
-                <li class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
-                  <input type="checkbox"
-                         [checked]="isChecked(item.key)"
-                         (change)="toggleCheck(item.key)"
-                         class="w-5 h-5 rounded accent-green-primary shrink-0" />
-                  <span [class.line-through]="isChecked(item.key)"
-                        [class.text-text-muted]="isChecked(item.key)"
-                        class="text-sm">
-                    {{ item.ingredient | quantity }}
-                  </span>
+                <li class="bg-white rounded-xl shadow-sm">
+                  <label class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <input type="checkbox"
+                           [checked]="isChecked(item.key)"
+                           (change)="toggleCheck(item.key)"
+                           class="w-5 h-5 rounded accent-green-primary shrink-0" />
+                    <span [class.line-through]="isChecked(item.key)"
+                          [class.text-text-muted]="isChecked(item.key)"
+                          class="text-sm">
+                      {{ item.ingredient | quantity }}
+                    </span>
+                  </label>
                 </li>
               }
             </ul>

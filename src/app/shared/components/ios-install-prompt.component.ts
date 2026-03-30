@@ -8,14 +8,17 @@ const DISMISSED_KEY = 'meal-prep:ios-install-dismissed';
   template: `
     @if (visible()) {
       <div class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center"
+           role="dialog"
+           aria-labelledby="ios-install-title"
            (click)="dismiss()">
         <div class="bg-white rounded-t-3xl w-full max-w-md p-6 pb-10 animate-slide-up"
              (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-text-primary">Instaliraj aplikaciju</h2>
+            <h2 id="ios-install-title" class="text-lg font-bold text-text-primary">Instaliraj aplikaciju</h2>
             <button (click)="dismiss()"
-                    class="text-text-muted text-2xl leading-none min-w-[44px] min-h-[44px] flex items-center justify-center">
-              ×
+                    aria-label="Zatvori"
+                    class="text-text-muted text-2xl leading-none min-w-11 min-h-11 flex items-center justify-center">
+              <span aria-hidden="true">×</span>
             </button>
           </div>
 

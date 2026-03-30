@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
 };
 

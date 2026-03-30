@@ -1,0 +1,2 @@
+npx ng test --watch=false
+npx playwright test

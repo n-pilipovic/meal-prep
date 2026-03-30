@@ -4,6 +4,7 @@ const skipOnboarding = async (page: any) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('meal-prep:skipped-onboarding', 'true');
+    localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
   });
 };
 
@@ -16,19 +17,19 @@ test.describe('Navigation Flow', () => {
     await page.goto('/today');
 
     // Daily → Weekly
-    await page.getByText('Nedelja').click();
+    await page.getByRole('link', { name: 'Nedelja' }).click();
     await expect(page).toHaveURL(/\/week/);
 
     // Weekly → Shopping
-    await page.getByText('Kupovina').click();
+    await page.getByRole('link', { name: 'Kupovina' }).click();
     await expect(page).toHaveURL(/\/shopping/);
 
     // Shopping → Settings
-    await page.getByText('Podešavanja').click();
+    await page.getByRole('link', { name: 'Podešavanja' }).click();
     await expect(page).toHaveURL(/\/settings/);
 
     // Settings → Daily
-    await page.getByText('Danas').click();
+    await page.getByRole('link', { name: 'Danas' }).click();
     await expect(page).toHaveURL(/\/today/);
   });
 
@@ -40,7 +41,7 @@ test.describe('Navigation Flow', () => {
     await expect(page).toHaveURL(/\/day\/\d+\/meal\//);
 
     // Back to daily
-    await page.getByText('Nazad').click();
+    await page.getByRole('button', { name: 'Nazad' }).click();
     await expect(page).toHaveURL(/\/today/);
 
     // Go to prep checklist
@@ -48,7 +49,7 @@ test.describe('Navigation Flow', () => {
     await expect(page).toHaveURL(/\/day\/\d+\/checklist/);
 
     // Back to daily
-    await page.getByText('Nazad').click();
+    await page.getByRole('button', { name: 'Nazad' }).click();
     await expect(page).toHaveURL(/\/today/);
   });
 

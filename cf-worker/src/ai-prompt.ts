@@ -1,5 +1,6 @@
 export interface MealPlanPreferences {
   calories: number;
+  ageGroup: string;
   restrictions: string[];
   preferredIngredients: string[];
   avoidIngredients: string[];
@@ -38,6 +39,16 @@ STRUKTURA OBROKA:
 - Užina 2 (16:00): Opciona, slična prvoj užini. Ako nema: name "—", description "Nema popodnevne užine", ingredients []
 - Večera (18:00): Lakša od ručka ali kompletna — protein + povrće, izbegavaj teške UH uveče
 
+PRILAGOĐAVANJE ZA DECU (obavezno ako je uzrast mlađi od 18):
+- BLW beba (6–12 mes.): Baby Led Weaning pristup — hrana u obliku štapića/prstića koje beba sama drži i jede. Mekana tekstura (kuvano do mekšeg), bez soli, bez šećera, bez meda. Komadi veličine prsta odraslog (6-7cm x 2cm) da beba može da drži u šaci. Izbegavaj sitne okrugle namirnice (grožđe, cherry paradajz, orašasti plodovi — rizik od gušenja). Dozvoljeno: kuvano povrće (brokoli, batat, šargarepa, tikvica), meko voće (banana, avokado, kruška), mleveno meso u obliku ćuftica, kuvana jaja, tost štapići. Bez kravjeg mleka kao piće (samo u jelima). Majčino mleko ili formula i dalje glavni izvor kalorija — čvrsta hrana je dopuna. Porcije su male (1–2 kašike po namirnici). Uvodi po jednu novu namirnicu u 2–3 dana.
+- Mala deca (1–3 god.): manje porcije, mekša hrana sečena na sitne komade, bez orašastih plodova u celini (samo mljeveni), izbegavaj med za decu ispod 1 god., bez začina, blagi ukusi
+- Predškolska deca (4–6 god.): šarena i vizuelno privlačna hrana, manje porcije, izbegavaj ljutu hranu, uključi zabavne oblike, voće i povrće u svakom obroku
+- Školska deca (7–10 god.): energetski bogati obroci za rast i aktivnost, kalcijum za kosti (mlečni proizvodi), gvožđe (meso, spanać, mahunarke), ograniči slatkiše
+- Mlađi tinejdžeri (11–13 god.): povećane potrebe za kalcijumom i gvožđem (pubertet), više proteina za rast, zdrave užine između obroka
+- Tinejdžeri (14–17 god.): visoke energetske potrebe, naročito za fizički aktivne, fokus na gvožđe (devojke), cink, kalcijum, vitamin D
+- Za SVU decu: izbegavaj kafu i energetska pića, ograniči so, izbegavaj prerađenu hranu, NIKADA gazirana pića, porcije prilagodi uzrastu
+- Recepti za decu treba da budu jednostavni za pripremu i privlačni za jelo
+
 KUHINJA:
 - Srpska tradicionalna jela prilagođena zdravoj ishrani (manje ulja, više povrća)
 - Kombinuj tradicionalno (pasulj, sarma, ćevapi) sa modernim zdravim obrocima (quinoa salate, smoothie)
@@ -68,8 +79,27 @@ Odgovori ISKLJUČIVO validnim JSON-om koji prati tačnu strukturu WeeklyPlan mod
   "recipes": [{ "id": "rec-1", "name": "...", "servings": "1 porcija", "ingredients": [{ "name": "...", "quantity": 100, "unit": "g", "category": "meat" }], "instructions": ["Korak 1...", "Korak 2..."] }]
 }`;
 
+const AGE_GROUP_LABELS: Record<string, string> = {
+  blw: 'BLW beba (6–12 meseci)',
+  toddler: 'malo dete (1–3 godine)',
+  preschool: 'predškolsko dete (4–6 godina)',
+  school: 'školsko dete (7–10 godina)',
+  preteen: 'mlađi tinejdžer (11–13 godina)',
+  teen: 'tinejdžer (14–17 godina)',
+  adult: 'odrasla osoba (18+ godina)',
+};
+
 export function buildUserPrompt(prefs: MealPlanPreferences): string {
   const parts = [`Napravi nedeljni plan ishrane sa sledećim zahtevima:`];
+
+  const ageLabel = AGE_GROUP_LABELS[prefs.ageGroup] ?? AGE_GROUP_LABELS['adult'];
+  parts.push(`- Uzrast: ${ageLabel}`);
+  if (prefs.ageGroup === 'blw') {
+    parts.push(`- VAŽNO: Baby Led Weaning pristup — sva hrana mora biti u obliku štapića/prstića, mekane teksture, BEZ soli i šećera. Opisuj oblik i teksturu hrane u svakom obroku.`);
+  } else if (prefs.ageGroup !== 'adult') {
+    parts.push(`- VAŽNO: Prilagodi porcije, sastojke i recepte za ${ageLabel}. Poštuj smernice za dečiju ishranu.`);
+  }
+
   parts.push(`- Kalorijski cilj: ${prefs.calories} kcal dnevno`);
 
   if (prefs.restrictions.length > 0) {

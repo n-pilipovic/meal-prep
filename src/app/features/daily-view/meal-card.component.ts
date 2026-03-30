@@ -10,7 +10,7 @@ import { Meal, MealType, MEAL_LABELS, MEAL_TIMES } from '../../core/models/meal.
        class="block bg-white rounded-2xl shadow-sm p-4 active:scale-[0.98] transition-transform">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <span class="text-lg">{{ icon() }}</span>
+          <span class="text-lg" aria-hidden="true">{{ icon() }}</span>
           <span class="font-semibold text-text-primary">{{ label() }}</span>
         </div>
         <span class="text-xs text-text-muted font-medium px-2 py-0.5 bg-cream rounded-full">

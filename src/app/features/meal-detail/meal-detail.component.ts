@@ -13,8 +13,8 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
   imports: [QuantityPipe, MealTypeBadgeComponent, UserAvatarComponent],
   template: `
     <div class="px-4 py-4">
-      <button (click)="goBack()" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-[44px] flex items-center">
-        ‹ Nazad
+      <button (click)="goBack()" aria-label="Nazad" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-[44px] flex items-center">
+        <span aria-hidden="true">‹</span>&nbsp;Nazad
       </button>
 
       @if (meal(); as m) {
@@ -33,16 +33,18 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
         <h2 class="text-base font-semibold text-text-primary mb-3">Sastojci</h2>
         <ul class="flex flex-col gap-2 mb-6">
           @for (ing of m.ingredients; track ing.name) {
-            <li class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
-              <input type="checkbox"
-                     [checked]="!!checked()[ing.name]"
-                     (change)="toggleIngredient(ing.name)"
-                     class="w-5 h-5 rounded accent-green-primary" />
-              <span [class.line-through]="checked()[ing.name]"
-                    [class.text-text-muted]="checked()[ing.name]"
-                    class="text-sm">
-                {{ ing | quantity }}
-              </span>
+            <li class="bg-white rounded-xl shadow-sm">
+              <label class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                <input type="checkbox"
+                       [checked]="!!checked()[ing.name]"
+                       (change)="toggleIngredient(ing.name)"
+                       class="w-5 h-5 rounded accent-green-primary" />
+                <span [class.line-through]="checked()[ing.name]"
+                      [class.text-text-muted]="checked()[ing.name]"
+                      class="text-sm">
+                  {{ ing | quantity }}
+                </span>
+              </label>
             </li>
           }
         </ul>

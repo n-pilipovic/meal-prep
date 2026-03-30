@@ -1,16 +1,24 @@
-import { Component, inject, signal, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, inject, signal, output } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
 import { ApiService } from '../../core/services/api.service';
 import { WeeklyPlan } from '../../core/models/meal.model';
 import {
   MealPlanPreferences,
   DIETARY_RESTRICTIONS,
   DEFAULT_PREFERENCES,
+  AGE_GROUPS,
 } from '../../core/models/ai-plan.model';
+
+interface AiPlanFormModel {
+  calories: number;
+  preferredInput: string;
+  avoidInput: string;
+  note: string;
+}
 
 @Component({
   selector: 'app-ai-plan-form',
-  imports: [FormsModule],
+  imports: [FormField],
   template: `
     <div class="flex flex-col gap-4">
       <div class="bg-white rounded-2xl shadow-sm p-4">
@@ -19,22 +27,41 @@ import {
           Gemini AI kreira nedeljni plan ishrane po tvojim zahtevima.
         </p>
 
+        <!-- Age group -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-text-primary mb-2">Uzrast</label>
+          <div class="flex flex-wrap gap-2">
+            @for (ag of ageGroups; track ag.key) {
+              <button
+                (click)="selectAgeGroup(ag.key)"
+                [attr.aria-pressed]="selectedAgeGroup() === ag.key"
+                class="px-3 py-1.5 rounded-full text-sm transition-colors min-h-9"
+                [class.bg-green-primary]="selectedAgeGroup() === ag.key"
+                [class.text-white]="selectedAgeGroup() === ag.key"
+                [class.bg-cream-light]="selectedAgeGroup() !== ag.key"
+                [class.text-text-secondary]="selectedAgeGroup() !== ag.key">
+                {{ ag.label }}
+              </button>
+            }
+          </div>
+        </div>
+
         <!-- Calories -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-text-primary mb-1">
-            Kalorijski cilj: {{ calories() }} kcal
+            Kalorijski cilj: {{ formModel().calories }} kcal
           </label>
           <input
             type="range"
-            [min]="1200"
-            [max]="3500"
+            [min]="activeAgeGroup().minCal"
+            [max]="activeAgeGroup().maxCal"
             [step]="100"
-            [ngModel]="calories()"
-            (ngModelChange)="calories.set($event)"
+            [value]="formModel().calories"
+            (input)="formModel.update(m => ({ ...m, calories: +$any($event.target).value }))"
             class="w-full accent-green-primary" />
           <div class="flex justify-between text-xs text-text-muted mt-1">
-            <span>1200</span>
-            <span>3500</span>
+            <span>{{ activeAgeGroup().minCal }}</span>
+            <span>{{ activeAgeGroup().maxCal }}</span>
           </div>
         </div>
 
@@ -45,6 +72,7 @@ import {
             @for (r of restrictions; track r.key) {
               <button
                 (click)="toggleRestriction(r.key)"
+                [attr.aria-pressed]="selectedRestrictions().includes(r.key)"
                 class="px-3 py-1.5 rounded-full text-sm transition-colors min-h-9"
                 [class.bg-green-primary]="selectedRestrictions().includes(r.key)"
                 [class.text-white]="selectedRestrictions().includes(r.key)"
@@ -64,12 +92,13 @@ import {
           <div class="flex gap-2">
             <input
               type="text"
-              [(ngModel)]="preferredInput"
+              [formField]="planForm.preferredInput"
               (keydown.enter)="addPreferred()"
               placeholder="npr. piletina, brokoli..."
               class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
             <button
               (click)="addPreferred()"
+              aria-label="Dodaj poželjni sastojak"
               class="px-3 py-2 bg-green-primary text-white rounded-lg text-sm min-h-11">
               +
             </button>
@@ -79,7 +108,7 @@ import {
               @for (item of preferred(); track item) {
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-800 rounded-full text-xs">
                   {{ item }}
-                  <button (click)="removePreferred(item)" class="text-green-600 hover:text-green-900">&times;</button>
+                  <button (click)="removePreferred(item)" [attr.aria-label]="'Ukloni ' + item" class="text-green-600 hover:text-green-900">&times;</button>
                 </span>
               }
             </div>
@@ -94,12 +123,13 @@ import {
           <div class="flex gap-2">
             <input
               type="text"
-              [(ngModel)]="avoidInput"
+              [formField]="planForm.avoidInput"
               (keydown.enter)="addAvoid()"
               placeholder="npr. ljuto, gljive..."
               class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
             <button
               (click)="addAvoid()"
+              aria-label="Dodaj sastojak za izbegavanje"
               class="px-3 py-2 bg-orange-primary text-white rounded-lg text-sm min-h-11">
               +
             </button>
@@ -109,7 +139,7 @@ import {
               @for (item of avoided(); track item) {
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-800 rounded-full text-xs">
                   {{ item }}
-                  <button (click)="removeAvoid(item)" class="text-red-600 hover:text-red-900">&times;</button>
+                  <button (click)="removeAvoid(item)" [attr.aria-label]="'Ukloni ' + item" class="text-red-600 hover:text-red-900">&times;</button>
                 </span>
               }
             </div>
@@ -122,7 +152,7 @@ import {
             Napomena
           </label>
           <textarea
-            [(ngModel)]="note"
+            [formField]="planForm.note"
             rows="2"
             placeholder="npr. više proteina, budžet prijateljski, brza priprema..."
             class="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none">
@@ -135,7 +165,7 @@ import {
           [disabled]="loading()"
           class="w-full py-3 bg-green-primary text-white font-medium rounded-xl min-h-11 disabled:opacity-40 flex items-center justify-center gap-2">
           @if (loading()) {
-            <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
             <span>Generisanje...</span>
           } @else {
             <span>Generiši plan</span>
@@ -143,7 +173,7 @@ import {
         </button>
 
         @if (error()) {
-          <p class="mt-3 text-sm text-red-500">{{ error() }}</p>
+          <p role="alert" class="mt-3 text-sm text-red-500">{{ error() }}</p>
         }
       </div>
     </div>
@@ -155,17 +185,32 @@ export class AiPlanFormComponent {
   readonly planGenerated = output<WeeklyPlan>();
 
   readonly restrictions = DIETARY_RESTRICTIONS;
+  readonly ageGroups = AGE_GROUPS;
 
-  readonly calories = signal(DEFAULT_PREFERENCES.calories);
+  readonly formModel = signal<AiPlanFormModel>({
+    calories: DEFAULT_PREFERENCES.calories,
+    preferredInput: '',
+    avoidInput: '',
+    note: '',
+  });
+  readonly planForm = form(this.formModel);
+
+  readonly selectedAgeGroup = signal(DEFAULT_PREFERENCES.ageGroup);
+  readonly activeAgeGroup = computed(() =>
+    AGE_GROUPS.find(ag => ag.key === this.selectedAgeGroup()) ?? AGE_GROUPS[AGE_GROUPS.length - 1],
+  );
   readonly selectedRestrictions = signal<string[]>([]);
   readonly preferred = signal<string[]>([]);
   readonly avoided = signal<string[]>([]);
-  note = '';
-  preferredInput = '';
-  avoidInput = '';
 
   readonly loading = signal(false);
   readonly error = signal('');
+
+  selectAgeGroup(key: string): void {
+    this.selectedAgeGroup.set(key);
+    const ag = AGE_GROUPS.find(g => g.key === key)!;
+    this.formModel.update(m => ({ ...m, calories: ag.defaultCal }));
+  }
 
   toggleRestriction(key: string): void {
     this.selectedRestrictions.update(list =>
@@ -174,11 +219,11 @@ export class AiPlanFormComponent {
   }
 
   addPreferred(): void {
-    const val = this.preferredInput.trim();
+    const val = this.formModel().preferredInput.trim();
     if (val && !this.preferred().includes(val)) {
       this.preferred.update(list => [...list, val]);
     }
-    this.preferredInput = '';
+    this.formModel.update(m => ({ ...m, preferredInput: '' }));
   }
 
   removePreferred(item: string): void {
@@ -186,11 +231,11 @@ export class AiPlanFormComponent {
   }
 
   addAvoid(): void {
-    const val = this.avoidInput.trim();
+    const val = this.formModel().avoidInput.trim();
     if (val && !this.avoided().includes(val)) {
       this.avoided.update(list => [...list, val]);
     }
-    this.avoidInput = '';
+    this.formModel.update(m => ({ ...m, avoidInput: '' }));
   }
 
   removeAvoid(item: string): void {
@@ -201,12 +246,14 @@ export class AiPlanFormComponent {
     this.loading.set(true);
     this.error.set('');
 
+    const { calories, note } = this.formModel();
     const prefs: MealPlanPreferences = {
-      calories: this.calories(),
+      calories,
+      ageGroup: this.selectedAgeGroup(),
       restrictions: this.selectedRestrictions(),
       preferredIngredients: this.preferred(),
       avoidIngredients: this.avoided(),
-      note: this.note.trim(),
+      note: note.trim(),
     };
 
     this.api.generatePlan(prefs).subscribe({

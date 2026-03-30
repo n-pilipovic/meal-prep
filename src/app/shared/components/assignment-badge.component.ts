@@ -12,7 +12,8 @@ import { UserAvatarComponent } from './user-avatar.component';
         @if (assignedUser(); as user) {
           <button
             (click)="cycleAssignment()"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium min-h-[32px]"
+            [attr.aria-label]="'Dodeljeno: ' + user.name + '. Tapni za promenu.'"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium min-h-11 min-w-11"
             [style.background-color]="user.color + '15'"
             [style.color]="user.color">
             <app-user-avatar [user]="user" size="sm" />
@@ -21,7 +22,8 @@ import { UserAvatarComponent } from './user-avatar.component';
         } @else {
           <button
             (click)="cycleAssignment()"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-text-muted bg-gray-100 min-h-[32px]">
+            aria-label="Dodeli osobu za pripremu"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-text-muted bg-gray-100 min-h-11 min-w-11">
             Dodeli
           </button>
         }

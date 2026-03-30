@@ -8,11 +8,12 @@ import { UserAvatarComponent } from './user-avatar.component';
   imports: [UserAvatarComponent],
   template: `
     @if (members().length > 1) {
-      <div class="flex gap-2 px-4 py-2 overflow-x-auto">
+      <div class="flex gap-2 px-4 py-2 overflow-x-auto" role="group" aria-label="Izbor korisnika">
         @for (member of members(); track member.id) {
           <button
             (click)="selectUser.emit(member.id)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all min-h-[44px] shrink-0"
+            [attr.aria-pressed]="selectedUserId() === member.id"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all min-h-11 shrink-0"
             [class.bg-white]="selectedUserId() === member.id"
             [class.shadow-sm]="selectedUserId() === member.id"
             [class.ring-2]="selectedUserId() === member.id"

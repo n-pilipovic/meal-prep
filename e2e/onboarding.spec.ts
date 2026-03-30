@@ -3,7 +3,10 @@ import { test, expect } from '@playwright/test';
 test.describe('Onboarding', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem('meal-prep:ios-install-dismissed', 'true');
+    });
     await page.goto('/');
   });
 
@@ -11,51 +14,48 @@ test.describe('Onboarding', () => {
     await expect(page).toHaveURL(/\/welcome/);
   });
 
-  test('should display the app title and options', async ({ page }) => {
+  test('should display the app title and auth options', async ({ page }) => {
     await expect(page.getByText('Priprema Obroka')).toBeVisible();
-    await expect(page.getByText('Kreiraj domaćinstvo')).toBeVisible();
-    await expect(page.getByText('Pridruži se')).toBeVisible();
+    await expect(page.getByText('Prijavi se sa Google nalogom')).toBeVisible();
+    await expect(page.getByText('Prijavi se sa email-om')).toBeVisible();
     await expect(page.getByText('Nastavi bez naloga')).toBeVisible();
   });
 
-  test('should navigate to create household form', async ({ page }) => {
-    await page.getByText('Kreiraj domaćinstvo').click();
+  test('should navigate to email login form', async ({ page }) => {
+    await page.getByText('Prijavi se sa email-om').click();
+    await expect(page.getByPlaceholder('Email adresa')).toBeVisible();
+    await expect(page.getByPlaceholder('Lozinka')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Prijavi se' })).toBeVisible();
+  });
+
+  test('should allow typing in login form fields', async ({ page }) => {
+    await page.getByText('Prijavi se sa email-om').click();
+    await page.getByPlaceholder('Email adresa').fill('test@example.com');
+    await page.getByPlaceholder('Lozinka').fill('password123');
+    await expect(page.getByPlaceholder('Email adresa')).toHaveValue('test@example.com');
+    await expect(page.getByPlaceholder('Lozinka')).toHaveValue('password123');
+  });
+
+  test('should navigate to register form from login', async ({ page }) => {
+    await page.getByText('Prijavi se sa email-om').click();
+    await page.getByText('Nemaš nalog? Registruj se').click();
     await expect(page.getByPlaceholder('Tvoje ime')).toBeVisible();
-    await expect(page.getByText('Kreiraj', { exact: true })).toBeVisible();
+    await expect(page.getByPlaceholder('Email adresa')).toBeVisible();
+    await expect(page.getByPlaceholder('Lozinka (min. 6 karaktera)')).toBeVisible();
   });
 
-  test('should show name input focused and ready for typing', async ({ page }) => {
-    await page.getByText('Kreiraj domaćinstvo').click();
-    const nameInput = page.getByPlaceholder('Tvoje ime');
-    await nameInput.fill('Novica');
-    await expect(nameInput).toHaveValue('Novica');
-  });
-
-  test('should navigate to join household form', async ({ page }) => {
-    await page.getByText('Pridruži se', { exact: true }).click();
-    await expect(page.getByPlaceholder('Kod domaćinstva')).toBeVisible();
-    await expect(page.getByPlaceholder('Tvoje ime')).toBeVisible();
-  });
-
-  test('should allow typing in join form fields', async ({ page }) => {
-    await page.getByText('Pridruži se', { exact: true }).click();
-    await page.getByPlaceholder('Kod domaćinstva').fill('ABC123');
-    await page.getByPlaceholder('Tvoje ime').fill('Ivana');
-    await expect(page.getByPlaceholder('Kod domaćinstva')).toHaveValue('ABC123');
-    await expect(page.getByPlaceholder('Tvoje ime')).toHaveValue('Ivana');
-  });
-
-  test('should go back from create form', async ({ page }) => {
-    await page.getByText('Kreiraj domaćinstvo').click();
+  test('should go back from login form', async ({ page }) => {
+    await page.getByText('Prijavi se sa email-om').click();
     await page.getByText('Nazad').click();
-    await expect(page.getByText('Kreiraj domaćinstvo')).toBeVisible();
+    await expect(page.getByText('Prijavi se sa Google nalogom')).toBeVisible();
   });
 
-  test('should go back from join form', async ({ page }) => {
-    await page.getByRole('button', { name: 'Pridruži se' }).click();
+  test('should go back from register form', async ({ page }) => {
+    await page.getByText('Prijavi se sa email-om').click();
+    await page.getByText('Nemaš nalog? Registruj se').click();
     await page.getByText('Nazad').click();
-    // Back on choice screen — check the button that only exists in choice mode
-    await expect(page.getByRole('button', { name: 'Kreiraj domaćinstvo' })).toBeVisible();
+    // Back on login form
+    await expect(page.getByRole('button', { name: 'Prijavi se' })).toBeVisible();
   });
 
   test('should skip onboarding and go to daily view', async ({ page }) => {
