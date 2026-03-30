@@ -1,4 +1,4 @@
-import { Component, inject, input, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, input, signal, computed, OnInit, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
@@ -7,9 +7,15 @@ import { UserSwitcherComponent } from '../../shared/components/user-switcher.com
 import { MealCardComponent } from './meal-card.component';
 import { DayPlan } from '../../core/models/meal.model';
 
+const SWIPE_THRESHOLD = 50;
+
 @Component({
   selector: 'app-daily-view',
   imports: [DayNavigatorComponent, UserSwitcherComponent, MealCardComponent],
+  host: {
+    '(touchstart)': 'onTouchStart($event)',
+    '(touchend)': 'onTouchEnd($event)',
+  },
   template: `
     @if (mealData.loading()) {
       <div class="flex items-center justify-center h-64" role="status" aria-live="polite">
@@ -50,6 +56,9 @@ export class DailyViewComponent implements OnInit {
   readonly dayIndex = input<string>();
   readonly viewingUserId = signal<string>('');
 
+  private touchStartX = 0;
+  private touchStartY = 0;
+
   /** Show the selected user's day plan, or the current user's own plan */
   readonly activeDayPlan = computed<DayPlan | null>(() => {
     const uid = this.viewingUserId();
@@ -85,5 +94,25 @@ export class DailyViewComponent implements OnInit {
 
   openChecklist(): void {
     this.router.navigate(['/day', this.mealData.currentDayIndex(), 'checklist']);
+  }
+
+  onTouchStart(e: TouchEvent): void {
+    this.touchStartX = e.touches[0].clientX;
+    this.touchStartY = e.touches[0].clientY;
+  }
+
+  onTouchEnd(e: TouchEvent): void {
+    const dx = e.changedTouches[0].clientX - this.touchStartX;
+    const dy = e.changedTouches[0].clientY - this.touchStartY;
+
+    // Only trigger if horizontal swipe is dominant and exceeds threshold
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
+
+    const currentIdx = this.mealData.currentDayIndex();
+    if (dx < 0 && currentIdx < 6) {
+      this.onDayChange(currentIdx + 1);
+    } else if (dx > 0 && currentIdx > 0) {
+      this.onDayChange(currentIdx - 1);
+    }
   }
 }
