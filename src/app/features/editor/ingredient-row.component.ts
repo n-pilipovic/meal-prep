@@ -6,13 +6,13 @@ import { Ingredient, IngredientCategory } from '../../core/models/meal.model';
   selector: 'app-ingredient-row',
   imports: [FormsModule],
   template: `
-    <div class="flex gap-2 items-start">
+    <div class="flex flex-wrap sm:flex-nowrap gap-x-2 gap-y-1.5 items-start">
       <input
         type="text"
         [ngModel]="ingredient().name"
         (ngModelChange)="emitChange('name', $event)"
         placeholder="Sastojak"
-        class="flex-1 min-w-0 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30" />
+        class="w-full sm:w-0 sm:flex-1 min-w-0 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30" />
       <input
         type="number"
         [ngModel]="ingredient().quantity"
@@ -22,7 +22,7 @@ import { Ingredient, IngredientCategory } from '../../core/models/meal.model';
       <select
         [ngModel]="ingredient().unit"
         (ngModelChange)="emitChange('unit', $event)"
-        class="w-20 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30">
+        class="flex-1 sm:flex-none sm:w-20 min-w-0 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30">
         <option value="g">g</option>
         <option value="ml">ml</option>
         <option value="kom">kom</option>
@@ -33,7 +33,7 @@ import { Ingredient, IngredientCategory } from '../../core/models/meal.model';
       <select
         [ngModel]="ingredient().category"
         (ngModelChange)="emitChange('category', $event)"
-        class="w-24 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30">
+        class="flex-1 sm:flex-none sm:w-24 min-w-0 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30">
         @for (cat of categories; track cat.value) {
           <option [value]="cat.value">{{ cat.label }}</option>
         }
