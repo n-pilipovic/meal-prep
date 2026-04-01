@@ -70,6 +70,8 @@ export async function sendScheduledPush(
       let body: string;
       let tag: string;
 
+      let dataUrl: string;
+
       if (cronType === 'daily') {
         title = `Priprema za danas — ${day.dayName}`;
         const allIngredients = day.meals
@@ -77,6 +79,7 @@ export async function sendScheduledPush(
           .map(i => i.quantity != null ? `☐ ${i.name} ${i.quantity}${i.unit}` : `☐ ${i.name}`);
         body = allIngredients.join('\n');
         tag = 'daily-summary';
+        dataUrl = '/meal-prep/today';
       } else {
         const meal = day.meals.find(m => m.type === cronType);
         if (!meal) continue;
@@ -101,11 +104,20 @@ export async function sendScheduledPush(
           .map(i => i.quantity != null ? `☐ ${i.name} ${i.quantity}${i.unit}` : `☐ ${i.name}`)
           .join('\n');
         tag = `meal-${cronType}`;
+        dataUrl = `/meal-prep/day/${today}/meal/${cronType}`;
       }
 
       await sendPushNotification(
         sub,
-        { title, body, icon: '/icons/icon-192x192.png', tag },
+        {
+          title,
+          body,
+          icon: '/meal-prep/icons/icon-192x192.png',
+          badge: '/meal-prep/icons/icon-72x72.png',
+          tag,
+          data: { url: dataUrl },
+          actions: [{ action: 'view', title: 'Pogledaj' }],
+        },
         { publicKey: vapid.publicKey, privateKey: vapid.privateKey },
         vapid.subject,
       );

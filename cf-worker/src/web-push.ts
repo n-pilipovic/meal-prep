@@ -21,7 +21,15 @@ interface VapidKeys {
  */
 export async function sendPushNotification(
   subscription: PushSubscription,
-  payload: { title: string; body: string; icon?: string; tag?: string; data?: unknown },
+  payload: {
+    title: string;
+    body: string;
+    icon?: string;
+    badge?: string;
+    tag?: string;
+    data?: unknown;
+    actions?: { action: string; title: string }[];
+  },
   vapidKeys: VapidKeys,
   vapidSubject: string,
 ): Promise<boolean> {

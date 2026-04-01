@@ -4,10 +4,11 @@ import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BottomNavComponent } from './shared/components/bottom-nav.component';
 import { IosInstallPromptComponent } from './shared/components/ios-install-prompt.component';
+import { AndroidInstallPromptComponent } from './shared/components/android-install-prompt.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BottomNavComponent, IosInstallPromptComponent],
+  imports: [RouterOutlet, BottomNavComponent, IosInstallPromptComponent, AndroidInstallPromptComponent],
   template: `
     <main id="main-content" tabindex="-1" [class.pb-20]="showNav()">
       <router-outlet />
@@ -16,6 +17,7 @@ import { IosInstallPromptComponent } from './shared/components/ios-install-promp
       <app-bottom-nav />
     }
     <app-ios-install-prompt />
+    <app-android-install-prompt />
   `,
   styles: `
     :host {

@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HouseholdService } from '../../core/services/household.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { PwaInstallService } from '../../core/services/pwa-install.service';
 import { UserAvatarComponent } from '../../shared/components/user-avatar.component';
 
 @Component({
@@ -110,7 +111,7 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
         </div>
 
         <!-- PWA install prompt (Chrome/Android) -->
-        @if (showInstallBanner()) {
+        @if (pwaInstallService.canInstall()) {
           <div class="bg-white rounded-2xl shadow-sm p-4">
             <h2 class="font-semibold text-text-primary mb-2">Instaliraj aplikaciju</h2>
             <p class="text-sm text-text-muted mb-3">
@@ -140,25 +141,13 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
 export class SettingsComponent {
   private readonly householdService = inject(HouseholdService);
   readonly notificationService = inject(NotificationService);
-
-  private deferredPrompt: any = null;
-  readonly showInstallBanner = signal(false);
+  readonly pwaInstallService = inject(PwaInstallService);
 
   readonly isLoggedIn = this.householdService.isLoggedIn;
   readonly householdCode = this.householdService.householdCode;
   readonly members = this.householdService.members;
 
   readonly prefs = this.notificationService.preferences;
-
-  constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeinstallprompt', (e: Event) => {
-        e.preventDefault();
-        this.deferredPrompt = e;
-        this.showInstallBanner.set(true);
-      });
-    }
-  }
 
   async enableNotifications(): Promise<void> {
     await this.notificationService.requestPermissionAndSubscribe();
@@ -179,13 +168,7 @@ export class SettingsComponent {
   }
 
   async installPwa(): Promise<void> {
-    if (!this.deferredPrompt) return;
-    this.deferredPrompt.prompt();
-    const result = await this.deferredPrompt.userChoice;
-    if (result.outcome === 'accepted') {
-      this.showInstallBanner.set(false);
-    }
-    this.deferredPrompt = null;
+    await this.pwaInstallService.promptInstall();
   }
 
   logout(): void {

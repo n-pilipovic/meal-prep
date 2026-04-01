@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { SwPush } from '@angular/service-worker';
+import { EMPTY } from 'rxjs';
 import { NotificationService } from './notification.service';
 import { HouseholdService } from './household.service';
 import { MealDataService } from './meal-data.service';
@@ -10,8 +12,9 @@ import { MealType } from '../models/meal.model';
 
 const mockSwPush = {
   requestSubscription: () => Promise.reject('not supported in test'),
-  messages: { subscribe: () => ({}) },
-  notificationClicks: { subscribe: () => ({}) },
+  messages: EMPTY,
+  notificationClicks: EMPTY,
+  subscription: EMPTY,
 };
 
 function setup(preLocalStorage?: () => void) {
@@ -27,6 +30,7 @@ function setup(preLocalStorage?: () => void) {
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
+      provideRouter([]),
       { provide: SwPush, useValue: mockSwPush },
       HouseholdService,
       ApiService,

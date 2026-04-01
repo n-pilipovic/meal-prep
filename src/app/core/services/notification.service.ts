@@ -1,7 +1,10 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { SwPush } from '@angular/service-worker';
 import { ApiService } from './api.service';
 import { HouseholdService } from './household.service';
+import { PwaInstallService } from './pwa-install.service';
 import { MealDataService } from './meal-data.service';
 import { MealType, MEAL_LABELS, MEAL_TIMES } from '../models/meal.model';
 import { NotificationPreferences } from '../models/user.model';
@@ -14,7 +17,10 @@ export class NotificationService {
   private readonly swPush = inject(SwPush);
   private readonly api = inject(ApiService);
   private readonly householdService = inject(HouseholdService);
+  private readonly pwaInstall = inject(PwaInstallService);
   private readonly mealData = inject(MealDataService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   private foregroundTimers: ReturnType<typeof setTimeout>[] = [];
 
@@ -23,7 +29,6 @@ export class NotificationService {
     typeof Notification !== 'undefined' ? Notification.permission : 'default',
   );
   readonly isSubscribed = signal(false);
-  readonly isStandalone = signal(this.checkStandalone());
 
   readonly preferences = signal<NotificationPreferences>(this.loadPreferences());
 
@@ -32,8 +37,21 @@ export class NotificationService {
   });
 
   readonly needsInstallPrompt = computed(() => {
-    return this.isIOS() && !this.isStandalone();
+    return this.isIOS() && !this.pwaInstall.isStandalone();
   });
+
+  constructor() {
+    this.swPush.notificationClicks
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ notification }) => {
+        const url = notification?.data?.url;
+        if (url) {
+          // Strip base href prefix for Angular router navigation
+          const path = url.replace(/^\/meal-prep/, '') || '/';
+          this.router.navigateByUrl(path);
+        }
+      });
+  }
 
   async requestPermissionAndSubscribe(): Promise<boolean> {
     if (!this.pushSupported()) return false;
@@ -166,7 +184,7 @@ export class NotificationService {
 
     new Notification(`${label} za 30 min (${meal.time})`, {
       body: body || meal.name,
-      icon: '/icons/icon-192x192.png',
+      icon: '/meal-prep/icons/icon-192x192.png',
       tag: `meal-${mealType}`,
     });
   }
@@ -181,7 +199,7 @@ export class NotificationService {
 
     new Notification(`Priprema za danas — ${day.dayName}`, {
       body: allIngredients.slice(0, 10).join('\n'),
-      icon: '/icons/icon-192x192.png',
+      icon: '/meal-prep/icons/icon-192x192.png',
       tag: 'daily-summary',
     });
   }
@@ -198,12 +216,6 @@ export class NotificationService {
       'serviceWorker' in navigator &&
       'PushManager' in window &&
       'Notification' in window;
-  }
-
-  private checkStandalone(): boolean {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as any).standalone === true;
   }
 
   isIOS(): boolean {
