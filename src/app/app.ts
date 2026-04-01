@@ -5,11 +5,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BottomNavComponent } from './shared/components/bottom-nav.component';
 import { IosInstallPromptComponent } from './shared/components/ios-install-prompt.component';
 import { AndroidInstallPromptComponent } from './shared/components/android-install-prompt.component';
+import { PwaUpdateBannerComponent } from './shared/components/pwa-update-banner.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BottomNavComponent, IosInstallPromptComponent, AndroidInstallPromptComponent],
+  imports: [RouterOutlet, BottomNavComponent, IosInstallPromptComponent, AndroidInstallPromptComponent, PwaUpdateBannerComponent],
   template: `
+    <app-pwa-update-banner />
     <main id="main-content" tabindex="-1" [class.pb-20]="showNav()">
       <router-outlet />
     </main>
