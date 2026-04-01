@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { NotificationService } from '../../core/services/notification.service';
+import { PwaInstallService } from '../../core/services/pwa-install.service';
 
 const DISMISSED_KEY = 'meal-prep:ios-install-dismissed';
 
@@ -72,6 +73,7 @@ const DISMISSED_KEY = 'meal-prep:ios-install-dismissed';
 })
 export class IosInstallPromptComponent {
   private readonly notificationService = inject(NotificationService);
+  private readonly pwaInstall = inject(PwaInstallService);
 
   readonly visible = signal(this.shouldShow());
 
@@ -83,6 +85,6 @@ export class IosInstallPromptComponent {
   private shouldShow(): boolean {
     if (typeof window === 'undefined') return false;
     if (localStorage.getItem(DISMISSED_KEY)) return false;
-    return this.notificationService.isIOS() && !this.notificationService.isStandalone();
+    return this.notificationService.isIOS() && !this.pwaInstall.isStandalone();
   }
 }
