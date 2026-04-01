@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -136,6 +136,12 @@ type AuthMode = 'initial' | 'login' | 'register';
             }
           }
 
+        } @else if (!householdService.sessionReady()) {
+          <!-- Session restoring — wait before showing household options -->
+          <div class="flex flex-col items-center gap-3 py-8">
+            <div class="w-8 h-8 border-3 border-green-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-text-secondary">Učitavanje...</p>
+          </div>
         } @else {
           <!-- Step 2: Create or join household -->
           @switch (mode()) {
@@ -226,8 +232,17 @@ type AuthMode = 'initial' | 'login' | 'register';
 })
 export class WelcomeComponent {
   readonly auth = inject(AuthService);
-  private readonly householdService = inject(HouseholdService);
+  readonly householdService = inject(HouseholdService);
   private readonly router = inject(Router);
+
+  constructor() {
+    // If the user already has a household (returning user), redirect away
+    effect(() => {
+      if (this.householdService.isLoggedIn()) {
+        this.router.navigate(['/today']);
+      }
+    });
+  }
 
   readonly authMode = signal<AuthMode>('initial');
   readonly mode = signal<Mode>('choice');
