@@ -21,9 +21,10 @@
 - **Shared shopping list** — aggregated ingredients across all users, assignable per person, checkable with real-time sync
 - **Prep checklist** — daily preparation divided between users at 3 levels (by plan, by meal, by item)
 - **Meal plan editor** — edit meals/ingredients/recipes, import from .docx, assign imported plans to specific users
+- **AI plan generator** — generate meal plans with age group selection, dietary restrictions, and granular allergy management
 - **Push notifications** — daily summary + per-meal reminders 30 min before (via Cloudflare Workers cron)
-- **PWA** — installable on iOS (Add to Home Screen) and Android/Chrome, works offline
-- **iOS install guide** — step-by-step overlay on first visit in Safari
+- **PWA** — installable on iOS and Android, works offline, auto-update banner when a new version is available
+- **Install prompts** — step-by-step iOS overlay in Safari, native Android install prompt via beforeinstallprompt API
 
 ## Tech Stack
 
@@ -43,8 +44,8 @@
 ```bash
 npm install
 npx ng serve                    # Dev server at localhost:4200
-npx ng test --watch=false       # Unit tests (98 tests)
-npx playwright test             # E2E tests (243 tests across 3 devices)
+npx ng test --watch=false       # Unit tests (142 tests)
+npx playwright test             # E2E tests (306 tests across 3 devices)
 ```
 
 ### Cloudflare Worker
@@ -62,7 +63,7 @@ npm run deploy                  # Deploy to Cloudflare
 src/app/
   core/
     models/          # WeeklyPlan, Household, SharedState, MealType (5 types)
-    services/        # MealData, Household, Api, Sync, ShoppingList, Notification
+    services/        # MealData, Household, Api, Sync, ShoppingList, Notification, PwaUpdate
     guards/          # Onboarding guard
   features/
     onboarding/      # Create/join household
@@ -71,10 +72,12 @@ src/app/
     weekly-view/     # 7-day overview grid
     shopping-list/   # Aggregated ingredients, assignable, filterable
     prep-checklist/  # Daily prep with 3-level division
-    editor/          # Meal plan editor + .docx import
+    editor/          # Meal plan editor + .docx import + AI plan generator
     settings/        # Notifications, household, PWA install
   shared/
-    components/      # BottomNav, DayNavigator, UserAvatar, iOS install prompt
+    components/      # BottomNav, DayNavigator, UserAvatar, UserSwitcher,
+                     # MealTypeBadge, AssignmentBadge, iOS/Android install prompts,
+                     # PWA update banner
     pipes/           # Quantity formatting
 
 cf-worker/           # Cloudflare Worker (API + push notifications)
@@ -123,4 +126,4 @@ Update `src/environments/environment.prod.ts` with the worker URL after deployin
 
 ## Language
 
-All UI text is in **Serbian** (Latin script). Meal types: doručak, užina, ručak, užina 2, večera.
+All UI text is in **Serbian** (Latin script). Meal types: dorucak, uzina, rucak, uzina 2, vecera.
