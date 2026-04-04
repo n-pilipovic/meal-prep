@@ -15,7 +15,17 @@ export class PwaUpdateService {
       .pipe(filter((e): e is VersionReadyEvent => e.type === 'VERSION_READY'))
       .subscribe(() => this.updateAvailable.set(true));
 
-    // Check for updates every 5 minutes
+    // Check immediately on startup (after SW registers)
+    this.swUpdate.checkForUpdate();
+
+    // Check when the app returns to foreground (critical for iOS)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.swUpdate.checkForUpdate();
+      }
+    });
+
+    // Also check periodically every 5 minutes
     setInterval(() => this.swUpdate.checkForUpdate(), 5 * 60 * 1000);
   }
 
