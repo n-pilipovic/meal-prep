@@ -67,6 +67,9 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
                           class="text-sm">
                       {{ ing | quantity }}
                     </span>
+                    @if (ing.variants.length > 1) {
+                      <span class="text-[10px] text-text-muted ml-1">({{ ing.variants.join(', ') }})</span>
+                    }
                     @if (isMultiUser() && ing.sources.length > 0) {
                       <div class="flex gap-1 mt-0.5">
                         @for (source of uniqueSources(ing.sources); track source.userId) {

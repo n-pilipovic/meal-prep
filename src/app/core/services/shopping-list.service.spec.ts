@@ -87,9 +87,16 @@ describe('ShoppingListService', () => {
 
   it('should sum duplicate ingredient quantities', () => {
     service.scope.set('today');
-    const hleb = service.aggregatedIngredients().find(i => i.name === 'Hleb');
+    const hleb = service.aggregatedIngredients().find(i => i.key === 'hleb_g');
     expect(hleb).toBeTruthy();
     expect(hleb!.quantity).toBe(120); // 70 + 50
+  });
+
+  it('should track variant names when merging synonyms', () => {
+    service.scope.set('today');
+    const hleb = service.aggregatedIngredients().find(i => i.key === 'hleb_g');
+    expect(hleb).toBeTruthy();
+    expect(hleb!.variants).toContain('Hleb');
   });
 
   it('should group ingredients by category', () => {

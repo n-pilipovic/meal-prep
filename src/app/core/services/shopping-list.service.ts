@@ -4,6 +4,7 @@ import { HouseholdService } from './household.service';
 import { SyncService } from './sync.service';
 import { Ingredient, IngredientCategory, MealType, MEAL_LABELS, DayPlan } from '../models/meal.model';
 import { UserProfile } from '../models/user.model';
+import { getIngredientKey, getDisplayName } from '../utils/ingredient-normalizer';
 
 export interface AggregatedIngredient {
   key: string;
@@ -11,6 +12,8 @@ export interface AggregatedIngredient {
   quantity: number | null;
   unit: string;
   category: IngredientCategory;
+  /** Original distinct names that were merged into this entry */
+  variants: string[];
   /** Which users need this ingredient (and from which meals) */
   sources: { userId: string; userName: string; mealType: MealType }[];
 }
@@ -148,17 +151,22 @@ export class ShoppingListService {
       if (!day) continue;
       for (const meal of day.meals) {
         for (const ing of meal.ingredients) {
-          const key = `${ing.name.toLowerCase()}_${ing.unit}`;
+          const key = getIngredientKey(ing.name, ing.unit);
           const existing = map.get(key);
           if (existing) {
             if (existing.quantity != null && ing.quantity != null) {
               existing.quantity += ing.quantity;
             }
+            if (!existing.variants.includes(ing.name)) {
+              existing.variants.push(ing.name);
+            }
             existing.sources.push({ userId: user.id, userName: user.name, mealType: meal.type as MealType });
           } else {
             map.set(key, {
               ...ing,
+              name: getDisplayName(key.replace(/_[^_]*$/, '')),
               key,
+              variants: [ing.name],
               sources: [{ userId: user.id, userName: user.name, mealType: meal.type as MealType }],
             });
           }

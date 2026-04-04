@@ -63,6 +63,17 @@ RECEPTI:
 - Koraci pripreme treba da budu konkretni: temperature, vremena kuvanja, tehnike
 - Svaki obrok koji ima recept mora imati recipeRef koji se poklapa sa id recepta
 
+IMENOVANJE SASTOJAKA (obavezno):
+- Koristi UVEK ISTI naziv za isti sastojak u celom planu — i u obrocima i u receptima
+- Bez zagrade u imenima: NE "Pasulj (spremljen)" već "Pasulj", NE "Jaje (za premaz)" već "Jaje"
+- Bez opisa stanja pripreme u imenu: NE "Susam pečeni" već "Susam", NE "Belo pileće meso (kuvano)" već "Pileće belo meso"
+- Razlikuj podvrste luka: "Crni luk", "Crveni luk", "Beli luk", "Mladi luk" — ali nikad samo "Luk"
+- Koristi jedan naziv za hleb: "Hleb" za beli, "Integralni hleb" za integralni — nikad "Hleb integralni"
+- Koristi jedan naziv za svaku vrstu mesa: "Pileći file", "Pileći batak", "Pileće belo meso" — razlikuj komade, ali budi konzistentan
+- "Ulje" za suncokretovo/neutralno ulje, "Maslinovo ulje" za maslinovo — to su različiti proizvodi
+- Koristi istu jedinicu za isti sastojak kroz ceo plan (npr. uvek "g" ili uvek "kašičica", ne mešaj)
+- Isti category za isti sastojak svuda
+
 Pravila formata:
 - Plan je za 7 dana (ponedeljak–nedelja)
 - Svaki dan ima 5 obroka: doručak, užina, ručak, užina2, večera

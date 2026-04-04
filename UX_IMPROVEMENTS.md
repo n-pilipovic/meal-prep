@@ -12,7 +12,7 @@ Tracked UI/UX improvement opportunities identified via code analysis.
 
 - [ ] **Daily view meal completion indicators** — Surface prep checklist progress on meal cards (checkmark or subtle badge for prepped meals). *(Impact: Medium, Effort: Low)*
 - [ ] **Shopping list search/filter** — Text search bar at the top to quickly find ingredients across categories. *(Impact: Medium, Effort: Low)*
-- [ ] **Aggregated shopping quantities** — Combine identical ingredients across meals with summed totals instead of separate entries. *(Impact: High, Effort: Medium)*
+- [x] **Aggregated shopping quantities** — Combine identical ingredients across meals with summed totals instead of separate entries. Includes Serbian synonym detection for ingredient name normalization. *(Impact: High, Effort: Medium)*
 - [ ] **Actionable empty states** — Replace plain "no data" text with CTA buttons ("Dodaj obrok", "Uvezi plan") to guide users forward. *(Impact: Medium, Effort: Low)*
 - [ ] **Undo on destructive editor actions** — Toast with undo when deleting ingredients or recipe steps, instead of instant removal. *(Impact: Medium, Effort: Medium)*
 
