@@ -1,21 +1,31 @@
-import { Component, input } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { UserProfile } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-user-avatar',
   template: `
     <span
-      class="inline-flex items-center justify-center rounded-full font-semibold shrink-0 select-none"
+      class="inline-flex items-center justify-center rounded-full font-semibold shrink-0 select-none overflow-hidden"
       [class]="sizeClass()"
       [style.background-color]="user().color + '20'"
       [style.color]="user().color">
-      {{ initials() }}
+      @if (user().avatar && !imgError()) {
+        <img
+          [src]="user().avatar"
+          [alt]="user().name"
+          referrerpolicy="no-referrer"
+          class="w-full h-full object-cover"
+          (error)="imgError.set(true)" />
+      } @else {
+        {{ initials() }}
+      }
     </span>
   `,
 })
 export class UserAvatarComponent {
   readonly user = input.required<UserProfile>();
   readonly size = input<'sm' | 'md' | 'lg'>('md');
+  readonly imgError = signal(false);
 
   initials(): string {
     const name = this.user().name;

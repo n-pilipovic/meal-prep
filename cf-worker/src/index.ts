@@ -71,11 +71,13 @@ export default {
       const uid = await getFirebaseUid(request, env);
       if (!uid) return json({ error: 'Unauthorized' }, 401);
 
-      const { name } = (await request.json()) as { name: string };
+      const { name, avatar } = (await request.json()) as { name: string; avatar?: string };
       const code = generateCode();
+      const member: Household['members'][0] = { id: uid, name, color: USER_COLORS[0] };
+      if (avatar) member.avatar = avatar;
       const household: Household = {
         code,
-        members: [{ id: uid, name, color: USER_COLORS[0] }],
+        members: [member],
         createdAt: new Date().toISOString(),
       };
       await putJSON(env.KV, `household:${code}`, household);
@@ -90,14 +92,16 @@ export default {
       if (!uid) return json({ error: 'Unauthorized' }, 401);
 
       const code = joinMatch[1];
-      const { name } = (await request.json()) as { name: string };
+      const { name, avatar } = (await request.json()) as { name: string; avatar?: string };
       const household = await getJSON<Household>(env.KV, `household:${code}`);
       if (!household) return json({ error: 'Household not found' }, 404);
 
       // Prevent duplicate joins
       if (!household.members.some(m => m.id === uid)) {
         const colorIndex = household.members.length % USER_COLORS.length;
-        household.members.push({ id: uid, name, color: USER_COLORS[colorIndex] });
+        const member: Household['members'][0] = { id: uid, name, color: USER_COLORS[colorIndex] };
+        if (avatar) member.avatar = avatar;
+        household.members.push(member);
         await putJSON(env.KV, `household:${code}`, household);
       }
       await env.KV.put(`user-household:${uid}`, code);
@@ -116,6 +120,30 @@ export default {
       if (!household) return json({ error: 'Household not found' }, 404);
 
       return json(household);
+    }
+
+    // PUT /api/me/profile — update current user's profile (avatar) in their household
+    if (request.method === 'PUT' && path === '/api/me/profile') {
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const code = await env.KV.get(`user-household:${uid}`);
+      if (!code) return json({ error: 'No household' }, 404);
+
+      const household = await getJSON<Household>(env.KV, `household:${code}`);
+      if (!household) return json({ error: 'Household not found' }, 404);
+
+      const { avatar } = (await request.json()) as { avatar?: string };
+      const member = household.members.find(m => m.id === uid);
+      if (!member) return json({ error: 'Member not found' }, 404);
+
+      if (avatar) {
+        member.avatar = avatar;
+      } else {
+        delete member.avatar;
+      }
+      await putJSON(env.KV, `household:${code}`, household);
+      return json({ ok: true, household });
     }
 
     // GET /api/household/:code — get household info

@@ -6,16 +6,19 @@ import { HouseholdService } from './household.service';
 import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 
-function createMockAuth(uid: string | null = null, ready = false) {
+function createMockAuth(uid: string | null = null, ready = false, photoURL: string | null = null) {
   const uidSig = signal(uid);
   const readySig = signal(ready);
+  const photoSig = signal(photoURL);
   return {
     uid: computed(() => uidSig()),
     isLoggedIn: computed(() => uidSig() !== null),
     isReady: computed(() => readySig()),
+    photoURL: computed(() => photoSig()),
     signOutUser: () => Promise.resolve(),
     _uid: uidSig,
     _ready: readySig,
+    _photo: photoSig,
   };
 }
 
@@ -62,7 +65,7 @@ describe('HouseholdService', () => {
     service.createHousehold('Novica');
 
     const req = httpTesting.expectOne(r => r.url.includes('/api/household') && r.method === 'POST');
-    expect(req.request.body).toEqual({ name: 'Novica' });
+    expect(req.request.body.name).toBe('Novica');
 
     req.flush({
       code: 'ABC123',
@@ -87,7 +90,7 @@ describe('HouseholdService', () => {
     service.joinHousehold('ABC123', 'Ivana');
 
     const req = httpTesting.expectOne(r => r.url.includes('/api/household/ABC123/join'));
-    expect(req.request.body).toEqual({ name: 'Ivana' });
+    expect(req.request.body.name).toBe('Ivana');
 
     req.flush({
       userId: 'user-2',

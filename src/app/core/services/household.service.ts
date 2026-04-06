@@ -53,10 +53,22 @@ export class HouseholdService {
         this._sessionReady.set(true);
       }
     });
+
+    // Sync Google profile photo to household member avatar
+    effect(() => {
+      const photoURL = this.auth.photoURL();
+      const user = this.currentUser();
+      if (!user || !photoURL) return;
+      if (user.avatar === photoURL) return;
+
+      this.api.updateProfile(photoURL).subscribe({
+        next: ({ household }) => this.household.set(household),
+      });
+    });
   }
 
-  createHousehold(name: string): void {
-    this.api.createHousehold(name).subscribe({
+  createHousehold(name: string, avatar?: string | null): void {
+    this.api.createHousehold(name, avatar).subscribe({
       next: ({ code, household }) => {
         this.saveSession(code);
         this.household.set(household);
@@ -64,8 +76,8 @@ export class HouseholdService {
     });
   }
 
-  joinHousehold(code: string, name: string): void {
-    this.api.joinHousehold(code.toUpperCase(), name).subscribe({
+  joinHousehold(code: string, name: string, avatar?: string | null): void {
+    this.api.joinHousehold(code.toUpperCase(), name, avatar).subscribe({
       next: ({ household }) => {
         this.saveSession(household.code);
         this.household.set(household);

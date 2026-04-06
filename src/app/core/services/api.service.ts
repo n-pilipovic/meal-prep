@@ -12,17 +12,17 @@ export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
-  createHousehold(name: string): Observable<{ code: string; userId: string; household: Household }> {
+  createHousehold(name: string, avatar?: string | null): Observable<{ code: string; userId: string; household: Household }> {
     return this.http.post<{ code: string; userId: string; household: Household }>(
       `${this.baseUrl}/api/household`,
-      { name },
+      { name, avatar: avatar ?? undefined },
     );
   }
 
-  joinHousehold(code: string, name: string): Observable<{ userId: string; household: Household }> {
+  joinHousehold(code: string, name: string, avatar?: string | null): Observable<{ userId: string; household: Household }> {
     return this.http.post<{ userId: string; household: Household }>(
       `${this.baseUrl}/api/household/${code}/join`,
-      { name },
+      { name, avatar: avatar ?? undefined },
     );
   }
 
@@ -32,6 +32,13 @@ export class ApiService {
 
   getMyHousehold(): Observable<Household> {
     return this.http.get<Household>(`${this.baseUrl}/api/me/household`);
+  }
+
+  updateProfile(avatar: string | null): Observable<{ ok: boolean; household: Household }> {
+    return this.http.put<{ ok: boolean; household: Household }>(
+      `${this.baseUrl}/api/me/profile`,
+      { avatar: avatar ?? undefined },
+    );
   }
 
   savePlan(userId: string, plan: WeeklyPlan): Observable<{ ok: boolean }> {

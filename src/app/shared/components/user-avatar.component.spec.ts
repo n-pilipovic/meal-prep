@@ -53,4 +53,31 @@ describe('UserAvatarComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent?.trim()).toBe('IV');
   });
+
+  it('should show image when avatar is provided', () => {
+    fixture.componentInstance.user.set({ id: '1', name: 'Novica', color: '#2d6a4f', avatar: 'https://example.com/photo.jpg' });
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img.src).toContain('photo.jpg');
+  });
+
+  it('should fallback to initials when image fails to load', () => {
+    fixture.componentInstance.user.set({ id: '1', name: 'Novica', color: '#2d6a4f', avatar: 'https://example.com/broken.jpg' });
+    fixture.detectChanges();
+
+    const img = fixture.nativeElement.querySelector('img');
+    img.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeNull();
+    expect(fixture.nativeElement.textContent?.trim()).toBe('NO');
+  });
+
+  it('should show initials when avatar is not set', () => {
+    fixture.componentInstance.user.set({ id: '1', name: 'Novica', color: '#2d6a4f' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeNull();
+    expect(fixture.nativeElement.textContent?.trim()).toBe('NO');
+  });
 });

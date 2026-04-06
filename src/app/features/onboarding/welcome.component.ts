@@ -323,7 +323,7 @@ export class WelcomeComponent {
     const name = this.auth.displayName() ?? 'Korisnik';
     this.error.set('');
     this.loading.set(true);
-    this.householdService.createHousehold(name);
+    this.householdService.createHousehold(name, this.auth.photoURL());
     this.waitForLogin();
   }
 
@@ -334,7 +334,7 @@ export class WelcomeComponent {
     const name = this.auth.displayName() ?? 'Korisnik';
     this.error.set('');
     this.loading.set(true);
-    this.householdService.joinHousehold(code, name);
+    this.householdService.joinHousehold(code, name, this.auth.photoURL());
     this.waitForLogin();
   }
 

@@ -85,6 +85,7 @@ describe('MealDataService', () => {
             uid: computed(() => mockAuthUid()),
             isLoggedIn: computed(() => mockAuthUid() !== null),
             isReady: computed(() => false),
+            photoURL: computed(() => null as string | null),
             signOutUser: () => Promise.resolve(),
           },
         },
