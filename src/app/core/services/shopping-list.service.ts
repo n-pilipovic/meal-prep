@@ -42,6 +42,7 @@ export class ShoppingListService {
 
   readonly scope = signal<'today' | 'week'>('today');
   readonly filter = signal<'all' | 'mine'>('all');
+  readonly search = signal('');
 
   /** Aggregate ingredients across all users' plans */
   readonly aggregatedIngredients = computed<AggregatedIngredient[]>(() => {
@@ -92,9 +93,20 @@ export class ShoppingListService {
     });
   });
 
+  /** Filtered by search query */
+  readonly searchedIngredients = computed<AggregatedIngredient[]>(() => {
+    const items = this.filteredIngredients();
+    const query = this.search().trim().toLowerCase();
+    if (!query) return items;
+    return items.filter(ing =>
+      ing.name.toLowerCase().includes(query) ||
+      ing.variants.some(v => v.toLowerCase().includes(query)),
+    );
+  });
+
   /** Grouped by category */
   readonly groupedIngredients = computed<IngredientGroup[]>(() => {
-    const items = this.filteredIngredients();
+    const items = this.searchedIngredients();
     const groups = new Map<IngredientCategory, AggregatedIngredient[]>();
 
     for (const item of items) {

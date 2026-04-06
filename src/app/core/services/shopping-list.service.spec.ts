@@ -132,4 +132,34 @@ describe('ShoppingListService', () => {
     // Only day 0 has ingredients in mock
     expect(items.length).toBe(3);
   });
+
+  it('should filter ingredients by search query', () => {
+    service.scope.set('today');
+    service.search.set('hleb');
+    const groups = service.groupedIngredients();
+    const allItems = groups.flatMap(g => g.items);
+    expect(allItems.length).toBe(1);
+    expect(allItems[0].key).toBe('hleb_g');
+  });
+
+  it('should be case-insensitive when searching', () => {
+    service.scope.set('today');
+    service.search.set('PUTER');
+    const allItems = service.groupedIngredients().flatMap(g => g.items);
+    expect(allItems.length).toBe(1);
+    expect(allItems[0].name.toLowerCase()).toContain('puter');
+  });
+
+  it('should show all items when search is empty', () => {
+    service.scope.set('today');
+    service.search.set('');
+    const allItems = service.groupedIngredients().flatMap(g => g.items);
+    expect(allItems.length).toBe(3);
+  });
+
+  it('should return no groups when search matches nothing', () => {
+    service.scope.set('today');
+    service.search.set('avokado');
+    expect(service.groupedIngredients().length).toBe(0);
+  });
 });

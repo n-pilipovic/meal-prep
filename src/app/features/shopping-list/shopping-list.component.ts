@@ -44,6 +44,20 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
         </div>
       }
 
+      <!-- Search -->
+      <div class="relative mb-3">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+        </svg>
+        <input
+          type="search"
+          [value]="shoppingService.search()"
+          (input)="shoppingService.search.set(searchInput.value)"
+          #searchInput
+          placeholder="Pretraži sastojke..."
+          class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-11" />
+      </div>
+
       @if (shoppingService.groupedIngredients().length === 0) {
         <p class="text-center text-text-muted py-8">Nema sastojaka za prikaz</p>
       }
