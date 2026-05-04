@@ -98,11 +98,13 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
         @case ('import') {
           <div class="flex flex-col gap-4">
-            <!-- .docx import -->
+            <!-- .docx / .odt import -->
             <div class="bg-white rounded-2xl shadow-sm p-4">
-              <h2 class="font-semibold text-text-primary mb-2">Uvezi iz .docx fajla</h2>
+              <h2 class="font-semibold text-text-primary mb-2">Uvezi iz .docx ili .odt fajla</h2>
               <p class="text-sm text-text-muted mb-3">
-                Učitaj plan ishrane iz Word dokumenta. Format: sekcije za D 9h, U 11h, R 14h, V 18h sa po 7 stavki.
+                Učitaj plan ishrane iz Word (.docx) ili OpenDocument (.odt) dokumenta.
+                .docx: sekcije D 9h / U 11h / R 14h / V 18h sa po 7 stavki.
+                .odt: tabela 5×7 (D, U, R, U2, V) — četvrti red je užina 2 (isto za sve dane).
               </p>
 
               <!-- User assignment for import -->
@@ -130,10 +132,10 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
               }
 
               <label>
-                <span class="sr-only">Izaberi .docx fajl za uvoz</span>
+                <span class="sr-only">Izaberi .docx ili .odt fajl za uvoz</span>
                 <input
                   type="file"
-                  accept=".docx"
+                  accept=".docx,.odt"
                   (change)="onDocxSelected($event)"
                   class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
               </label>
@@ -298,7 +300,7 @@ export class EditorComponent {
     this.importError.set(false);
 
     try {
-      const plan = await this.docxImport.parseDocx(file);
+      const plan = await this.docxImport.parseFile(file);
       this.applyImportedPlan(plan);
       this.importStatus.set(`Uspešno uvezeno! ${plan.days.filter(d => d.meals.some(m => m.name)).length} dana sa obrocima.`);
       this.activeTab.set('meals');

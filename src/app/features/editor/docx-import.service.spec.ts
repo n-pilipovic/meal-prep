@@ -117,4 +117,134 @@ Brusketi , hleb int 60 g , feta 70 g`;
     expect(plan.days[0].dayName).toBe('Ponedeljak');
     expect(plan.days[6].dayName).toBe('Nedelja');
   });
+
+  describe('parseOdtXml', () => {
+    const cell = (text: string) =>
+      `<table:table-cell><text:p>${text}</text:p></table:table-cell>`;
+    const row = (label: string, days: string[]) =>
+      `<table:table-row>${cell(label)}${days.map(cell).join('')}</table:table-row>`;
+
+    const buildOdt = (rows: string[], extra: string = '') => `<?xml version="1.0"?>
+<office:document-content
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
+  <office:body>
+    <office:text>
+      <table:table>${rows.join('')}</table:table>
+      ${extra}
+    </office:text>
+  </office:body>
+</office:document-content>`;
+
+    const SAMPLE_ROWS = [
+      row('D', [
+        'Pileca pasteta - belo meso 120 g , susam 20 g , pavlaka 50 g , hleb 70 g',
+        'Pasteta od mesa , hleb 70 g , povrce',
+        'Pecenica 50 g , puter 10 g , hleb 70 g',
+        'Ovsena pita 1/3 + jogurt 150 g',
+        'Ovsena pita 1/3 + jogurt 150 g',
+        'Pogacice 6 kom + jogurt 1 casa',
+        'Omlet od 2 jajeta na 30 g slanine , hleb 70 g',
+      ]),
+      row('U', [
+        'Jabuka 120 g + 10 kom badema',
+        '150 g jagoda + 15 g lesnika',
+        '15 badema + borovnice 100 g',
+        '4 polovine oraha + maline 150 g',
+        'Jabuka 120 g + 10 kom badema',
+        '150 g jagoda + 15 g lesnika',
+        '15 badema + borovnice 100 g',
+      ]),
+      row('R', [
+        'Becar sataras + pileci file 150 g , hleb 3 kom',
+        'Becar sataras + jaje, hleb 3 kom',
+        'Riba pecena 180 g , krompir 200 g , blitva 250 g',
+        'Piletina sa senfom 150 g , hleb 3 kom',
+        'Kupus sa junetinom , hleb 3 kom',
+        'Kupus sa junetinom , hleb 3 kom',
+        'Curetina 150 g , hleb 3 kom',
+      ]),
+      row('U', [
+        'Uzina kao I prva samo kombinovati iz razl dana',
+        '', '', '', '', '', '',
+      ]),
+      row('V', [
+        'Salata kapri , belo meso 120 g , hleb 2 kom',
+        'Tunjevina 120 g , hleb 2 kom',
+        'Taratur salata , jaje 2 kom , hleb int 2 kom',
+        'Salata kapri , belo meso 120 g , hleb 2 kom',
+        'Pecenica 50 g , hleb 2 kom , kiselo mleko 150 g',
+        'Taratur salata , jaje 2 kom , hleb int 2 kom',
+        'Tunjevina 120 g , hleb 2 kom , brokoli',
+      ]),
+    ];
+
+    it('parses 7 days with all 5 meal types from ODT table', () => {
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS));
+      expect(plan.days.length).toBe(7);
+      for (const day of plan.days) {
+        expect(day.meals.length).toBe(5);
+        const named = day.meals.filter(m => m.name.length > 0);
+        // Every day should have at least breakfast/snack/lunch/snack2/dinner filled.
+        expect(named.length).toBe(5);
+      }
+    });
+
+    it('broadcasts the snack-2 row across all 7 days', () => {
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS));
+      const snack2Texts = plan.days.map(
+        d => d.meals.find(m => m.type === MealType.AfternoonSnack)!.description,
+      );
+      const expected = 'Uzina kao I prva samo kombinovati iz razl dana';
+      for (const t of snack2Texts) {
+        expect(t).toBe(expected);
+      }
+    });
+
+    it('parses ingredients from ODT cell text', () => {
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS));
+      const monday = plan.days[0];
+      const breakfast = monday.meals.find(m => m.type === MealType.Breakfast)!;
+      const hleb = breakfast.ingredients.find(i => i.name.toLowerCase().includes('hleb'));
+      expect(hleb?.quantity).toBe(70);
+      expect(hleb?.unit).toBe('g');
+    });
+
+    it('uses correct day names from ODT table', () => {
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS));
+      expect(plan.days[0].dayName).toBe('Ponedeljak');
+      expect(plan.days[6].dayName).toBe('Nedelja');
+    });
+
+    it('extracts recipes from paragraphs after the ODT table', () => {
+      const extra = `
+        <text:p>Becarac mera za dva dana</text:p>
+        <text:list><text:list-item><text:p>500 g paprike</text:p></text:list-item><text:list-item><text:p>500 g paradajza</text:p></text:list-item></text:list>
+        <text:p>Uputstvo za pripremu</text:p>
+        <text:list><text:list-item><text:p>Na ulju dinstajte luk oko 10 minuta. Dodajte papriku.</text:p></text:list-item></text:list>
+        <text:p>Ovsena pita</text:p>
+        <text:p>2 jajeta</text:p>
+        <text:p>15 kasika ovsenih pahuljica</text:p>
+        <text:p>Umutiti jaja, dodati mekinje. Peci na 220 stepeni pola sata.</text:p>
+      `;
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS, extra));
+      const names = plan.recipes.map(r => r.name);
+      expect(names).toContain('Bećar šataraš');
+      expect(names).toContain('Ovsena pita');
+      const becarac = plan.recipes.find(r => r.name === 'Bećar šataraš')!;
+      expect(becarac.ingredients.length).toBeGreaterThan(0);
+      expect(becarac.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('handles missing table gracefully', () => {
+      const plan = service.parseOdtXml(buildOdt([]));
+      expect(plan.days.length).toBe(7);
+      for (const day of plan.days) {
+        for (const meal of day.meals) {
+          expect(meal.name).toBe('');
+        }
+      }
+    });
+  });
 });

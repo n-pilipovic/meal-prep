@@ -93,7 +93,7 @@ test.describe('Editor', () => {
 
   test('should switch to import tab', async ({ page }) => {
     await page.getByRole('button', { name: 'Uvoz' }).click();
-    await expect(page.getByText('Uvezi iz .docx fajla')).toBeVisible();
+    await expect(page.getByText('Uvezi iz .docx ili .odt fajla')).toBeVisible();
     await expect(page.getByText('Uvezi iz JSON fajla')).toBeVisible();
   });
 

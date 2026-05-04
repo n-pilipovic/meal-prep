@@ -101,7 +101,7 @@ describe('EditorComponent', () => {
     component.activeTab.set('import');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Uvezi iz .docx fajla');
+    expect(fixture.nativeElement.textContent).toContain('Uvezi iz .docx ili .odt fajla');
     expect(fixture.nativeElement.textContent).toContain('Uvezi iz JSON fajla');
   });
 

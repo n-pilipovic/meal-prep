@@ -1,13 +1,21 @@
 import { Injectable } from '@angular/core';
 import { WeeklyPlan, DayPlan, Meal, MealType, Ingredient, IngredientCategory, MEAL_TIMES, DAY_NAMES, Recipe } from '../../core/models/meal.model';
 
+const ODT_TABLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
+const ODT_TEXT_NS = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+const ODT_OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
+
 /**
- * Parses .docx meal plan files (like Ivana.docx) into WeeklyPlan objects.
+ * Parses meal plan files (.docx and .odt) into WeeklyPlan objects.
  *
- * Expected document structure:
+ * .docx format (Ivana.docx):
  * - Sections starting with "D 9 h" (breakfast), "U 11 h" (snack), "R 14 gh" (lunch), "V 18h" (dinner)
  * - Each section has 7 items (one per day, Mon-Sun)
- * - Recipes may appear after the main sections
+ *
+ * .odt format (Ivana Krsmanovic 2.odt):
+ * - Single 5-row table with first column = meal-type letter and 7 columns for Mon-Sun
+ * - Rows: D, U (snack), R, U (snack 2 — same for all days), V
+ * - Recipes follow as paragraphs after the table
  */
 @Injectable({ providedIn: 'root' })
 export class DocxImportService {
@@ -16,6 +24,198 @@ export class DocxImportService {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
     return this.parseText(result.value);
+  }
+
+  async parseOdt(file: File): Promise<WeeklyPlan> {
+    const JSZip = (await import('jszip')).default;
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const contentXml = await zip.file('content.xml')?.async('string');
+    if (!contentXml) {
+      throw new Error('content.xml not found in .odt file');
+    }
+    return this.parseOdtXml(contentXml);
+  }
+
+  /** Auto-detects format from filename extension. */
+  async parseFile(file: File): Promise<WeeklyPlan> {
+    const lower = file.name.toLowerCase();
+    if (lower.endsWith('.odt')) return this.parseOdt(file);
+    return this.parseDocx(file);
+  }
+
+  parseOdtXml(xml: string): WeeklyPlan {
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const parserError = doc.querySelector('parsererror');
+    if (parserError) {
+      throw new Error('Invalid ODT XML: ' + parserError.textContent);
+    }
+
+    const days: DayPlan[] = Array.from({ length: 7 }, (_, i) => ({
+      dayIndex: i,
+      dayName: DAY_NAMES[i],
+      meals: [
+        this.createEmptyMeal(MealType.Breakfast),
+        this.createEmptyMeal(MealType.Snack),
+        this.createEmptyMeal(MealType.Lunch),
+        this.createEmptyMeal(MealType.AfternoonSnack),
+        this.createEmptyMeal(MealType.Dinner),
+      ],
+    }));
+
+    const table = doc.getElementsByTagNameNS(ODT_TABLE_NS, 'table')[0];
+    if (table) {
+      this.fillDaysFromOdtTable(table, days);
+    }
+
+    const recipes = this.parseOdtRecipes(doc);
+
+    return {
+      weekLabel: `Uvoz ${new Date().toLocaleDateString('sr-Latn')}`,
+      days,
+      recipes,
+    };
+  }
+
+  private fillDaysFromOdtTable(table: Element, days: DayPlan[]): void {
+    // Row index → meal type. Row 3 = Užina 2 (afternoon snack), same content for all days.
+    const rowToMealType: Record<number, MealType> = {
+      0: MealType.Breakfast,
+      1: MealType.Snack,
+      2: MealType.Lunch,
+      3: MealType.AfternoonSnack,
+      4: MealType.Dinner,
+    };
+
+    const rows = Array.from(table.getElementsByTagNameNS(ODT_TABLE_NS, 'table-row'));
+
+    rows.forEach((row, rowIndex) => {
+      const mealType = rowToMealType[rowIndex];
+      if (mealType === undefined) return;
+
+      const cells = Array.from(row.getElementsByTagNameNS(ODT_TABLE_NS, 'table-cell'));
+      // First cell is the meal-type label (D, U, R, U, V); skip it.
+      const dayCells = cells.slice(1, 8).map(c => this.cellText(c));
+
+      // Snack 2: only the first non-empty cell is provided; reuse for all 7 days.
+      const isAfternoonSnack = mealType === MealType.AfternoonSnack;
+      const broadcastValue = isAfternoonSnack ? dayCells.find(t => t.length > 0) ?? '' : null;
+
+      for (let i = 0; i < 7; i++) {
+        const raw = isAfternoonSnack ? broadcastValue! : (dayCells[i] ?? '');
+        if (!raw) continue;
+        const meal = days[i].meals.find(m => m.type === mealType);
+        if (!meal) continue;
+        meal.name = this.extractMealName(raw);
+        meal.description = raw;
+        meal.ingredients = this.parseIngredients(raw);
+      }
+    });
+  }
+
+  private cellText(cell: Element): string {
+    const paragraphs = Array.from(cell.getElementsByTagNameNS(ODT_TEXT_NS, 'p'))
+      .map(p => (p.textContent ?? '').trim())
+      .filter(t => t.length > 0);
+    return paragraphs.join(' | ');
+  }
+
+  private parseOdtRecipes(doc: Document): Recipe[] {
+    const body = doc.getElementsByTagNameNS(ODT_OFFICE_NS, 'text')[0];
+    if (!body) return [];
+
+    // Collect text-blocks that follow the table.
+    const blocks: string[] = [];
+    let pastTable = false;
+    for (const child of Array.from(body.childNodes)) {
+      if (child.nodeType !== 1 /* ELEMENT_NODE */) continue;
+      const el = child as Element;
+      if (el.namespaceURI === ODT_TABLE_NS && el.localName === 'table') {
+        pastTable = true;
+        continue;
+      }
+      if (!pastTable) continue;
+      // <text:p> direct, or <text:list> containing <text:list-item><text:p>
+      if (el.namespaceURI === ODT_TEXT_NS && el.localName === 'p') {
+        const t = (el.textContent ?? '').trim();
+        if (t) blocks.push(t);
+      } else if (el.namespaceURI === ODT_TEXT_NS && el.localName === 'list') {
+        for (const p of Array.from(el.getElementsByTagNameNS(ODT_TEXT_NS, 'p'))) {
+          const t = (p.textContent ?? '').trim();
+          if (t) blocks.push(t);
+        }
+      }
+    }
+
+    return this.buildRecipesFromBlocks(blocks);
+  }
+
+  private buildRecipesFromBlocks(blocks: string[]): Recipe[] {
+    // Recognized recipe titles (lowercased substring → display name + id).
+    const titles: { match: RegExp; name: string; id: string; servings: string }[] = [
+      { match: /be[cć]ar/i, name: 'Bećar šataraš', id: 'imported-becarac', servings: 'mera za 2 dana' },
+      { match: /pogacic|pogačic/i, name: 'Pogačice', id: 'imported-pogacice', servings: '35 komada' },
+      { match: /ovsena pita/i, name: 'Ovsena pita', id: 'imported-ovsena-pita', servings: '1 plitka tepsija' },
+    ];
+
+    // Find indices where a recipe title appears.
+    const titleIndices: { index: number; def: typeof titles[number] }[] = [];
+    blocks.forEach((b, i) => {
+      const def = titles.find(t => t.match.test(b));
+      if (def && !titleIndices.some(t => t.def === def)) {
+        titleIndices.push({ index: i, def });
+      }
+    });
+
+    if (titleIndices.length === 0) return [];
+
+    const recipes: Recipe[] = [];
+    for (let i = 0; i < titleIndices.length; i++) {
+      const start = titleIndices[i].index + 1; // skip the title line itself
+      const end = i + 1 < titleIndices.length ? titleIndices[i + 1].index : blocks.length;
+      const block = blocks.slice(start, end).filter(b => !/^sastojci$/i.test(b));
+      const { ingredients, instructions } = this.splitRecipeBlock(block);
+      const def = titleIndices[i].def;
+      recipes.push({
+        id: def.id,
+        name: def.name,
+        servings: def.servings,
+        ingredients,
+        instructions,
+      });
+    }
+    return recipes;
+  }
+
+  private splitRecipeBlock(blocks: string[]): { ingredients: Ingredient[]; instructions: string[] } {
+    const headerIdx = blocks.findIndex(b => /uputstvo za pripremu/i.test(b));
+    const ingredientLines: string[] = [];
+    const instructionLines: string[] = [];
+
+    if (headerIdx >= 0) {
+      ingredientLines.push(...blocks.slice(0, headerIdx));
+      instructionLines.push(...blocks.slice(headerIdx + 1));
+    } else {
+      // No explicit header: short qty-like lines = ingredients, long lines = instructions.
+      for (const b of blocks) {
+        const looksLikeIngredient =
+          /^\d/.test(b) || /\b\d+\s*(g|ml|kom|kasik|kasicic)\b/i.test(b) || b.length < 35;
+        if (looksLikeIngredient) ingredientLines.push(b);
+        else instructionLines.push(b);
+      }
+    }
+
+    const ingredients: Ingredient[] = [];
+    for (const line of ingredientLines) {
+      ingredients.push(...this.parseIngredients(line));
+    }
+
+    const instructions = instructionLines
+      .flatMap(line => line.split(/(?<=[.!])\s+/))
+      .map(s => s.trim())
+      .filter(s => s.length > 10);
+
+    return { ingredients, instructions };
   }
 
   parseText(text: string): WeeklyPlan {
