@@ -21,7 +21,12 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
   selector: 'app-editor',
   imports: [FormsModule, MealFormComponent, RecipeFormComponent, UserAvatarComponent, AiPlanFormComponent],
   template: `
-    <div class="px-4 py-4 pb-24">
+    <div class="px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <button
+        (click)="goBack()"
+        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2 -ml-1 px-1">
+        ‹ Nazad
+      </button>
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-xl font-bold text-text-primary">Uredi plan</h1>
         <div class="flex gap-2">
@@ -196,7 +201,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
       <!-- Save status -->
       @if (saveStatus()) {
-        <div role="status" aria-live="polite" class="fixed bottom-20 left-4 right-4 bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse">
+        <div role="status" aria-live="polite" class="fixed left-4 right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse">
           {{ saveStatus() }}
         </div>
       }
@@ -350,6 +355,10 @@ export class EditorComponent {
 
   exportJson(): void {
     this.jsonExport.exportPlan(this.editingPlan());
+  }
+
+  goBack(): void {
+    this.router.navigate(['/settings']);
   }
 
   onAiPlanGenerated(plan: WeeklyPlan): void {

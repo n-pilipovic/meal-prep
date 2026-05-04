@@ -48,6 +48,7 @@ export class App {
   }
 
   showNav(): boolean {
-    return !this.router.url.startsWith('/welcome');
+    const url = this.router.url;
+    return !url.startsWith('/welcome') && !url.startsWith('/editor');
   }
 }
