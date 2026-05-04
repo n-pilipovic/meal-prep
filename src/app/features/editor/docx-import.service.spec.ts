@@ -230,11 +230,65 @@ Brusketi , hleb int 60 g , feta 70 g`;
       `;
       const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS, extra));
       const names = plan.recipes.map(r => r.name);
-      expect(names).toContain('Bećar šataraš');
+      expect(names).toContain('Becarac mera za dva dana');
       expect(names).toContain('Ovsena pita');
-      const becarac = plan.recipes.find(r => r.name === 'Bećar šataraš')!;
+      const becarac = plan.recipes.find(r => r.name === 'Becarac mera za dva dana')!;
       expect(becarac.ingredients.length).toBeGreaterThan(0);
       expect(becarac.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('detects recipes with novel titles using heuristic-based parsing', () => {
+      // A title we have no hardcoded knowledge of — must still be detected via Sastojci header.
+      const extra = `
+        <text:p>Cudni neki novi recept od povrca</text:p>
+        <text:p>Sastojci</text:p>
+        <text:p>200 g pirinca</text:p>
+        <text:p>100 g spanaca</text:p>
+        <text:p>Skuvati pirinac u slanoj vodi. Dodati spanac i pomesati. Peci u rerni 20 minuta.</text:p>
+      `;
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS, extra));
+      const names = plan.recipes.map(r => r.name);
+      expect(names).toContain('Cudni neki novi recept od povrca');
+      const novi = plan.recipes.find(r => r.name === 'Cudni neki novi recept od povrca')!;
+      expect(novi.id).toBe('imported-cudni-neki-novi-recept-od-povrca');
+      expect(novi.ingredients.length).toBeGreaterThan(0);
+    });
+
+    it('links meals to imported recipes via recipeRef', () => {
+      const extra = `
+        <text:p>Becarac mera za dva dana</text:p>
+        <text:list><text:list-item><text:p>500 g paprike</text:p></text:list-item></text:list>
+        <text:p>Uputstvo za pripremu</text:p>
+        <text:list><text:list-item><text:p>Na ulju dinstajte luk oko 10 minuta.</text:p></text:list-item></text:list>
+        <text:p>Ovsena pita</text:p>
+        <text:p>2 jajeta</text:p>
+        <text:p>Umutiti jaja, dodati mekinje. Peci na 220 stepeni pola sata.</text:p>
+      `;
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS, extra));
+      const becarId = plan.recipes.find(r => r.name.toLowerCase().includes('becar'))!.id;
+      const ovsenaId = plan.recipes.find(r => r.name.toLowerCase().includes('ovsena'))!.id;
+
+      const monLunch = plan.days[0].meals.find(m => m.type === MealType.Lunch)!;
+      expect(monLunch.description).toContain('Becar sataras');
+      expect(monLunch.recipeRef).toBe(becarId);
+
+      const tueLunch = plan.days[1].meals.find(m => m.type === MealType.Lunch)!;
+      expect(tueLunch.recipeRef).toBe(becarId);
+
+      const thuBreakfast = plan.days[3].meals.find(m => m.type === MealType.Breakfast)!;
+      expect(thuBreakfast.description).toContain('Ovsena pita');
+      expect(thuBreakfast.recipeRef).toBe(ovsenaId);
+    });
+
+    it('does not set recipeRef when the recipe was not imported', () => {
+      // No extra recipes provided → no recipes parsed → no links set.
+      const plan = service.parseOdtXml(buildOdt(SAMPLE_ROWS));
+      expect(plan.recipes.length).toBe(0);
+      for (const day of plan.days) {
+        for (const meal of day.meals) {
+          expect(meal.recipeRef).toBeUndefined();
+        }
+      }
     });
 
     it('handles missing table gracefully', () => {

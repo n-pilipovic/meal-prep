@@ -5,6 +5,26 @@ const ODT_TABLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 const ODT_TEXT_NS = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 const ODT_OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
 
+const SASTOJCI_RE = /^sastojci\s*:?\s*$/i;
+const UPUTSTVO_RE = /uputstvo\s+za\s+pripremu/i;
+
+const ACTION_VERBS = [
+  'dodajte', 'dodati', 'dinstajte', 'dinstati', 'kuvajte', 'kuvati',
+  'pecite', 'peci', 'peći', 'umutiti', 'umuti', 'umesati', 'umesiti',
+  'rastanjiti', 'pomesati', 'pomesajte', 'sjediniti', 'naredndati',
+  'narendati', 'iseckati', 'iseci', 'iseći', 'isecite', 'servirajte',
+  'servirati', 'premazati', 'sipati', 'pobrasnjaviti', 'vaditi',
+  'vadite', 'mesati', 'mešati', 'mesajte',
+];
+
+function stripDiacritics(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function normalizeText(s: string): string {
+  return stripDiacritics(s.toLowerCase());
+}
+
 /**
  * Parses meal plan files (.docx and .odt) into WeeklyPlan objects.
  *
@@ -69,12 +89,41 @@ export class DocxImportService {
     }
 
     const recipes = this.parseOdtRecipes(doc);
+    this.linkMealsToRecipes(days, recipes);
 
     return {
       weekLabel: `Uvoz ${new Date().toLocaleDateString('sr-Latn')}`,
       days,
       recipes,
     };
+  }
+
+  private linkMealsToRecipes(days: DayPlan[], recipes: Recipe[]): void {
+    if (recipes.length === 0) return;
+    // Build a stem for each recipe from its name's first significant alphabetic word.
+    // Longer stems first so more-specific recipes win when several share a prefix.
+    const matchers = recipes
+      .map(r => ({ id: r.id, stem: this.recipeMatchStem(r.name) }))
+      .filter(m => m.stem.length >= 4)
+      .sort((a, b) => b.stem.length - a.stem.length);
+    if (matchers.length === 0) return;
+
+    for (const day of days) {
+      for (const meal of day.meals) {
+        const haystack = normalizeText(`${meal.name} ${meal.description}`);
+        if (!haystack.trim()) continue;
+        const match = matchers.find(m => haystack.includes(m.stem));
+        if (match) meal.recipeRef = match.id;
+      }
+    }
+  }
+
+  /** Returns a normalized prefix of the title's first significant word, used to fuzzy-match meal text. */
+  private recipeMatchStem(title: string): string {
+    const cleaned = title.replace(/\([^)]*\)/g, ' ');
+    const words = normalizeText(cleaned).split(/[^a-z]+/).filter(w => w.length >= 4);
+    if (words.length === 0) return '';
+    return words[0].slice(0, 5);
   }
 
   private fillDaysFromOdtTable(table: Element, days: DayPlan[]): void {
@@ -151,40 +200,102 @@ export class DocxImportService {
   }
 
   private buildRecipesFromBlocks(blocks: string[]): Recipe[] {
-    // Recognized recipe titles (lowercased substring → display name + id).
-    const titles: { match: RegExp; name: string; id: string; servings: string }[] = [
-      { match: /be[cć]ar/i, name: 'Bećar šataraš', id: 'imported-becarac', servings: 'mera za 2 dana' },
-      { match: /pogacic|pogačic/i, name: 'Pogačice', id: 'imported-pogacice', servings: '35 komada' },
-      { match: /ovsena pita/i, name: 'Ovsena pita', id: 'imported-ovsena-pita', servings: '1 plitka tepsija' },
-    ];
-
-    // Find indices where a recipe title appears.
-    const titleIndices: { index: number; def: typeof titles[number] }[] = [];
-    blocks.forEach((b, i) => {
-      const def = titles.find(t => t.match.test(b));
-      if (def && !titleIndices.some(t => t.def === def)) {
-        titleIndices.push({ index: i, def });
-      }
-    });
-
+    const titleIndices = this.findRecipeTitleIndices(blocks);
     if (titleIndices.length === 0) return [];
 
+    const usedIds = new Set<string>();
     const recipes: Recipe[] = [];
     for (let i = 0; i < titleIndices.length; i++) {
-      const start = titleIndices[i].index + 1; // skip the title line itself
-      const end = i + 1 < titleIndices.length ? titleIndices[i + 1].index : blocks.length;
-      const block = blocks.slice(start, end).filter(b => !/^sastojci$/i.test(b));
-      const { ingredients, instructions } = this.splitRecipeBlock(block);
-      const def = titleIndices[i].def;
-      recipes.push({
-        id: def.id,
-        name: def.name,
-        servings: def.servings,
-        ingredients,
-        instructions,
-      });
+      const start = titleIndices[i];
+      const end = i + 1 < titleIndices.length ? titleIndices[i + 1] : blocks.length;
+      const titleLine = blocks[start];
+      const body = blocks.slice(start + 1, end).filter(b => !SASTOJCI_RE.test(b));
+      const { ingredients, instructions } = this.splitRecipeBlock(body);
+
+      const baseId = `imported-${this.slugify(titleLine)}` || `imported-recipe-${i + 1}`;
+      let id = baseId;
+      let dedupe = 2;
+      while (usedIds.has(id)) id = `${baseId}-${dedupe++}`;
+      usedIds.add(id);
+
+      const { name, servings } = this.splitTitleAndServings(titleLine);
+      recipes.push({ id, name, servings, ingredients, instructions });
     }
     return recipes;
+  }
+
+  /**
+   * Identifies which blocks are recipe titles. Three signals:
+   *  1. First non-header block in the section starts the first recipe (unless it's clearly an ingredient).
+   *  2. Block whose next non-empty block is the "Sastojci" header.
+   *  3. Short block that follows an instruction-like block and itself has no quantity pattern.
+   */
+  private findRecipeTitleIndices(blocks: string[]): number[] {
+    const indices: number[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      if (this.isStructuralHeader(b)) continue;
+
+      const nextIsSastojci = i + 1 < blocks.length && SASTOJCI_RE.test(blocks[i + 1]);
+
+      if (indices.length === 0) {
+        if (nextIsSastojci || !this.hasQuantityPattern(b)) {
+          indices.push(i);
+        }
+        continue;
+      }
+
+      if (nextIsSastojci) {
+        indices.push(i);
+        continue;
+      }
+
+      const prev = blocks[i - 1] ?? '';
+      if (
+        this.looksLikeInstruction(prev) &&
+        b.length < 60 &&
+        !this.hasQuantityPattern(b) &&
+        !this.looksLikeInstruction(b)
+      ) {
+        indices.push(i);
+      }
+    }
+    return indices;
+  }
+
+  private isStructuralHeader(text: string): boolean {
+    return SASTOJCI_RE.test(text) || UPUTSTVO_RE.test(text);
+  }
+
+  private hasQuantityPattern(text: string): boolean {
+    return /\b\d+\s*(g|ml|kom|kasik|kasicic)\b/i.test(text);
+  }
+
+  private looksLikeInstruction(text: string): boolean {
+    if (!text) return false;
+    if (this.isStructuralHeader(text)) return false;
+    const norm = normalizeText(text);
+    const hasActionVerb = ACTION_VERBS.some(v => norm.includes(stripDiacritics(v)));
+    if (!hasActionVerb) return false;
+    // A title may incidentally contain an action verb (e.g. "ispeci" inside parens),
+    // so require some length or sentence-like punctuation before classifying as instruction.
+    return text.length >= 15 || /[.!,;:]/.test(text);
+  }
+
+  private slugify(s: string): string {
+    return normalizeText(s)
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40);
+  }
+
+  private splitTitleAndServings(titleLine: string): { name: string; servings: string } {
+    const parenMatch = titleLine.match(/^([^(]+?)\s*\(([^)]+)\)\s*$/);
+    if (parenMatch) {
+      return { name: parenMatch[1].trim(), servings: parenMatch[2].trim() };
+    }
+    const trimmed = titleLine.trim();
+    return { name: trimmed, servings: '' };
   }
 
   private splitRecipeBlock(blocks: string[]): { ingredients: Ingredient[]; instructions: string[] } {
@@ -256,6 +367,7 @@ export class DocxImportService {
     }
 
     const recipes = this.parseRecipes(sections.extra);
+    this.linkMealsToRecipes(days, recipes);
 
     return {
       weekLabel: `Uvoz ${new Date().toLocaleDateString('sr-Latn')}`,
