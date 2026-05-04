@@ -6,7 +6,7 @@ import { PwaUpdateService } from '../../core/services/pwa-update.service';
   template: `
     @if (updateService.updateAvailable()) {
       <div
-        class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-green-primary px-4 py-3 text-white shadow-lg"
+        class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-green-primary px-4 pb-3 text-white shadow-lg pt-[calc(env(safe-area-inset-top)+0.75rem)]"
         role="alert"
       >
         <span class="text-sm font-medium">Nova verzija je dostupna!</span>

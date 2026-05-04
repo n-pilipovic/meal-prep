@@ -1,6 +1,7 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { APP_VERSION } from '../../../environments/version';
 import { AuthService } from '../../core/services/auth.service';
 import { HouseholdService } from '../../core/services/household.service';
 
@@ -11,7 +12,7 @@ type AuthMode = 'initial' | 'login' | 'register';
   selector: 'app-welcome',
   imports: [FormsModule],
   template: `
-    <div class="min-h-screen flex flex-col items-center justify-center px-6 bg-cream">
+    <div class="min-h-screen flex flex-col items-center justify-center px-6 bg-cream relative">
       <div class="w-full max-w-sm">
         <div class="text-center mb-8">
           <span class="text-5xl mb-3 block" aria-hidden="true">🍽️</span>
@@ -227,6 +228,10 @@ type AuthMode = 'initial' | 'login' | 'register';
         }
 
       </div>
+
+      <p class="absolute bottom-0 left-0 right-0 text-center text-xs text-text-muted font-mono pb-[max(1rem,env(safe-area-inset-bottom))]">
+        Verzija {{ version.version }} · {{ version.commit }}
+      </p>
     </div>
   `,
 })
@@ -234,6 +239,8 @@ export class WelcomeComponent {
   readonly auth = inject(AuthService);
   readonly householdService = inject(HouseholdService);
   private readonly router = inject(Router);
+
+  readonly version = APP_VERSION;
 
   constructor() {
     // If the user already has a household (returning user), redirect away
