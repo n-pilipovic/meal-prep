@@ -29,13 +29,13 @@ jobs:
       - run: npm ci
 
       - name: Run unit tests
-        run: npx ng test --watch=false
+        run: npm test
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
-        run: CI=true npx playwright test
+        run: CI=true npm run e2e
 
       - name: Upload Playwright report
         if: failure()
@@ -46,7 +46,7 @@ jobs:
           retention-days: 7
 
       - name: Build production
-        run: npx ng build --base-href /meal-prep/
+        run: npm run build:prod
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'

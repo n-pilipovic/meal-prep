@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { APP_VERSION } from '../../../environments/version';
 import { HouseholdService } from '../../core/services/household.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PwaInstallService } from '../../core/services/pwa-install.service';
@@ -134,6 +135,11 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
           </div>
           <span class="text-text-muted text-lg">›</span>
         </a>
+
+        <!-- App version -->
+        <p class="text-center text-xs text-text-muted mt-2 font-mono">
+          Verzija {{ version.version }} · {{ version.commit }}
+        </p>
       </div>
     </div>
   `,
@@ -148,6 +154,7 @@ export class SettingsComponent {
   readonly members = this.householdService.members;
 
   readonly prefs = this.notificationService.preferences;
+  readonly version = APP_VERSION;
 
   async enableNotifications(): Promise<void> {
     await this.notificationService.requestPermissionAndSubscribe();
