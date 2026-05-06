@@ -24,11 +24,12 @@
 - **Meal plan editor** — edit meals/ingredients/recipes, import from .docx (Mammoth), export/import JSON, assign plans to specific users
 - **AI plan generator** — 7 age groups (including BLW 6-12 months with baby-safe guidelines), 9 dietary restrictions, 12 common allergens + custom allergens, preferred/avoided ingredients, calorie slider, free-text notes; dual AI provider (Gemini primary, Groq fallback)
 - **Push notifications** — daily summary at 7:00 + per-meal reminders 30 min before each meal (6 cron triggers via Cloudflare Workers), per-user preference toggles
-- **Offline-first** — localStorage persistence, 30-second background sync polling, visibility change detection, optimistic updates with graceful offline degradation
+- **User feedback** — "Povratna informacija" form for bugs / suggestions / questions with up to 3 image attachments (canvas-compressed client-side, EXIF-stripped); auto-creates GitHub issues with screenshots stored as Release assets; *Moje prijave* tab + household *Predlozi* with upvotes; push notifications when the developer responds or changes status
+- **Offline-first** — localStorage persistence, 30-second background sync polling, visibility change detection, optimistic updates with graceful offline degradation; failed feedback submissions queue locally and replay on reconnect
 - **PWA** — installable on iOS and Android, auto-update banner when a new version is available
 - **Install prompts** — step-by-step iOS overlay in Safari, native Android install prompt via beforeinstallprompt API
 - **Accessibility** — ARIA labels and live regions, semantic HTML, screen reader support, skip navigation, dedicated a11y test suites
-- **Firebase auth** — email/password authentication with JWT verification in Cloudflare Worker
+- **Firebase auth** — email/password and Google sign-in with JWT verification in Cloudflare Worker
 
 ## Tech Stack
 
@@ -79,19 +80,25 @@ src/app/
     weekly-view/     # 7-day overview grid
     shopping-list/   # Aggregated ingredients, assignable, filterable by scope/user
     prep-checklist/  # Daily prep with 3-level division
-    editor/          # Meal plan editor + .docx import + AI plan generator
-    settings/        # Notifications, household, PWA install
+    editor/          # Meal plan editor + .docx/.odt import + AI plan generator
+    settings/        # Notifications, household, PWA install, feedback entry
+    report-issue/    # Unified feedback form (bug/suggestion/question) with attachments
+    my-issues/       # Tabbed list (mine / household suggestions) + read-only detail
   shared/
     components/      # BottomNav, DayNavigator, UserAvatar, UserSwitcher,
                      # MealTypeBadge, AssignmentBadge, iOS/Android install prompts,
                      # PWA update banner
     pipes/           # Quantity formatting
 
-cf-worker/           # Cloudflare Worker (API + push notifications)
+cf-worker/           # Cloudflare Worker (API + push + AI + feedback)
   src/
-    index.ts         # Routes + cron handler
-    push.ts          # Notification scheduling
+    index.ts         # Routes + cron + GitHub webhook handler
+    push.ts          # Meal notification scheduling
     web-push.ts      # VAPID/Web Push implementation
+    issues.ts        # GitHub Issues + Release-asset uploads + webhook signature
+    gemini.ts        # Gemini meal-plan generator
+    groq.ts          # Groq fallback generator
+    ai-prompt.ts     # Shared AI prompt template
     kv-helpers.ts    # KV read/write utilities
 ```
 
@@ -111,6 +118,12 @@ cf-worker/           # Cloudflare Worker (API + push notifications)
 | GET | `/api/household/:code/shared` | Get shared state |
 | PUT | `/api/household/:code/shared` | Update shared state |
 | POST | `/api/generate-plan` | Generate AI meal plan |
+| POST | `/api/issues` | Submit user feedback (multipart, images uploaded to GitHub Releases) |
+| GET | `/api/me/issues` | List current user's submitted issues |
+| GET | `/api/household/:code/suggestions` | List household enhancement issues with upvote counts |
+| GET | `/api/issues/:n` | Issue detail (refreshes status from GitHub, returns developer comments) |
+| POST | `/api/issues/:n/upvote` | Toggle upvote on a suggestion |
+| POST | `/api/github-webhook` | GitHub webhook entrypoint (HMAC-verified, dispatches push notifications) |
 
 ## Multi-User Architecture
 
@@ -132,7 +145,7 @@ Both deploy automatically via GitHub Actions on push to `main`:
 - **Angular app** — builds, runs unit + E2E tests, deploys to GitHub Pages
 - **Cloudflare Worker** — deploys via Wrangler using `CLOUDFLARE_API_TOKEN` secret
 
-### Initial Cloudflare Setup
+### Initial Cloudflare Setup (short form)
 
 ```bash
 cd cf-worker
@@ -143,12 +156,20 @@ npx wrangler secret put VAPID_PUBLIC_KEY
 npx wrangler secret put VAPID_PRIVATE_KEY
 npx wrangler secret put GEMINI_API_KEY     # https://aistudio.google.com/apikey
 npx wrangler secret put GROQ_API_KEY       # https://console.groq.com/keys (fallback)
+
+# User feedback (Settings → Povratna informacija):
+npx wrangler secret put GITHUB_TOKEN              # fine-grained PAT, Issues+Contents write
+npx wrangler secret put GITHUB_ASSETS_RELEASE_ID  # numeric id of the "feedback-assets" release
+npx wrangler secret put GITHUB_WEBHOOK_SECRET     # 32+ char random; same value as in webhook config
+
 npm run deploy
 ```
 
 Add `CLOUDFLARE_API_TOKEN` to GitHub repo secrets (Settings → Secrets → Actions) for CI/CD.
 
 Update `src/environments/environment.prod.ts` with the worker URL after deploying.
+
+For full step-by-step setup of every external service (Firebase, Cloudflare, Gemini/Groq, GitHub PAT, GitHub Release for attachments, GitHub webhook), see **[docs/EXTERNAL_SETUP.md](docs/EXTERNAL_SETUP.md)**.
 
 ## Language
 

@@ -16,9 +16,13 @@ crons = [
 [vars]
 VAPID_SUBJECT = "mailto:javasoftwaredeveloper85@gmail.com"
 FIREBASE_PROJECT_ID = "meal-prep-37753"
+GITHUB_REPO = "n-pilipovic/meal-prep"
 # Secrets (set via wrangler secret put):
 #   wrangler secret put VAPID_PUBLIC_KEY
 #   wrangler secret put VAPID_PRIVATE_KEY
-#   wrangler secret put GEMINI_API_KEY     # https://aistudio.google.com/apikey
-#   wrangler secret put GROQ_API_KEY      # https://console.groq.com/keys
+#   wrangler secret put GEMINI_API_KEY            # https://aistudio.google.com/apikey
+#   wrangler secret put GROQ_API_KEY              # https://console.groq.com/keys
+#   wrangler secret put GITHUB_TOKEN              # fine-grained PAT, repo scope: Issues + Contents (write)
+#   wrangler secret put GITHUB_ASSETS_RELEASE_ID  # release id for tag "feedback-assets"
+#   wrangler secret put GITHUB_WEBHOOK_SECRET     # random secret used for X-Hub-Signature-256 verification
 # Generate VAPID keys with: npx web-push generate-vapid-keys

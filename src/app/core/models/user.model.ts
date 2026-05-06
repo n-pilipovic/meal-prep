@@ -28,6 +28,7 @@ export interface NotificationPreferences {
   enabled: boolean;
   dailySummary: boolean;
   mealReminders: boolean;
+  issueUpdates?: boolean;
 }
 
 export const USER_COLORS = [

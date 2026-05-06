@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Household, SharedState, NotificationPreferences } from '../models/user.model';
 import { WeeklyPlan } from '../models/meal.model';
 import { MealPlanPreferences } from '../models/ai-plan.model';
+import { IssueDetail, IssueRecord } from '../models/issue.model';
 
 import { environment } from '../../../environments/environment';
 
@@ -91,6 +92,34 @@ export class ApiService {
     return this.http.post<WeeklyPlan>(
       `${this.baseUrl}/api/generate-plan`,
       prefs,
+    );
+  }
+
+  submitIssue(form: FormData): Observable<{ number: number; githubUrl: string }> {
+    return this.http.post<{ number: number; githubUrl: string }>(
+      `${this.baseUrl}/api/issues`,
+      form,
+    );
+  }
+
+  getMyIssues(): Observable<IssueRecord[]> {
+    return this.http.get<IssueRecord[]>(`${this.baseUrl}/api/me/issues`);
+  }
+
+  getHouseholdSuggestions(code: string): Observable<IssueRecord[]> {
+    return this.http.get<IssueRecord[]>(
+      `${this.baseUrl}/api/household/${code}/suggestions`,
+    );
+  }
+
+  getIssueDetail(number: number): Observable<IssueDetail> {
+    return this.http.get<IssueDetail>(`${this.baseUrl}/api/issues/${number}`);
+  }
+
+  toggleIssueUpvote(number: number): Observable<{ upvotes: number; upvotedByMe: boolean }> {
+    return this.http.post<{ upvotes: number; upvotedByMe: boolean }>(
+      `${this.baseUrl}/api/issues/${number}/upvote`,
+      {},
     );
   }
 }

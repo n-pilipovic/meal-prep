@@ -104,6 +104,18 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
                          (ngModelChange)="toggleMealReminders($event)"
                          class="w-5 h-5 accent-green-primary" />
                 </label>
+
+                <!-- Odgovori na moje prijave toggle (issue reply notifications) -->
+                <label class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-text-primary block">Odgovori na moje prijave</span>
+                    <span class="text-xs text-text-muted">Obaveštenje kad razvijač odgovori ili promeni status</span>
+                  </div>
+                  <input type="checkbox"
+                         [ngModel]="prefs().issueUpdates ?? true"
+                         (ngModelChange)="toggleIssueUpdates($event)"
+                         class="w-5 h-5 accent-green-primary" />
+                </label>
               </div>
             }
           } @else if (!notificationService.pushSupported() && !notificationService.needsInstallPrompt()) {
@@ -125,6 +137,26 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
             </button>
           </div>
         }
+
+        <!-- Feedback / report issue -->
+        <a routerLink="/report-issue"
+           class="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between active:bg-cream-light transition-colors">
+          <div>
+            <h2 class="font-semibold text-text-primary">Povratna informacija</h2>
+            <p class="text-sm text-text-muted">Greška, predlog ili pitanje</p>
+          </div>
+          <span class="text-text-muted text-lg">›</span>
+        </a>
+
+        <!-- My issues / suggestions -->
+        <a routerLink="/my-issues"
+           class="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between active:bg-cream-light transition-colors">
+          <div>
+            <h2 class="font-semibold text-text-primary">Moje prijave</h2>
+            <p class="text-sm text-text-muted">Status tvojih prijava i predlozi domaćinstva</p>
+          </div>
+          <span class="text-text-muted text-lg">›</span>
+        </a>
 
         <!-- Editor link -->
         <a routerLink="/editor"
@@ -171,6 +203,13 @@ export class SettingsComponent {
     this.notificationService.updatePreferences({
       ...this.prefs(),
       mealReminders: enabled,
+    });
+  }
+
+  toggleIssueUpdates(enabled: boolean): void {
+    this.notificationService.updatePreferences({
+      ...this.prefs(),
+      issueUpdates: enabled,
     });
   }
 

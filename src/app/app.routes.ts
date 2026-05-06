@@ -56,4 +56,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/editor/editor.component').then(m => m.EditorComponent),
   },
+  {
+    path: 'report-issue',
+    canActivate: [onboardingGuard],
+    loadComponent: () =>
+      import('./features/report-issue/report-issue.component').then(m => m.ReportIssueComponent),
+  },
+  {
+    path: 'my-issues',
+    canActivate: [onboardingGuard],
+    loadComponent: () =>
+      import('./features/my-issues/my-issues.component').then(m => m.MyIssuesComponent),
+  },
+  {
+    path: 'issue/:number',
+    canActivate: [onboardingGuard],
+    loadComponent: () =>
+      import('./features/my-issues/issue-detail.component').then(m => m.IssueDetailComponent),
+  },
 ];

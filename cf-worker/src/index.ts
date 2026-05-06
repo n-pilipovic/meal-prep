@@ -2,6 +2,20 @@ import { getJSON, putJSON, type KVNamespace } from './kv-helpers';
 import { sendScheduledPush } from './push';
 import { generateMealPlanGroq } from './groq';
 import { generateMealPlanGemini } from './gemini';
+import {
+  ATTACHMENT_LIMITS,
+  createIssueFlow,
+  getIssueDetail,
+  handleWebhook,
+  listHouseholdSuggestions,
+  listMyIssues,
+  refreshIssueStateFromGithub,
+  sniffMime,
+  toggleUpvote,
+  verifyWebhookSignature,
+  type IssueType,
+  type IssuesEnv,
+} from './issues';
 import { Auth, WorkersKVStoreSingle } from 'firebase-auth-cloudflare-workers';
 
 interface Env {
@@ -12,6 +26,30 @@ interface Env {
   GROQ_API_KEY: string;
   GEMINI_API_KEY?: string;
   FIREBASE_PROJECT_ID: string;
+  GITHUB_TOKEN?: string;
+  GITHUB_REPO?: string;
+  GITHUB_ASSETS_RELEASE_ID?: string;
+  GITHUB_WEBHOOK_SECRET?: string;
+}
+
+function issuesEnv(env: Env): IssuesEnv | null {
+  if (
+    !env.GITHUB_TOKEN ||
+    !env.GITHUB_REPO ||
+    !env.GITHUB_ASSETS_RELEASE_ID ||
+    !env.GITHUB_WEBHOOK_SECRET
+  )
+    return null;
+  return {
+    KV: env.KV,
+    GITHUB_TOKEN: env.GITHUB_TOKEN,
+    GITHUB_REPO: env.GITHUB_REPO,
+    GITHUB_ASSETS_RELEASE_ID: env.GITHUB_ASSETS_RELEASE_ID,
+    GITHUB_WEBHOOK_SECRET: env.GITHUB_WEBHOOK_SECRET,
+    VAPID_SUBJECT: env.VAPID_SUBJECT,
+    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY: env.VAPID_PRIVATE_KEY,
+  };
 }
 
 interface Household {
@@ -249,6 +287,174 @@ export default {
       }
 
       return json({ error: 'No AI provider configured' }, 500);
+    }
+
+    // POST /api/issues — submit a new issue (multipart/form-data)
+    if (request.method === 'POST' && path === '/api/issues') {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const householdCode = await env.KV.get(`user-household:${uid}`);
+      if (!householdCode) return json({ error: 'No household' }, 404);
+
+      const household = await getJSON<Household>(env.KV, `household:${householdCode}`);
+      if (!household) return json({ error: 'Household not found' }, 404);
+      const author = household.members.find((m) => m.id === uid);
+      if (!author) return json({ error: 'Member not found' }, 404);
+
+      const form = await request.formData();
+      const type = form.get('type') as IssueType | null;
+      const title = (form.get('title') as string | null)?.trim() ?? '';
+      const description = (form.get('description') as string | null)?.trim() ?? '';
+      const contextRaw = (form.get('context') as string | null) ?? '{}';
+
+      if (!type || !['bug', 'suggestion', 'question'].includes(type)) {
+        return json({ error: 'Neispravan tip' }, 400);
+      }
+      if (!title || title.length > 100) {
+        return json({ error: 'Naslov je obavezan i mora imati do 100 karaktera.' }, 400);
+      }
+      if (!description || description.length > 4000) {
+        return json({ error: 'Opis je obavezan i mora imati do 4000 karaktera.' }, 400);
+      }
+
+      let context: Record<string, string> = {};
+      try {
+        context = JSON.parse(contextRaw);
+      } catch {
+        context = {};
+      }
+
+      // workers-types declares getAll as string[] but the runtime returns File for file parts
+      const rawEntries = (form.getAll('attachments') as unknown as Array<File | string>).filter(
+        (v): v is File => typeof v !== 'string',
+      );
+      if (rawEntries.length > ATTACHMENT_LIMITS.MAX_ATTACHMENTS) {
+        return json({ error: `Najviše ${ATTACHMENT_LIMITS.MAX_ATTACHMENTS} priloga.` }, 400);
+      }
+      const attachments: { bytes: Uint8Array; mime: string }[] = [];
+      for (const file of rawEntries) {
+        if (file.size > ATTACHMENT_LIMITS.MAX_ATTACHMENT_SIZE) {
+          return json({ error: 'Prilog je prevelik (>5 MB).' }, 400);
+        }
+        const buf = new Uint8Array(await file.arrayBuffer());
+        const mime = sniffMime(buf);
+        if (!mime || !ATTACHMENT_LIMITS.ALLOWED_MIME.has(mime)) {
+          return json({ error: 'Dozvoljeni formati: JPEG, PNG, WebP.' }, 400);
+        }
+        attachments.push({ bytes: buf, mime });
+      }
+
+      try {
+        const result = await createIssueFlow(issuesCfg, {
+          type,
+          title,
+          description,
+          attachments,
+          context,
+          authorUserId: uid,
+          authorName: author.name,
+          householdCode,
+        });
+        return json(result);
+      } catch (err: any) {
+        return json({ error: err.message ?? 'Slanje nije uspelo.' }, 400);
+      }
+    }
+
+    // GET /api/me/issues — list current user's issues
+    if (request.method === 'GET' && path === '/api/me/issues') {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const householdCode = await env.KV.get(`user-household:${uid}`);
+      if (!householdCode) return json([]);
+
+      const list = await listMyIssues(issuesCfg, uid, householdCode);
+      return json(list);
+    }
+
+    // GET /api/household/:code/suggestions — list household enhancement issues
+    const householdSuggMatch = path.match(/^\/api\/household\/([A-Z0-9]+)\/suggestions$/);
+    if (request.method === 'GET' && householdSuggMatch) {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const code = householdSuggMatch[1];
+      const myCode = await env.KV.get(`user-household:${uid}`);
+      if (myCode !== code) return json({ error: 'Forbidden' }, 403);
+
+      const list = await listHouseholdSuggestions(issuesCfg, code, uid);
+      return json(list);
+    }
+
+    // GET /api/issues/:n — issue detail (refreshes status from GitHub)
+    const issueDetailMatch = path.match(/^\/api\/issues\/(\d+)$/);
+    if (request.method === 'GET' && issueDetailMatch) {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const code = await env.KV.get(`user-household:${uid}`);
+      if (!code) return json({ error: 'No household' }, 404);
+
+      const number = Number(issueDetailMatch[1]);
+      await refreshIssueStateFromGithub(issuesCfg, number);
+      const detail = await getIssueDetail(issuesCfg, number, uid, code);
+      if (!detail) return json({ error: 'Not found' }, 404);
+      return json(detail);
+    }
+
+    // POST /api/issues/:n/upvote — toggle upvote on a suggestion
+    const upvoteMatch = path.match(/^\/api\/issues\/(\d+)\/upvote$/);
+    if (request.method === 'POST' && upvoteMatch) {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const number = Number(upvoteMatch[1]);
+      const result = await toggleUpvote(issuesCfg, number, uid);
+      if (!result) return json({ error: 'Not found' }, 404);
+      return json(result);
+    }
+
+    // POST /api/github-webhook — GitHub webhook entrypoint (HMAC-verified)
+    if (request.method === 'POST' && path === '/api/github-webhook') {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const event = request.headers.get('X-GitHub-Event');
+      const signature = request.headers.get('X-Hub-Signature-256');
+      const rawBody = await request.text();
+      const valid = await verifyWebhookSignature(
+        issuesCfg.GITHUB_WEBHOOK_SECRET,
+        signature,
+        rawBody,
+      );
+      if (!valid) return json({ error: 'Invalid signature' }, 401);
+
+      try {
+        const payload = JSON.parse(rawBody);
+        if (event === 'issues' || event === 'issue_comment') {
+          await handleWebhook(issuesCfg, event, payload);
+        }
+        return json({ ok: true });
+      } catch (err: any) {
+        return json({ error: err.message ?? 'Webhook error' }, 400);
+      }
     }
 
     return json({ error: 'Not found' }, 404);

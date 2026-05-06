@@ -1,11 +1,12 @@
 import { Component, inject, DestroyRef } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, fromEvent } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BottomNavComponent } from './shared/components/bottom-nav.component';
 import { IosInstallPromptComponent } from './shared/components/ios-install-prompt.component';
 import { AndroidInstallPromptComponent } from './shared/components/android-install-prompt.component';
 import { PwaUpdateBannerComponent } from './shared/components/pwa-update-banner.component';
+import { IssueReportService } from './core/services/issue-report.service';
 
 @Component({
   selector: 'app-root',
@@ -34,6 +35,7 @@ import { PwaUpdateBannerComponent } from './shared/components/pwa-update-banner.
 export class App {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly issueReport = inject(IssueReportService);
 
   constructor() {
     this.router.events
@@ -45,6 +47,13 @@ export class App {
         const main = document.getElementById('main-content');
         main?.focus({ preventScroll: false });
       });
+
+    if (typeof window !== 'undefined') {
+      fromEvent(window, 'online')
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => void this.issueReport.flushQueue());
+      if (navigator.onLine) void this.issueReport.flushQueue();
+    }
   }
 
   showNav(): boolean {
