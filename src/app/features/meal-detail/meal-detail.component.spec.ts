@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { MealDetailComponent } from './meal-detail.component';
+import { MealDataService } from '../../core/services/meal-data.service';
 import { MealType, IngredientCategory, WeeklyPlan } from '../../core/models/meal.model';
 import { Component, signal } from '@angular/core';
 
@@ -38,11 +39,12 @@ const MOCK_PLAN: WeeklyPlan = {
 
 @Component({
   imports: [MealDetailComponent],
-  template: `<app-meal-detail [dayIndex]="dayIndex()" [mealType]="mealType()" />`,
+  template: `<app-meal-detail [dayIndex]="dayIndex()" [mealType]="mealType()" [user]="user()" />`,
 })
 class TestHost {
   dayIndex = signal('0');
   mealType = signal('rucak');
+  user = signal<string | undefined>(undefined);
 }
 
 describe('MealDetailComponent', () => {
@@ -97,6 +99,29 @@ describe('MealDetailComponent', () => {
     const btn = fixture.nativeElement.querySelector('button[aria-label="Uđi u režim kuvanja"]');
     expect(btn).toBeTruthy();
     expect(btn.textContent).toContain('Kuvaj');
+  });
+
+  it('should resolve meal against another household member when [user] is set', () => {
+    // Seed a different plan for "other-uid" via the service
+    const mealData = TestBed.inject(MealDataService);
+    const otherPlan: WeeklyPlan = {
+      ...MOCK_PLAN,
+      days: MOCK_PLAN.days.map((d, i) => ({
+        ...d,
+        meals: d.meals.map(m => ({ ...m, name: i === 0 ? 'Drugi obrok' : m.name })),
+      })),
+    };
+    mealData.savePlanForUser('other-uid', otherPlan);
+
+    // savePlanForUser triggers an HTTP PUT — handle it
+    const saveReq = httpTesting.expectOne((req) => req.url.endsWith('/api/user/other-uid/plan'));
+    saveReq.flush({ ok: true });
+
+    fixture.componentInstance.user.set('other-uid');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Drugi obrok');
+    expect(fixture.nativeElement.textContent).not.toContain('Bolonjeze špagete');
   });
 
   describe('Cook Mode', () => {

@@ -165,6 +165,10 @@ export class MealDetailComponent implements OnDestroy {
 
   readonly dayIndex = input.required<string>();
   readonly mealType = input.required<string>();
+  /** Bound from the `?user=<id>` query param via withComponentInputBinding().
+   *  When set, the detail view resolves the meal + owner against this
+   *  household member's plan instead of the viewer's. */
+  readonly user = input<string | undefined>(undefined);
 
   readonly checked = signal<Record<string, boolean>>({});
   readonly cookMode = signal(false);
@@ -182,12 +186,22 @@ export class MealDetailComponent implements OnDestroy {
   });
 
   readonly mealOwner = computed<UserProfile | null>(() => {
-    const user = this.householdService.currentUser();
-    return this.householdService.isLoggedIn() ? user : null;
+    if (!this.householdService.isLoggedIn()) return null;
+    const otherUid = this.user();
+    if (otherUid) {
+      return this.householdService.members().find(m => m.id === otherUid) ?? null;
+    }
+    return this.householdService.currentUser();
   });
 
   readonly meal = computed(() => {
-    return this.mealData.getMealForDay(Number(this.dayIndex()), this.mealType() as MealType);
+    const day = Number(this.dayIndex());
+    const type = this.mealType() as MealType;
+    const otherUid = this.user();
+    if (otherUid) {
+      return this.mealData.getMealForUser(otherUid, day, type);
+    }
+    return this.mealData.getMealForDay(day, type);
   });
 
   readonly recipe = computed<Recipe | null>(() => {

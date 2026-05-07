@@ -7,6 +7,7 @@ import { Meal, MealType, MEAL_LABELS, MEAL_TIMES } from '../../core/models/meal.
   imports: [RouterLink],
   template: `
     <a [routerLink]="['/day', dayIndex(), 'meal', meal().type]"
+       [queryParams]="userId() ? { user: userId() } : null"
        class="block bg-white rounded-2xl shadow-sm p-4 active:scale-[0.98] transition-transform">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
@@ -29,6 +30,9 @@ import { Meal, MealType, MEAL_LABELS, MEAL_TIMES } from '../../core/models/meal.
 export class MealCardComponent {
   readonly meal = input.required<Meal>();
   readonly dayIndex = input.required<number>();
+  /** When set, the routerLink carries `?user=<id>` so the detail page resolves
+   *  the meal against this household member's plan instead of the viewer's. */
+  readonly userId = input<string | null>(null);
 
   label(): string {
     return MEAL_LABELS[this.meal().type as MealType] ?? '';

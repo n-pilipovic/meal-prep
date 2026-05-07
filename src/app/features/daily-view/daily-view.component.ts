@@ -33,7 +33,10 @@ const SWIPE_THRESHOLD = 50;
       <div class="px-4 flex flex-col gap-3 pb-4">
         @if (activeDayPlan(); as day) {
           @for (meal of day.meals; track meal.type) {
-            <app-meal-card [meal]="meal" [dayIndex]="day.dayIndex" />
+            <app-meal-card
+              [meal]="meal"
+              [dayIndex]="day.dayIndex"
+              [userId]="viewingOtherUserId()" />
           }
 
           <button
@@ -72,6 +75,14 @@ export class DailyViewComponent implements OnInit {
 
     // Viewing another user's plan from KV
     return this.mealData.getDayPlanForUser(uid, dayIdx);
+  });
+
+  /** Set only when the user is browsing another household member's plan;
+   *  used to attach `?user=<id>` to meal-card links. */
+  readonly viewingOtherUserId = computed<string | null>(() => {
+    const uid = this.viewingUserId();
+    const currentUid = this.householdService.currentUserId();
+    return uid && uid !== currentUid ? uid : null;
   });
 
   ngOnInit(): void {

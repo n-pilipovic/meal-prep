@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { MealCardComponent } from './meal-card.component';
 import { Meal, MealType, IngredientCategory } from '../../core/models/meal.model';
 
 @Component({
   imports: [MealCardComponent],
-  template: `<app-meal-card [meal]="meal" [dayIndex]="0" />`,
+  template: `<app-meal-card [meal]="meal" [dayIndex]="0" [userId]="userId()" />`,
 })
 class TestHost {
   meal: Meal = {
@@ -20,6 +20,7 @@ class TestHost {
       { name: 'Paradajz', quantity: null, unit: '', category: IngredientCategory.Produce },
     ],
   };
+  userId = signal<string | null>(null);
 }
 
 describe('MealCardComponent', () => {
@@ -60,8 +61,15 @@ describe('MealCardComponent', () => {
     expect(text).toContain('80g');
   });
 
-  it('should link to meal detail route', () => {
+  it('should link to meal detail route without query param when userId is null', () => {
     const link = fixture.nativeElement.querySelector('a');
     expect(link.getAttribute('href')).toBe('/day/0/meal/rucak');
+  });
+
+  it('should append ?user=<id> when userId is set (viewing another household member)', () => {
+    fixture.componentInstance.userId.set('user-123');
+    fixture.detectChanges();
+    const link = fixture.nativeElement.querySelector('a');
+    expect(link.getAttribute('href')).toBe('/day/0/meal/rucak?user=user-123');
   });
 });
