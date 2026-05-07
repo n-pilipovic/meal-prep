@@ -24,7 +24,7 @@
 - **Meal plan editor** — edit meals/ingredients/recipes, import from .docx (Mammoth), export/import JSON, assign plans to specific users
 - **AI plan generator** — 7 age groups (including BLW 6-12 months with baby-safe guidelines), 9 dietary restrictions, 12 common allergens + custom allergens, preferred/avoided ingredients, calorie slider, free-text notes; dual AI provider (Gemini primary, Groq fallback)
 - **Push notifications** — daily summary at 7:00 + per-meal reminders 30 min before each meal (6 cron triggers via Cloudflare Workers), per-user preference toggles
-- **User feedback** — "Povratna informacija" form for bugs / suggestions / questions with up to 3 image attachments (canvas-compressed client-side, EXIF-stripped); auto-creates GitHub issues with screenshots stored as Release assets; *Moje prijave* tab + household *Predlozi* with upvotes; push notifications when the developer responds or changes status
+- **User feedback** — "Povratna informacija" form for bugs / suggestions / questions with up to 3 image attachments (canvas-compressed client-side, EXIF-stripped); auto-creates GitHub issues with screenshots stored as Release assets; *Moje prijave* tab + household *Predlozi* with upvotes; in-app comment composer on each issue detail page (household members can reply, authored comments are tagged with an invisible marker so the app can attribute them); push notifications when the developer responds, another household member comments, or status changes
 - **Offline-first** — localStorage persistence, 30-second background sync polling, visibility change detection, optimistic updates with graceful offline degradation; failed feedback submissions queue locally and replay on reconnect
 - **PWA** — installable on iOS and Android, auto-update banner when a new version is available
 - **Install prompts** — step-by-step iOS overlay in Safari, native Android install prompt via beforeinstallprompt API
@@ -123,6 +123,7 @@ cf-worker/           # Cloudflare Worker (API + push + AI + feedback)
 | GET | `/api/household/:code/suggestions` | List household enhancement issues with upvote counts |
 | GET | `/api/issues/:n` | Issue detail (refreshes status from GitHub, returns developer comments) |
 | POST | `/api/issues/:n/upvote` | Toggle upvote on a suggestion |
+| POST | `/api/issues/:n/comments` | Post a comment from a household member (any same-household user) |
 | POST | `/api/github-webhook` | GitHub webhook entrypoint (HMAC-verified, dispatches push notifications) |
 
 ## Multi-User Architecture

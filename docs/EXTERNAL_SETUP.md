@@ -221,7 +221,11 @@ GitHub will send a `ping` event immediately. If the webhook page shows a green c
 | Issue closed (`not_planned`) | `rejected` | "Status: Odbačeno" |
 | Issue reopened | `open` | "Status: Otvoreno" |
 | Label `in-progress` added | `in_progress` | "Status: U obradi" |
-| Comment by repo owner/member | (status unchanged) | "Razvijač je odgovorio na #N" + first 80 chars |
+| Comment without user marker | (status unchanged) | "Razvijač je odgovorio na #N" + first 80 chars |
+| Comment with user marker, by another household member | (status unchanged) | "{Name} je komentarisao #N" + first 80 chars |
+| Comment with user marker, by the original reporter | (status unchanged) | suppressed (no self-push) |
+
+The worker distinguishes user comments from developer comments via an HTML-comment marker `<!-- mp:user-comment authorId="..." authorName="..." -->` that the worker prepends when a household member replies via the in-app composer. The marker is invisible in the GitHub UI render and is stripped from the in-app comment view.
 
 Push delivery requires the user to have:
 - Subscribed to push (toggled on in Settings → Obaveštenja).

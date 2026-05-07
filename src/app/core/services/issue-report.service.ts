@@ -146,6 +146,10 @@ export class IssueReportService {
     return firstValueFrom(this.api.toggleIssueUpvote(number));
   }
 
+  addComment(number: number, body: string): Promise<{ ok: boolean }> {
+    return firstValueFrom(this.api.addIssueComment(number, body));
+  }
+
   private buildFormData(input: {
     type: IssueType;
     title: string;

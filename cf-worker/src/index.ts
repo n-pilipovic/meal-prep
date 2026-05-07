@@ -9,6 +9,7 @@ import {
   handleWebhook,
   listHouseholdSuggestions,
   listMyIssues,
+  postUserComment,
   refreshIssueStateFromGithub,
   sniffMime,
   toggleUpvote,
@@ -414,6 +415,35 @@ export default {
       const detail = await getIssueDetail(issuesCfg, number, uid, code);
       if (!detail) return json({ error: 'Not found' }, 404);
       return json(detail);
+    }
+
+    // POST /api/issues/:n/comments — household member posts a comment
+    const commentMatch = path.match(/^\/api\/issues\/(\d+)\/comments$/);
+    if (request.method === 'POST' && commentMatch) {
+      const issuesCfg = issuesEnv(env);
+      if (!issuesCfg) return json({ error: 'Issues not configured' }, 503);
+
+      const uid = await getFirebaseUid(request, env);
+      if (!uid) return json({ error: 'Unauthorized' }, 401);
+
+      const code = await env.KV.get(`user-household:${uid}`);
+      if (!code) return json({ error: 'No household' }, 404);
+
+      const household = await getJSON<Household>(env.KV, `household:${code}`);
+      if (!household) return json({ error: 'Household not found' }, 404);
+      const author = household.members.find((m) => m.id === uid);
+      if (!author) return json({ error: 'Member not found' }, 404);
+
+      const { body } = (await request.json()) as { body?: string };
+      const trimmed = (body ?? '').trim();
+      if (!trimmed) return json({ error: 'Komentar je obavezan.' }, 400);
+      if (trimmed.length > 2000)
+        return json({ error: 'Komentar može imati do 2000 karaktera.' }, 400);
+
+      const number = Number(commentMatch[1]);
+      const result = await postUserComment(issuesCfg, number, uid, author.name, code, trimmed);
+      if (!result.ok) return json({ error: result.reason }, result.status);
+      return json({ ok: true });
     }
 
     // POST /api/issues/:n/upvote — toggle upvote on a suggestion

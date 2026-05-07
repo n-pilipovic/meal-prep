@@ -122,4 +122,11 @@ export class ApiService {
       {},
     );
   }
+
+  addIssueComment(number: number, body: string): Observable<{ ok: boolean }> {
+    return this.http.post<{ ok: boolean }>(
+      `${this.baseUrl}/api/issues/${number}/comments`,
+      { body },
+    );
+  }
 }

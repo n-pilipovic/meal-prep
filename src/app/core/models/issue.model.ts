@@ -46,7 +46,8 @@ export interface IssueDetail {
 }
 
 export interface IssueComment {
-  author: 'developer' | 'reporter';
+  author: 'developer' | 'user';
+  authorName?: string;
   body: string;
   createdAt: string;
 }

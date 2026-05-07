@@ -408,6 +408,35 @@ export async function listHouseholdSuggestions(
   return out;
 }
 
+interface ParsedComment {
+  author: 'developer' | 'user';
+  authorName?: string;
+  authorUserId?: string;
+  body: string;
+  createdAt: string;
+}
+
+const USER_COMMENT_MARKER_RE =
+  /^<!--\s*mp:user-comment\s+authorId="([^"]+)"\s+authorName="([^"]+)"\s*-->\s*\n?/;
+
+function parseGithubComment(raw: { body: string; created_at: string }): ParsedComment {
+  const m = raw.body.match(USER_COMMENT_MARKER_RE);
+  if (m) {
+    return {
+      author: 'user',
+      authorUserId: m[1],
+      authorName: m[2],
+      body: raw.body.slice(m[0].length).replace(/^\*\*[^*]+\*\*:\s*\n+/, ''),
+      createdAt: raw.created_at,
+    };
+  }
+  return { author: 'developer', body: raw.body, createdAt: raw.created_at };
+}
+
+function escapeMarkerAttr(value: string): string {
+  return value.replace(/"/g, '').replace(/[\r\n]/g, ' ');
+}
+
 export async function getIssueDetail(
   env: IssuesEnv,
   number: number,
@@ -417,7 +446,7 @@ export async function getIssueDetail(
   issue: PublicIssue;
   description: string;
   attachments: { url: string; name: string }[];
-  comments: { author: 'developer' | 'reporter'; body: string; createdAt: string }[];
+  comments: { author: 'developer' | 'user'; authorName?: string; body: string; createdAt: string }[];
 } | null> {
   const rec = await getJSON<IssueRecord>(env.KV, `issue:${number}`);
   if (!rec) return null;
@@ -430,21 +459,21 @@ export async function getIssueDetail(
     `https://api.github.com/repos/${env.GITHUB_REPO}/issues/${number}/comments`,
     { headers: ghHeaders(env) },
   );
-  let comments: { author: 'developer' | 'reporter'; body: string; createdAt: string }[] = [];
+  let comments: { author: 'developer' | 'user'; authorName?: string; body: string; createdAt: string }[] = [];
   if (commentsRes.ok) {
     const raw = (await commentsRes.json()) as {
       body: string;
       created_at: string;
-      author_association: string;
     }[];
-    comments = raw.map((c) => ({
-      author:
-        c.author_association === 'OWNER' || c.author_association === 'MEMBER'
-          ? 'developer'
-          : 'reporter',
-      body: c.body,
-      createdAt: c.created_at,
-    }));
+    comments = raw.map((c) => {
+      const parsed = parseGithubComment(c);
+      return {
+        author: parsed.author,
+        authorName: parsed.authorName,
+        body: parsed.body,
+        createdAt: parsed.createdAt,
+      };
+    });
   }
 
   return {
@@ -453,6 +482,42 @@ export async function getIssueDetail(
     attachments: rec.attachments.map((a) => ({ url: a.url, name: a.name })),
     comments,
   };
+}
+
+export async function postUserComment(
+  env: IssuesEnv,
+  number: number,
+  authorUserId: string,
+  authorName: string,
+  householdCode: string,
+  rawBody: string,
+): Promise<{ ok: true } | { ok: false; status: number; reason: string }> {
+  const rec = await getJSON<IssueRecord>(env.KV, `issue:${number}`);
+  if (!rec) return { ok: false, status: 404, reason: 'Not found' };
+  if (rec.householdCode !== householdCode)
+    return { ok: false, status: 403, reason: 'Forbidden' };
+
+  const safeName = escapeMarkerAttr(authorName);
+  const safeId = escapeMarkerAttr(authorUserId);
+  const marker = `<!-- mp:user-comment authorId="${safeId}" authorName="${safeName}" -->`;
+  const fullBody = `${marker}\n**${safeName}**:\n\n${rawBody}`;
+
+  const res = await fetch(
+    `https://api.github.com/repos/${env.GITHUB_REPO}/issues/${number}/comments`,
+    {
+      method: 'POST',
+      headers: { ...ghHeaders(env), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: fullBody }),
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    return { ok: false, status: 502, reason: `GitHub comment failed: ${res.status} ${text}` };
+  }
+
+  rec.updatedAt = new Date().toISOString();
+  await putJSON(env.KV, `issue:${number}`, rec);
+  return { ok: true };
 }
 
 export async function toggleUpvote(
@@ -592,13 +657,30 @@ export async function handleWebhook(
   } else if (event === 'issue_comment' && payload.action === 'created' && payload.comment) {
     rec.updatedAt = new Date().toISOString();
     await putJSON(env.KV, `issue:${issueNumber}`, rec);
-    const snippet = payload.comment.body.slice(0, 80);
-    await notifyReporter(
-      env,
-      rec,
-      `Razvijač je odgovorio na #${rec.number}`,
-      snippet,
-    );
+
+    const parsed = parseGithubComment({
+      body: payload.comment.body,
+      created_at: new Date().toISOString(),
+    });
+    const snippet = parsed.body.slice(0, 80);
+
+    if (parsed.author === 'user') {
+      // Don't notify the reporter when they comment on their own issue
+      if (parsed.authorUserId === rec.authorUserId) return;
+      await notifyReporter(
+        env,
+        rec,
+        `${parsed.authorName ?? 'Korisnik'} je komentarisao #${rec.number}`,
+        snippet,
+      );
+    } else {
+      await notifyReporter(
+        env,
+        rec,
+        `Razvijač je odgovorio na #${rec.number}`,
+        snippet,
+      );
+    }
   }
 }
 

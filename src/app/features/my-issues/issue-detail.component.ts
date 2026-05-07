@@ -1,7 +1,10 @@
 import { Component, inject, input, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { HouseholdService } from '../../core/services/household.service';
 import { IssueReportService } from '../../core/services/issue-report.service';
 import {
+  IssueComment,
   IssueDetail,
   IssueState,
   ISSUE_STATE_LABELS,
@@ -17,6 +20,7 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
 
 @Component({
   selector: 'app-issue-detail',
+  imports: [FormsModule],
   template: `
     <div class="px-4 py-4 pb-24 max-w-xl mx-auto">
       <button
@@ -70,7 +74,7 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
                 @for (c of detail()!.comments; track c.createdAt) {
                   <div [class]="c.author === 'developer' ? 'bg-cream-light rounded-xl p-3' : 'bg-white border border-border rounded-xl p-3'">
                     <p class="text-xs text-text-muted mb-1">
-                      {{ c.author === 'developer' ? 'Razvijač' : 'Prijavilac' }} · {{ formatDate(c.createdAt) }}
+                      {{ commentAuthorLabel(c) }} · {{ formatDate(c.createdAt) }}
                     </p>
                     <p class="text-sm text-text-secondary whitespace-pre-wrap">{{ c.body }}</p>
                   </div>
@@ -78,6 +82,31 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
               </div>
             </div>
           }
+
+          <!-- Comment composer -->
+          <div class="bg-white rounded-2xl shadow-sm p-4">
+            <h2 class="font-semibold text-text-primary mb-2">Dodaj komentar</h2>
+            <textarea
+              [(ngModel)]="commentDraft"
+              name="comment"
+              rows="3"
+              maxlength="2000"
+              placeholder="Napiši komentar..."
+              class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary resize-none"></textarea>
+            <p class="text-xs text-text-muted mt-1 text-right">{{ commentDraft().length }}/2000</p>
+
+            @if (commentError()) {
+              <p role="alert" class="text-red-500 text-xs mt-2">{{ commentError() }}</p>
+            }
+
+            <button
+              type="button"
+              (click)="postComment()"
+              [disabled]="!canPostComment()"
+              class="mt-2 w-full py-3 bg-green-primary text-white font-medium rounded-xl active:scale-[0.98] transition-transform disabled:opacity-40 min-h-11">
+              {{ posting() ? 'Šaljem...' : 'Pošalji komentar' }}
+            </button>
+          </div>
         </article>
       }
     </div>
@@ -85,6 +114,7 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
 })
 export class IssueDetailComponent {
   private readonly issueReport = inject(IssueReportService);
+  private readonly household = inject(HouseholdService);
   private readonly location = inject(Location);
 
   readonly stateLabels = ISSUE_STATE_LABELS;
@@ -96,8 +126,57 @@ export class IssueDetailComponent {
   readonly loading = signal(true);
   readonly error = signal('');
 
+  readonly commentDraft = signal('');
+  readonly commentError = signal('');
+  readonly posting = signal(false);
+
   constructor() {
     queueMicrotask(() => void this.load());
+  }
+
+  canPostComment(): boolean {
+    return !this.posting() && this.commentDraft().trim().length > 0;
+  }
+
+  commentAuthorLabel(c: IssueComment): string {
+    if (c.author === 'developer') return 'Razvijač';
+    return c.authorName ?? 'Korisnik';
+  }
+
+  async postComment(): Promise<void> {
+    if (!this.canPostComment()) return;
+    const text = this.commentDraft().trim();
+    const n = Number(this.number());
+    if (!Number.isFinite(n)) return;
+
+    this.commentError.set('');
+    this.posting.set(true);
+
+    // Optimistic append
+    const me = this.household.currentUser();
+    const optimistic: IssueComment = {
+      author: 'user',
+      authorName: me?.name,
+      body: text,
+      createdAt: new Date().toISOString(),
+    };
+    this.detail.update((d) =>
+      d ? { ...d, comments: [...d.comments, optimistic] } : d,
+    );
+    this.commentDraft.set('');
+
+    try {
+      await this.issueReport.addComment(n, text);
+    } catch (err: any) {
+      // Roll back the optimistic append
+      this.detail.update((d) =>
+        d ? { ...d, comments: d.comments.filter((c) => c !== optimistic) } : d,
+      );
+      this.commentDraft.set(text);
+      this.commentError.set(err?.error?.error ?? 'Slanje nije uspelo.');
+    } finally {
+      this.posting.set(false);
+    }
   }
 
   async load(): Promise<void> {

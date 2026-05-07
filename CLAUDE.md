@@ -70,7 +70,7 @@ For step-by-step setup of GitHub, Cloudflare, Firebase, AI providers, and the fe
 - KV namespace keys: `household:{code}`, `user-household:{uid}`, `plan:{userId}`, `subscription:{userId}`, `notif-prefs:{userId}`, `shared:{householdCode}`, `issue:{number}`, `userIssues:{userId}`, `householdIssues:{householdCode}`, `ratelimit:issues:{householdCode}`, `firebase-public-jwk-cache`
 - Firebase JWT verification via `firebase-auth-cloudflare-workers`; `getFirebaseUid(request, env)` returns the verified UID or null
 - 6 cron triggers for meal push notifications (daily summary 07:00 UTC, per-meal reminders 30 min before each meal)
-- GitHub webhook (`POST /api/github-webhook`) verifies `X-Hub-Signature-256` HMAC and dispatches push notifications to the original reporter when an issue's status changes or a comment is added
+- GitHub webhook (`POST /api/github-webhook`) verifies `X-Hub-Signature-256` HMAC and dispatches push notifications to the original reporter when an issue's status changes, the developer comments, or a household member comments. User-posted comments are tagged with an HTML-comment marker `<!-- mp:user-comment authorId="..." authorName="..." -->` so the webhook can attribute them and suppress self-notifications
 - CORS enabled for GitHub Pages origin
 
 ### Data Flow
@@ -78,7 +78,7 @@ For step-by-step setup of GitHub, Cloudflare, Firebase, AI providers, and the fe
 - Meal plan source: `Ivana.docx` → transcribed into `src/assets/data/weekly-plan.json`
 - Per-user plans stored in Cloudflare KV, synced via `ApiService`
 - Shared state (shopping checks, prep assignments) synced to KV
-- User feedback: `IssueReportService` → multipart POST → worker uploads each image to GitHub Releases asset storage (tag `feedback-assets`) → opens an issue with the embedded URLs
+- User feedback: `IssueReportService` → multipart POST → worker uploads each image to GitHub Releases asset storage (tag `feedback-assets`) → opens an issue with the embedded URLs. Comment composer on the detail page posts via `POST /api/issues/:n/comments` with the same auth + same-household check
 
 ### Key Models (`src/app/core/models/`)
 
@@ -98,7 +98,7 @@ Each feature is a lazy-loaded standalone component:
 - `settings/` — notifications, household, editor access, feedback entry
 - `editor/` — meal plan editor with .docx/.odt import, AI generator, and user assignment
 - `report-issue/` — unified feedback form (bug/suggestion/question) with image attachments
-- `my-issues/` — tabbed list (mine / household suggestions) + read-only detail view with developer comments
+- `my-issues/` — tabbed list (mine / household suggestions) + detail view with developer + household-member comments and a composer to reply
 
 ## Conventions
 

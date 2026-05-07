@@ -99,6 +99,16 @@ describe('IssueReportService', () => {
     expect(localStorage.getItem('meal-prep:issue-queue')).toBeNull();
   });
 
+  it('addComment posts JSON to the comments endpoint', async () => {
+    const promise = service.addComment(42, '  hello world  ');
+    const req = http.expectOne(`${environment.apiUrl}/api/issues/42/comments`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ body: '  hello world  ' });
+    req.flush({ ok: true });
+    const result = await promise;
+    expect(result.ok).toBe(true);
+  });
+
   it('flushes queued entries on flushQueue()', async () => {
     // Manually seed a queue entry
     const queue = [
