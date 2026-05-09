@@ -20,7 +20,7 @@ GITHUB_REPO = "n-pilipovic/meal-prep"
 # AI model overrides — leave commented to use defaults from src/ai-models.ts.
 # Uncomment + redeploy to switch without code changes.
 # GEMINI_MODEL = "gemini-2.5-pro"
-# GROQ_MODEL = "llama-3.1-8b-instant"
+# GROQ_MODEL = "llama-3.3-70b-versatile"
 # Secrets (set via wrangler secret put):
 #   wrangler secret put VAPID_PUBLIC_KEY
 #   wrangler secret put VAPID_PRIVATE_KEY

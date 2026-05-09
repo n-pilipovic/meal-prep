@@ -49,6 +49,29 @@ const CATEGORY_ORDER: IngredientCategory[] = [
   IngredientCategory.Oil,
 ];
 
+/**
+ * Filter out malformed ingredient entries (typically from broken ODT imports)
+ * so they don't show up in the shopping list or get sent to the AI summarizer.
+ *
+ * Drops:
+ *  - empty / whitespace-only names
+ *  - meal-type names (Doručak, Užina, Užina 2, Ručak, Večera) that ended up as ingredients
+ *  - cooking-step sentences (long names, or names containing ". ")
+ */
+function isShoppableIngredient(name: string | null | undefined): boolean {
+  if (typeof name !== 'string') return false;
+  const trimmed = name.trim();
+  if (!trimmed) return false;
+  if (trimmed.length > 60) return false;
+  if (/\.\s/.test(trimmed)) return false;
+  const folded = trimmed
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+  if (/^(dorucak|uzina(\s*\d*)?|rucak|vecera)$/.test(folded)) return false;
+  return true;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ShoppingListService {
   private readonly mealData = inject(MealDataService);
@@ -242,6 +265,7 @@ export class ShoppingListService {
       if (!day) continue;
       for (const meal of day.meals) {
         for (const ing of meal.ingredients) {
+          if (!isShoppableIngredient(ing.name)) continue;
           const key = getIngredientKey(ing.name, ing.unit);
           const existing = map.get(key);
           if (existing) {

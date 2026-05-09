@@ -31,43 +31,46 @@ export const SHOPPING_SUMMARY_SYSTEM_PROMPT = `Ti si asistent za kupovinu hrane.
 
 PRAVILA:
 
-1) SIROVI SASTOJAK, NE JELO
-- Izlazno ime MORA biti sirovi sastojak iz prodavnice, NE pripremljeno jelo ili recept.
-- Ukloni opise pripreme: "kuvano", "pečeno", "prženo", "blanširano", "narendano", "pasirano", "sveže", "dinstano".
-- Ukloni zagrade i objašnjenja iz imena: "Pileća pašteta (belo meso kuvano)" → "Pileće belo meso".
-- Iz složenih jela izvuci primarni sirovi sastojak. Primeri:
-  • "Pileća pašteta", "Pileće belo meso kuvano", "Pileći file" → "Pileće belo meso"
-  • "Sendvič sa sirom" → kupiš hleb i sir kao zasebne sirove sastojke
-  • "Sos od paradajza" → "Paradajz" (ili "Pelat" ako je iz konzerve)
-  • "Salata Olivije" → razdvojeno: krompir, šargarepa, grašak, jaja...
-- Ako agregirana lista već sadrži razdvojene sastojke jela, NE dodaj jelo ponovo.
+1) ISTA STAVKA SE NIKAD NE PONAVLJA
+- U FINALNOM IZLAZU svaki proizvod (logički isti sirovi sastojak) sme da se pojavi TAČNO JEDNOM, bez obzira što je u ulazu pod više različitih ključeva.
+- Sve ulazne stavke koje su logički isti proizvod MORAŠ spojiti u jednu izlaznu stavku, sumiraj količine i u "sourceKeys" stavi sve ulazne ključeve.
+- Primer obaveznog spajanja: ulaz ima "Pileće meso", "Pileće belo meso", "Pileći file", "Pileća pašteta", "Piletina sa senfom" → IZLAZ: jedna stavka "Pileće belo meso" sa zbirnom količinom i sourceKeys = svi navedeni ključevi.
 
-2) SPAJANJE DUPLIKATA I VARIJANTI
-- AGRESIVNO spajaj logički isti proizvod: "Sir" + "Beli sir" → "Beli sir"; "Pileće belo meso" + "Pileći file" + "Pileća pašteta (belo meso)" → "Pileće belo meso"
-- NE spajaj zaista različite proizvode: "Hleb" + "Integralni hleb" (razdvojeno); razne vrste paradajza/paprike/luka (cherry vs običan, beli vs crni luk) razdvojeno; "Jogurt" + "Kiselo mleko" razdvojeno.
-- Spoji istu stavku u različitim jedinicama (g i kom, ml i L) u jednu logičnu mernu jedinicu.
-- KRITIČNO: u finalnom izlazu NIJEDAN proizvod (isto ime + ista jedinica) se NE SME pojaviti više od jednom. Ako vidiš da bi se ponovio, spoji količine u jednu stavku.
+2) SAMO SIROVI SASTOJCI — DEKOMPONUJ ILI ODBACI JELA
+- Izlazno ime MORA biti sirovi sastojak iz prodavnice. NIKAD ime jela, recepta, salate, sosa ili napitka.
+- Prepoznaj jela po obrascima: "X sa Y" (Piletina sa senfom, Kupus sa junetinom), "X od Y" (Sos od paradajza), "X + Y" (Pasulj + kupus), "Salata ...", "Taratur", "Pašteta", "Sendvič ...", "Čorba ...", "Sarma".
+- Postupak za jelo u ulazu:
+  a) Ako možeš izvući primarni sirovi sastojak → koristi ga ("Pileća pašteta" → "Pileće belo meso", "Taratur salata" → "Krastavac", "Kupus sa junetinom" → izvuci "Kupus" i "Mlevenu junetinu" ako nisu već u listi inače spoji u postojeću).
+  b) Ako su sastojci jela već razdvojeno u ulazu (npr. ulaz već sadrži "Kupus" i "Mlevena junetina"), DODAJ ulazni ključ jela u sourceKeys POSTOJEĆE stavke i NEMOJ izlistati jelo zasebno.
+  c) Ako nikako ne možeš dekomponovati i nije jasan sirovi sastojak → IZBACI tu ulaznu stavku iz izlaza, ali njen ključ DODAJ u sourceKeys neke logički bliske stavke (ili u sourceKeys "Razno" stavke ako baš nema).
+- Ukloni iz imena: opise pripreme ("kuvano", "pečeno", "prženo", "blanširano", "narendano", "pasirano", "sveže", "dinstano"), zagrade i sve unutar njih.
 
-3) NORMALIZACIJA JEDINICA
+3) KOLIČINE BEZ JEDINICE / NULL
+- Ako je ulazna količina null ili 0, a stavka je legitiman sastojak (so, biljni začini), zadrži je sa quantity=null i napomenom "kupi pakovanje ako nemaš".
+- Ako je ulazna količina null jer je u stvari jelo (Piletina sa senfom bez količine), primeni pravilo 2.
+
+4) SPAJANJE U RAZLIČITIM JEDINICAMA
+- Spoji istu stavku u različitim jedinicama (g i kom, ml i L) u jednu logičnu mernu jedinicu, sumiraj na osnovu razumne konverzije.
+- Kada je konverzija nepouzdana, izaberi dominantnu jedinicu i napomeni razliku u "note".
+
+5) PROIZVODI KOJI SE NE SPAJAJU
+- "Hleb" + "Integralni hleb" → razdvojeno; razne vrste paradajza/paprike/luka (cherry vs običan, beli vs crni luk) razdvojeno; "Jogurt" + "Kiselo mleko" razdvojeno; "Mleko" + "Pavlaka" razdvojeno.
+
+6) NORMALIZACIJA JEDINICA
 - Tečnosti (mleko, ulje, jogurt): ml ili L
 - Voće/povrće: kom ako su mali brojevi, g ako su veliki količinski
 - Meso: g ili kg
 - Brašno, žitarice, šećer, riža: g ili kg
 - Začini: g ili kašičica/kašika
-- Ako se različite jedinice ne mogu pouzdano kombinovati, izaberi dominantnu i napomeni razliku u "note"
 
-4) KUPOVNA KOLIČINA
+7) KUPOVNA KOLIČINA
 - ZAOKRUŽI NAVIŠE do realne ambalaže/pakovanja (npr. mleko 350 ml → 0.5 L; jaja 4 kom → 6 ili 10 kom; brašno 230 g → 500 g)
 - Ako je preporučeno više od izračunatog, dodaj kratku napomenu u "note" (npr. "iz plana ~340 ml" ili "≈3 srednja paradajza")
-- Začini koji se koriste u malim količinama: napomeni "kupi pakovanje ako nemaš"
 
-5) GRUPISANJE
+8) GRUPISANJE I MAPIRANJE KLJUČEVA
 - Kategorije: meat, dairy, produce, grain, pantry, spice, oil
-- Koristi ISTU kategoriju kao u ulaznom sastojku osim ako je očigledna greška
-
-6) MAPIRANJE KLJUČEVA
 - "sourceKeys" je niz "key" vrednosti iz ulaza koji su spojeni u ovu izlaznu stavku
-- SVAKI ulazni "key" se MORA pojaviti tačno jednom kroz ceo izlaz (bez duplikata, bez izostavljanja)
+- SVAKI ulazni "key" mora se pojaviti TAČNO JEDNOM kroz ceo izlaz (bez duplikata, bez izostavljanja). Ovo važi i za ulazne ključeve koji su predstavljali jela — dodaj ih u sourceKeys odgovarajućeg sirovog sastojka (vidi pravilo 2).
 
 JEZIK
 - Sva imena, napomene i opisi su na SRPSKOM (latinica)
@@ -94,7 +97,8 @@ ODGOVORI ISKLJUČIVO validnim JSON-om u sledećoj strukturi:
 "note" je opciono — izostavi ga ako nije potrebno. "quantity" može biti broj ili null kada količina nije primenjiva.`;
 
 /** Lowercase + collapse whitespace + strip diacritics for fuzzy name matching. */
-function normalizeName(name: string): string {
+function normalizeName(name: unknown): string {
+  if (typeof name !== 'string') return '';
   return name
     .toLowerCase()
     .normalize('NFD')
@@ -105,29 +109,51 @@ function normalizeName(name: string): string {
 
 /**
  * Safety net: if the model still emits two output items with the same canonical
- * name + unit (within or across categories), merge them into one.
+ * name + unit (within or across categories), merge them into one. Also tolerates
+ * malformed model output (missing/null name, unit, sourceKeys, etc.).
  */
 export function dedupeShoppingSummary(
   summary: ShoppingSummaryResponse,
 ): ShoppingSummaryResponse {
+  const groups = Array.isArray(summary?.groups) ? summary.groups : [];
+
   // Group by (normalized name, unit) — first occurrence wins for category/name/note
   const merged = new Map<string, ShoppingSummaryOutputItem>();
-  for (const group of summary.groups) {
-    for (const item of group.items) {
-      const dedupeKey = `${normalizeName(item.name)}|${item.unit.toLowerCase()}`;
+  for (const group of groups) {
+    const items = Array.isArray(group?.items) ? group.items : [];
+    for (const raw of items) {
+      const name = typeof raw?.name === 'string' ? raw.name : '';
+      if (!name.trim()) continue; // skip items the model failed to name
+      const unit = typeof raw?.unit === 'string' ? raw.unit : '';
+      const category =
+        typeof raw?.category === 'string' && raw.category ? raw.category : group.category;
+      const quantity = typeof raw?.quantity === 'number' ? raw.quantity : null;
+      const sourceKeys = Array.isArray(raw?.sourceKeys)
+        ? raw.sourceKeys.filter((k): k is string => typeof k === 'string')
+        : [];
+      const note = typeof raw?.note === 'string' ? raw.note : undefined;
+
+      const dedupeKey = `${normalizeName(name)}|${unit.toLowerCase()}`;
       const existing = merged.get(dedupeKey);
       if (existing) {
-        if (existing.quantity != null && item.quantity != null) {
-          existing.quantity += item.quantity;
+        if (existing.quantity != null && quantity != null) {
+          existing.quantity += quantity;
         } else if (existing.quantity == null) {
-          existing.quantity = item.quantity;
+          existing.quantity = quantity;
         }
-        for (const k of item.sourceKeys) {
+        for (const k of sourceKeys) {
           if (!existing.sourceKeys.includes(k)) existing.sourceKeys.push(k);
         }
-        if (!existing.note && item.note) existing.note = item.note;
+        if (!existing.note && note) existing.note = note;
       } else {
-        merged.set(dedupeKey, { ...item, sourceKeys: [...item.sourceKeys] });
+        merged.set(dedupeKey, {
+          name,
+          quantity,
+          unit,
+          category,
+          sourceKeys: [...sourceKeys],
+          ...(note ? { note } : {}),
+        });
       }
     }
   }
@@ -135,7 +161,8 @@ export function dedupeShoppingSummary(
   // Re-bucket by category, preserving original group order
   const groupOrder: string[] = [];
   const byCategory = new Map<string, ShoppingSummaryOutputItem[]>();
-  for (const group of summary.groups) {
+  for (const group of groups) {
+    if (typeof group?.category !== 'string') continue;
     if (!byCategory.has(group.category)) {
       groupOrder.push(group.category);
       byCategory.set(group.category, []);
@@ -157,13 +184,17 @@ export function dedupeShoppingSummary(
 }
 
 export function buildShoppingSummaryPrompt(items: ShoppingSummaryInputItem[]): string {
+  // Compact format keeps the request below Groq's per-request token cap on big plans.
+  // Format: key|name qty unit category (extra variants, max 2, only if differ from name)
   const lines = items.map((i) => {
     const qty = i.quantity == null ? '?' : i.quantity;
-    const variants =
-      i.variants && i.variants.length > 1 ? ` | varijante: ${i.variants.join(', ')}` : '';
-    return `- key="${i.key}" | ${i.name} ${qty} ${i.unit} [${i.category}]${variants}`;
+    const extras = (i.variants ?? [])
+      .filter(v => v !== i.name)
+      .slice(0, 2);
+    const extra = extras.length > 0 ? ` (${extras.join(', ')})` : '';
+    return `${i.key}|${i.name} ${qty}${i.unit} ${i.category}${extra}`;
   });
-  return `Sumarizuj sledeću agregiranu listu sastojaka u praktičnu listu za kupovinu. Ulaz (${items.length} stavki):\n\n${lines.join('\n')}`;
+  return `Sumarizuj agregiranu listu sastojaka u praktičnu listu za kupovinu (${items.length} stavki). Format ulaza: key|ime količinajedinica kategorija (varijante).\n\n${lines.join('\n')}`;
 }
 
 export async function summarizeShoppingListGemini(
@@ -181,7 +212,7 @@ export async function summarizeShoppingListGemini(
         contents: [{ parts: [{ text: buildShoppingSummaryPrompt(items) }] }],
         generationConfig: {
           responseMimeType: 'application/json',
-          temperature: 0.3,
+          temperature: 0.2,
         },
       }),
     },
@@ -222,8 +253,9 @@ export async function summarizeShoppingListGroq(
           { role: 'user', content: buildShoppingSummaryPrompt(items) },
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.3,
-        max_tokens: 4000,
+        temperature: 0.2,
+        // Output is typically <1500 tokens; 2000 keeps total under Groq's per-request cap.
+        max_tokens: 2000,
       }),
     },
     'Groq',

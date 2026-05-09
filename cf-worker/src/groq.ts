@@ -22,7 +22,8 @@ export async function generateMealPlanGroq(
         ],
         response_format: { type: 'json_object' },
         temperature: 0.8,
-        max_tokens: 16000,
+        // llama-3.1-8b-instant caps per-request output at 8192; higher values return 413.
+        max_tokens: 8000,
       }),
     },
     'Groq',

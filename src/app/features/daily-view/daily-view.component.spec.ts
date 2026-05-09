@@ -89,6 +89,9 @@ describe('DailyViewComponent', () => {
 
     it('should navigate to next day on swipe left', () => {
       const component = fixture.componentInstance;
+      // Pin to Monday so the test isn't flaky on Sundays (where index 6 can't advance).
+      component.mealData.setDayIndex(0);
+      fixture.detectChanges();
       const initialDay = component.mealData.currentDayIndex();
 
       simulateSwipe(component, 300, 200);

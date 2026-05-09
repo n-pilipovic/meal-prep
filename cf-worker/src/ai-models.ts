@@ -7,7 +7,10 @@
  */
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
-export const DEFAULT_GROQ_MODEL = 'llama-3.1-8b-instant';
+// llama-3.3-70b-versatile: 12000 TPM on free tier, enough headroom for
+// (input ≈1500) + (max_tokens 8000) without 413. The 8b-instant model has
+// only 6000 TPM and rejects the meal-plan generator with 413.
+export const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 /** Per-provider request timeout. Cloudflare Worker request budget is ~30s,
  *  so we keep each call under 15s to leave room for the fallback provider. */
