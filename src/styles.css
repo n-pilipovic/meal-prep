@@ -34,6 +34,17 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Prevent iOS Safari from auto-zooming on focus when input font-size < 16px.
+   Scoped to coarse pointers so desktop keeps Tailwind's chosen sizes.
+   Unlayered, so it beats Tailwind's utility-layer text-* classes via cascade layer order. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Accessibility: screen-reader only utility */
 .sr-only {
   position: absolute;
