@@ -1,4 +1,4 @@
-import { Injectable, inject, computed, signal } from '@angular/core';
+import { Injectable, inject, computed, signal, effect } from '@angular/core';
 import { MealDataService } from './meal-data.service';
 import { HouseholdService } from './household.service';
 import { SyncService } from './sync.service';
@@ -41,22 +41,34 @@ export class ShoppingListService {
   private readonly syncService = inject(SyncService);
 
   readonly scope = signal<'today' | 'week'>('today');
-  readonly filter = signal<'all' | 'mine'>('all');
+  /** 'all' shows ingredients from every household member; a userId narrows to that member's plan */
+  readonly filter = signal<'all' | string>('all');
   readonly search = signal('');
 
-  /** Aggregate ingredients across all users' plans */
+  constructor() {
+    // If the selected member leaves the household, fall back to "all"
+    effect(() => {
+      const f = this.filter();
+      if (f === 'all') return;
+      const stillExists = this.householdService.members().some(m => m.id === f);
+      if (!stillExists) this.filter.set('all');
+    });
+  }
+
+  /** Aggregate ingredients across household members' plans, narrowed by `filter` */
   readonly aggregatedIngredients = computed<AggregatedIngredient[]>(() => {
     const members = this.householdService.members();
     const allPlans = this.mealData.householdPlans();
     const currentPlan = this.mealData.plan();
     const dayIndex = this.mealData.currentDayIndex();
+    const filter = this.filter();
     const isMultiUser = members.length > 1 && Object.keys(allPlans).length > 0;
 
     const map = new Map<string, AggregatedIngredient>();
 
     if (isMultiUser) {
-      // Multi-user: aggregate from all household members' plans
-      for (const member of members) {
+      const targets = filter === 'all' ? members : members.filter(m => m.id === filter);
+      for (const member of targets) {
         const plan = allPlans[member.id];
         if (!plan) continue;
         const days = this.scope() === 'today' ? [plan.days[dayIndex]] : plan.days;
@@ -77,25 +89,9 @@ export class ShoppingListService {
     return Array.from(map.values());
   });
 
-  /** Filtered by "Sve" / "Moje" assignment filter */
-  readonly filteredIngredients = computed<AggregatedIngredient[]>(() => {
-    const all = this.aggregatedIngredients();
-    if (this.filter() === 'all') return all;
-
-    const userId = this.householdService.currentUserId();
-    if (!userId) return all;
-
-    const assignments = this.syncService.sharedState().shoppingAssignments;
-    return all.filter(ing => {
-      const assignedTo = assignments[ing.key];
-      // Show unassigned items + items assigned to me
-      return !assignedTo || assignedTo === userId;
-    });
-  });
-
   /** Filtered by search query */
   readonly searchedIngredients = computed<AggregatedIngredient[]>(() => {
-    const items = this.filteredIngredients();
+    const items = this.aggregatedIngredients();
     const query = this.search().trim().toLowerCase();
     if (!query) return items;
     return items.filter(ing =>

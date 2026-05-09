@@ -26,19 +26,28 @@ import { AssignmentBadgeComponent } from '../../shared/components/assignment-bad
         }
       </div>
 
-      <!-- Filter toggle: Sve / Moje (only when multi-user) -->
+      <!-- Person filter: Sve + per-member chips (only when multi-user) -->
       @if (isMultiUser()) {
-        <div class="flex gap-2 mb-4">
-          @for (opt of filters; track opt.value) {
+        <div class="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-1">
+          <button
+            (click)="shoppingService.filter.set('all')"
+            [attr.aria-pressed]="shoppingService.filter() === 'all'"
+            class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-9"
+            [class.bg-green-primary]="shoppingService.filter() === 'all'"
+            [class.text-white]="shoppingService.filter() === 'all'"
+            [class.bg-white]="shoppingService.filter() !== 'all'"
+            [class.text-text-muted]="shoppingService.filter() !== 'all'">
+            Svi
+          </button>
+          @for (member of householdMembers(); track member.id) {
             <button
-              (click)="shoppingService.filter.set(opt.value)"
-              [attr.aria-pressed]="shoppingService.filter() === opt.value"
-              class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-9"
-              [class.bg-green-primary]="shoppingService.filter() === opt.value"
-              [class.text-white]="shoppingService.filter() === opt.value"
-              [class.bg-white]="shoppingService.filter() !== opt.value"
-              [class.text-text-muted]="shoppingService.filter() !== opt.value">
-              {{ opt.label }}
+              (click)="shoppingService.filter.set(member.id)"
+              [attr.aria-pressed]="shoppingService.filter() === member.id"
+              class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-9 border"
+              [style.background-color]="shoppingService.filter() === member.id ? member.color : 'white'"
+              [style.color]="shoppingService.filter() === member.id ? 'white' : member.color"
+              [style.border-color]="member.color">
+              {{ member.name }}{{ member.id === currentUserId() ? ' (ja)' : '' }}
             </button>
           }
         </div>
@@ -117,11 +126,8 @@ export class ShoppingListComponent {
     { value: 'week' as const, label: 'Cela nedelja' },
   ];
 
-  readonly filters = [
-    { value: 'all' as const, label: 'Sve' },
-    { value: 'mine' as const, label: 'Moje' },
-  ];
-
+  readonly householdMembers = this.householdService.members;
+  readonly currentUserId = this.householdService.currentUserId;
   readonly isMultiUser = computed(() => this.householdService.members().length > 1);
 
   uniqueSources(sources: { userId: string; userName: string }[]): { userId: string; userName: string }[] {
