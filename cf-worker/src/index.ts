@@ -3,6 +3,12 @@ import { sendScheduledPush } from './push';
 import { generateMealPlanGroq } from './groq';
 import { generateMealPlanGemini } from './gemini';
 import {
+  summarizeShoppingListGemini,
+  summarizeShoppingListGroq,
+  type ShoppingSummaryInputItem,
+} from './shopping-summary';
+import { resolveGeminiModel, resolveGroqModel } from './ai-models';
+import {
   ATTACHMENT_LIMITS,
   createIssueFlow,
   getIssueDetail,
@@ -26,6 +32,8 @@ interface Env {
   VAPID_PRIVATE_KEY: string;
   GROQ_API_KEY: string;
   GEMINI_API_KEY?: string;
+  GEMINI_MODEL?: string;
+  GROQ_MODEL?: string;
   FIREBASE_PROJECT_ID: string;
   GITHUB_TOKEN?: string;
   GITHUB_REPO?: string;
@@ -270,7 +278,11 @@ export default {
       // Try Gemini first
       if (env.GEMINI_API_KEY) {
         try {
-          const plan = await generateMealPlanGemini(env.GEMINI_API_KEY, prefs as any);
+          const plan = await generateMealPlanGemini(
+            env.GEMINI_API_KEY,
+            prefs as any,
+            resolveGeminiModel(env),
+          );
           return json(plan);
         } catch (err: any) {
           console.error('Gemini failed, falling back to Groq:', err.message);
@@ -280,10 +292,54 @@ export default {
       // Fallback to Groq
       if (env.GROQ_API_KEY) {
         try {
-          const plan = await generateMealPlanGroq(env.GROQ_API_KEY, prefs as any);
+          const plan = await generateMealPlanGroq(
+            env.GROQ_API_KEY,
+            prefs as any,
+            resolveGroqModel(env),
+          );
           return json(plan);
         } catch (err: any) {
           return json({ error: err.message ?? 'Failed to generate plan' }, 500);
+        }
+      }
+
+      return json({ error: 'No AI provider configured' }, 500);
+    }
+
+    // POST /api/shopping-list/summarize — AI-summarize aggregated shopping list (Gemini, Groq fallback)
+    if (request.method === 'POST' && path === '/api/shopping-list/summarize') {
+      const body = (await request.json()) as { items?: ShoppingSummaryInputItem[] };
+      const items = body.items;
+      if (!Array.isArray(items) || items.length === 0) {
+        return json({ error: 'Lista sastojaka je prazna.' }, 400);
+      }
+      if (items.length > 200) {
+        return json({ error: 'Previše stavki (max 200).' }, 400);
+      }
+
+      if (env.GEMINI_API_KEY) {
+        try {
+          const summary = await summarizeShoppingListGemini(
+            env.GEMINI_API_KEY,
+            items,
+            resolveGeminiModel(env),
+          );
+          return json(summary);
+        } catch (err: any) {
+          console.error('Gemini shopping summary failed, falling back to Groq:', err.message);
+        }
+      }
+
+      if (env.GROQ_API_KEY) {
+        try {
+          const summary = await summarizeShoppingListGroq(
+            env.GROQ_API_KEY,
+            items,
+            resolveGroqModel(env),
+          );
+          return json(summary);
+        } catch (err: any) {
+          return json({ error: err.message ?? 'Sumarizacija nije uspela.' }, 500);
         }
       }
 

@@ -1,10 +1,12 @@
 import { type MealPlanPreferences, SYSTEM_PROMPT, buildUserPrompt } from './ai-prompt';
+import { fetchWithTimeout } from './ai-models';
 
 export async function generateMealPlanGroq(
   apiKey: string,
   prefs: MealPlanPreferences,
+  model: string,
 ): Promise<unknown> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     'https://api.groq.com/openai/v1/chat/completions',
     {
       method: 'POST',
@@ -13,7 +15,7 @@ export async function generateMealPlanGroq(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(prefs) },
@@ -23,6 +25,7 @@ export async function generateMealPlanGroq(
         max_tokens: 16000,
       }),
     },
+    'Groq',
   );
 
   if (!response.ok) {

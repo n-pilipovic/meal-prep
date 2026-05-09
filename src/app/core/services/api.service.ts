@@ -5,6 +5,10 @@ import { Household, SharedState, NotificationPreferences } from '../models/user.
 import { WeeklyPlan } from '../models/meal.model';
 import { MealPlanPreferences } from '../models/ai-plan.model';
 import { IssueDetail, IssueRecord } from '../models/issue.model';
+import {
+  ShoppingSummaryInputItem,
+  ShoppingSummaryResponse,
+} from '../models/shopping-summary.model';
 
 import { environment } from '../../../environments/environment';
 
@@ -92,6 +96,13 @@ export class ApiService {
     return this.http.post<WeeklyPlan>(
       `${this.baseUrl}/api/generate-plan`,
       prefs,
+    );
+  }
+
+  summarizeShoppingList(items: ShoppingSummaryInputItem[]): Observable<ShoppingSummaryResponse> {
+    return this.http.post<ShoppingSummaryResponse>(
+      `${this.baseUrl}/api/shopping-list/summarize`,
+      { items },
     );
   }
 
