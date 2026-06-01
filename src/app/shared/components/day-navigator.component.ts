@@ -8,8 +8,7 @@ import { DAY_NAMES } from '../../core/models/meal.model';
       <button
         (click)="prev()"
         aria-label="Prethodni dan"
-        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
-        [disabled]="dayIndex() <= 0">
+        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform">
         <span class="text-lg" aria-hidden="true">‹</span>
       </button>
       <div class="text-center" aria-live="polite">
@@ -18,8 +17,7 @@ import { DAY_NAMES } from '../../core/models/meal.model';
       <button
         (click)="next()"
         aria-label="Sledeći dan"
-        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
-        [disabled]="dayIndex() >= 6">
+        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform">
         <span class="text-lg" aria-hidden="true">›</span>
       </button>
     </div>
@@ -33,13 +31,13 @@ export class DayNavigatorComponent {
     return DAY_NAMES[this.dayIndex()] ?? '';
   }
 
+  /** Wraps around: from Monday (0) goes to Sunday (6). */
   prev(): void {
-    const idx = this.dayIndex();
-    if (idx > 0) this.dayChange.emit(idx - 1);
+    this.dayChange.emit((this.dayIndex() + 6) % 7);
   }
 
+  /** Wraps around: from Sunday (6) goes to Monday (0). */
   next(): void {
-    const idx = this.dayIndex();
-    if (idx < 6) this.dayChange.emit(idx + 1);
+    this.dayChange.emit((this.dayIndex() + 1) % 7);
   }
 }

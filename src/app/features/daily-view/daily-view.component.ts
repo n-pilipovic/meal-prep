@@ -120,10 +120,10 @@ export class DailyViewComponent implements OnInit {
     if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
 
     const currentIdx = this.mealData.currentDayIndex();
-    if (dx < 0 && currentIdx < 6) {
-      this.onDayChange(currentIdx + 1);
-    } else if (dx > 0 && currentIdx > 0) {
-      this.onDayChange(currentIdx - 1);
+    if (dx < 0) {
+      this.onDayChange((currentIdx + 1) % 7);
+    } else {
+      this.onDayChange((currentIdx + 6) % 7);
     }
   }
 }

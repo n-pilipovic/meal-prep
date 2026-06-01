@@ -48,17 +48,21 @@ describe('DayNavigatorComponent', () => {
     expect(host.lastEmitted).toBe(4);
   });
 
-  it('should disable prev button at day 0', () => {
+  it('should wrap from day 0 to day 6 on prev', () => {
     host.day.set(0);
     fixture.detectChanges();
     const prevBtn = fixture.nativeElement.querySelectorAll('button')[0];
-    expect(prevBtn.disabled).toBe(true);
+    prevBtn.click();
+    fixture.detectChanges();
+    expect(host.lastEmitted).toBe(6);
   });
 
-  it('should disable next button at day 6', () => {
+  it('should wrap from day 6 to day 0 on next', () => {
     host.day.set(6);
     fixture.detectChanges();
     const nextBtn = fixture.nativeElement.querySelectorAll('button')[1];
-    expect(nextBtn.disabled).toBe(true);
+    nextBtn.click();
+    fixture.detectChanges();
+    expect(host.lastEmitted).toBe(0);
   });
 });
