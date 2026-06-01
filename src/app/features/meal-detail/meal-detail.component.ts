@@ -207,6 +207,11 @@ export class MealDetailComponent implements OnDestroy {
   readonly recipe = computed<Recipe | null>(() => {
     const m = this.meal();
     if (!m?.recipeRef) return null;
+    const otherUid = this.user();
+    if (otherUid) {
+      // Recipes live per-plan — resolve against the meal owner's plan, not ours
+      return this.mealData.getRecipeForUser(otherUid, m.recipeRef);
+    }
     return this.mealData.recipes().find(r => r.id === m.recipeRef) ?? null;
   });
 
