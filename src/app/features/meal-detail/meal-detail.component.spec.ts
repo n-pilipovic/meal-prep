@@ -124,6 +124,40 @@ describe('MealDetailComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Bolonjeze špagete');
   });
 
+  it('should resolve the recipe from the other member\'s plan, not the viewer\'s', () => {
+    const mealData = TestBed.inject(MealDataService);
+    // Other member's meal points at a recipe that does NOT exist in the viewer's plan
+    const otherPlan: WeeklyPlan = {
+      ...MOCK_PLAN,
+      days: MOCK_PLAN.days.map(d => ({
+        ...d,
+        meals: d.meals.map(m => ({ ...m, recipeRef: 'recipe-other' })),
+      })),
+      recipes: [
+        {
+          id: 'recipe-other',
+          name: 'Tuđi recept',
+          servings: '1 porcija',
+          ingredients: [],
+          instructions: ['Tuđi korak jedan', 'Tuđi korak dva'],
+        },
+      ],
+    };
+    mealData.savePlanForUser('other-uid', otherPlan);
+
+    const saveReq = httpTesting.expectOne((req) => req.url.endsWith('/api/user/other-uid/plan'));
+    saveReq.flush({ ok: true });
+
+    fixture.componentInstance.user.set('other-uid');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Tuđi recept');
+    expect(text).toContain('Tuđi korak jedan');
+    // The viewer's own recipe must not leak in
+    expect(text).not.toContain('Bolonjeze sos');
+  });
+
   describe('Cook Mode', () => {
     beforeEach(() => {
       const btn = fixture.nativeElement.querySelector('button[aria-label="Uđi u režim kuvanja"]');
