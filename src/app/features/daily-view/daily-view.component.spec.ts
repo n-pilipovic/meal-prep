@@ -111,7 +111,7 @@ describe('DailyViewComponent', () => {
       expect(component.mealData.currentDayIndex()).toBe(2);
     });
 
-    it('should not navigate past day 6', () => {
+    it('should wrap from day 6 to day 0 on swipe left', () => {
       const component = fixture.componentInstance;
       component.mealData.setDayIndex(6);
       fixture.detectChanges();
@@ -119,10 +119,10 @@ describe('DailyViewComponent', () => {
       simulateSwipe(component, 300, 200);
       fixture.detectChanges();
 
-      expect(component.mealData.currentDayIndex()).toBe(6);
+      expect(component.mealData.currentDayIndex()).toBe(0);
     });
 
-    it('should not navigate before day 0', () => {
+    it('should wrap from day 0 to day 6 on swipe right', () => {
       const component = fixture.componentInstance;
       component.mealData.setDayIndex(0);
       fixture.detectChanges();
@@ -130,7 +130,7 @@ describe('DailyViewComponent', () => {
       simulateSwipe(component, 200, 300);
       fixture.detectChanges();
 
-      expect(component.mealData.currentDayIndex()).toBe(0);
+      expect(component.mealData.currentDayIndex()).toBe(6);
     });
 
     it('should ignore vertical swipes', () => {
