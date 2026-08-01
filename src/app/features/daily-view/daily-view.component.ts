@@ -1,4 +1,13 @@
-import { Component, inject, input, signal, computed, OnInit, ElementRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  signal,
+  computed,
+  OnInit,
+  ElementRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
@@ -16,6 +25,7 @@ const SWIPE_THRESHOLD = 50;
     '(touchstart)': 'onTouchStart($event)',
     '(touchend)': 'onTouchEnd($event)',
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (mealData.loading()) {
       <div class="flex items-center justify-center h-64" role="status" aria-live="polite">
@@ -24,11 +34,13 @@ const SWIPE_THRESHOLD = 50;
     } @else {
       <app-user-switcher
         [selectedUserId]="viewingUserId()"
-        (selectUser)="viewingUserId.set($event)" />
+        (selectUser)="viewingUserId.set($event)"
+      />
 
       <app-day-navigator
         [dayIndex]="mealData.currentDayIndex()"
-        (dayChange)="onDayChange($event)" />
+        (dayChange)="onDayChange($event)"
+      />
 
       <div class="px-4 flex flex-col gap-3 pb-4">
         @if (activeDayPlan(); as day) {
@@ -36,12 +48,14 @@ const SWIPE_THRESHOLD = 50;
             <app-meal-card
               [meal]="meal"
               [dayIndex]="day.dayIndex"
-              [userId]="viewingOtherUserId()" />
+              [userId]="viewingOtherUserId()"
+            />
           }
 
           <button
             (click)="openChecklist()"
-            class="mt-2 w-full py-3 bg-green-primary text-white font-medium rounded-2xl active:scale-[0.98] transition-transform min-h-12">
+            class="mt-2 w-full py-3 bg-green-primary text-white font-medium rounded-2xl active:scale-[0.98] transition-transform min-h-12"
+          >
             Pripremi sastojke
           </button>
         } @else {

@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { PwaUpdateService } from '../../core/services/pwa-update.service';
 
 @Component({
   selector: 'app-pwa-update-banner',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (updateService.updateAvailable()) {
       <div

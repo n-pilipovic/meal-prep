@@ -1,14 +1,16 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { DAY_NAMES } from '../../core/models/meal.model';
 
 @Component({
   selector: 'app-day-navigator',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="flex items-center justify-between px-4 py-3">
       <button
         (click)="prev()"
         aria-label="Prethodni dan"
-        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform">
+        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
+      >
         <span class="text-lg" aria-hidden="true">‹</span>
       </button>
       <div class="text-center" aria-live="polite">
@@ -17,7 +19,8 @@ import { DAY_NAMES } from '../../core/models/meal.model';
       <button
         (click)="next()"
         aria-label="Sledeći dan"
-        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform">
+        class="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
+      >
         <span class="text-lg" aria-hidden="true">›</span>
       </button>
     </div>

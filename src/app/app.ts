@@ -1,4 +1,4 @@
-import { Component, inject, DestroyRef } from '@angular/core';
+import { Component, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { filter, fromEvent } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +10,13 @@ import { IssueReportService } from './core/services/issue-report.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BottomNavComponent, IosInstallPromptComponent, AndroidInstallPromptComponent, PwaUpdateBannerComponent],
+  imports: [
+    RouterOutlet,
+    BottomNavComponent,
+    IosInstallPromptComponent,
+    AndroidInstallPromptComponent,
+    PwaUpdateBannerComponent,
+  ],
   template: `
     <app-pwa-update-banner />
     <main id="main-content" tabindex="-1" [class.pb-20]="showNav()">
@@ -22,6 +28,7 @@ import { IssueReportService } from './core/services/issue-report.service';
     <app-ios-install-prompt />
     <app-android-install-prompt />
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     :host {
       display: block;
@@ -40,7 +47,7 @@ export class App {
   constructor() {
     this.router.events
       .pipe(
-        filter(e => e instanceof NavigationEnd),
+        filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {

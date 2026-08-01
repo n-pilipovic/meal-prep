@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { PwaInstallService } from '../../core/services/pwa-install.service';
 
 const DISMISSED_KEY = 'meal-prep:android-install-dismissed';
@@ -11,10 +11,12 @@ const DISMISSED_KEY = 'meal-prep:android-install-dismissed';
         class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center"
         role="dialog"
         aria-labelledby="android-install-title"
-        (click)="dismiss()">
+        (click)="dismiss()"
+      >
         <div
           class="bg-white rounded-t-3xl w-full max-w-md p-6 pb-10 animate-slide-up"
-          (click)="$event.stopPropagation()">
+          (click)="$event.stopPropagation()"
+        >
           <div class="flex items-center justify-between mb-4">
             <h2 id="android-install-title" class="text-lg font-bold text-text-primary">
               Instaliraj aplikaciju
@@ -22,7 +24,8 @@ const DISMISSED_KEY = 'meal-prep:android-install-dismissed';
             <button
               (click)="dismiss()"
               aria-label="Zatvori"
-              class="text-text-muted text-2xl leading-none min-w-11 min-h-11 flex items-center justify-center">
+              class="text-text-muted text-2xl leading-none min-w-11 min-h-11 flex items-center justify-center"
+            >
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -34,12 +37,14 @@ const DISMISSED_KEY = 'meal-prep:android-install-dismissed';
           <div class="flex flex-col gap-3">
             <button
               (click)="install()"
-              class="w-full py-3 bg-green-primary text-white font-semibold rounded-xl min-h-[48px] active:scale-[0.98] transition-transform">
+              class="w-full py-3 bg-green-primary text-white font-semibold rounded-xl min-h-[48px] active:scale-[0.98] transition-transform"
+            >
               Instaliraj
             </button>
             <button
               (click)="dismiss()"
-              class="w-full py-3 text-text-muted font-medium rounded-xl min-h-[48px]">
+              class="w-full py-3 text-text-muted font-medium rounded-xl min-h-[48px]"
+            >
               Ne sada
             </button>
           </div>
@@ -47,6 +52,7 @@ const DISMISSED_KEY = 'meal-prep:android-install-dismissed';
       </div>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     @keyframes slide-up {
       from {

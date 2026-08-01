@@ -1,21 +1,24 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { UserProfile } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-user-avatar',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <span
       class="inline-flex items-center justify-center rounded-full font-semibold shrink-0 select-none overflow-hidden"
       [class]="sizeClass()"
       [style.background-color]="user().color + '20'"
-      [style.color]="user().color">
+      [style.color]="user().color"
+    >
       @if (user().avatar && !imgError()) {
         <img
           [src]="user().avatar"
           [alt]="user().name"
           referrerpolicy="no-referrer"
           class="w-full h-full object-cover"
-          (error)="imgError.set(true)" />
+          (error)="imgError.set(true)"
+        />
       } @else {
         {{ initials() }}
       }
