@@ -7,6 +7,22 @@ const ODT_OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
 
 const SASTOJCI_RE = /^sastojci\s*:?\s*$/i;
 const UPUTSTVO_RE = /uputstvo\s+za\s+pripremu/i;
+// Heading that introduces the recipe appendix (e.g. "Recepti", "Recepti (prilog)").
+// It is a section label, not a recipe title, and must never be parsed as one.
+const RECEPTI_HEADER_RE = /^\s*recepti\b/i;
+
+// Leading words that name a dish *category* rather than a specific recipe. They appear
+// incidentally in meal text (e.g. a side "salatu"), so they must not anchor a recipe match;
+// a more distinctive word in the title is used instead (e.g. "kapri").
+const GENERIC_LEADING_WORDS = new Set(['salata', 'salat', 'corba', 'supa', 'sos', 'varivo']);
+
+// Serving-size / boilerplate words that recur across recipe titles ("mera za 2 dana",
+// "1 porcija", "recept u prilogu"). They carry no dish identity, so they must not become
+// match tokens — otherwise every meal mentioning "mera za 2 dana" would link to one recipe.
+const MATCH_STOPWORDS = new Set([
+  'mera', 'dana', 'dani', 'danu', 'cetiri', 'porcija', 'porcije', 'komad', 'komada',
+  'kcal', 'kalorija', 'recept', 'recepti', 'prilog', 'prilogu', 'obrok', 'obroku', 'pleh',
+]);
 
 const ACTION_VERBS = [
   'dodajte', 'dodati', 'dinstajte', 'dinstati', 'kuvajte', 'kuvati',
@@ -100,30 +116,49 @@ export class DocxImportService {
 
   private linkMealsToRecipes(days: DayPlan[], recipes: Recipe[]): void {
     if (recipes.length === 0) return;
-    // Build a stem for each recipe from its name's first significant alphabetic word.
-    // Longer stems first so more-specific recipes win when several share a prefix.
+    // Each recipe contributes one or more match stems drawn from the distinctive words of
+    // its title. A meal links to the recipe whose stem appears earliest in its text — a meal
+    // names its dish up front, so the leading match wins over an ingredient mentioned later
+    // (e.g. "Bečar sataraš … pileći file" links to Bečarac, not Pileća pašteta).
     const matchers = recipes
-      .map(r => ({ id: r.id, stem: this.recipeMatchStem(r.name) }))
-      .filter(m => m.stem.length >= 4)
-      .sort((a, b) => b.stem.length - a.stem.length);
+      .map(r => ({ id: r.id, stems: this.recipeMatchStems(r.name) }))
+      .filter(m => m.stems.length > 0);
     if (matchers.length === 0) return;
 
     for (const day of days) {
       for (const meal of day.meals) {
         const haystack = normalizeText(`${meal.name} ${meal.description}`);
         if (!haystack.trim()) continue;
-        const match = matchers.find(m => haystack.includes(m.stem));
-        if (match) meal.recipeRef = match.id;
+        let bestId: string | undefined;
+        let bestIdx = Infinity;
+        let bestLen = 0;
+        for (const m of matchers) {
+          for (const stem of m.stems) {
+            const idx = haystack.indexOf(stem);
+            if (idx >= 0 && (idx < bestIdx || (idx === bestIdx && stem.length > bestLen))) {
+              bestId = m.id;
+              bestIdx = idx;
+              bestLen = stem.length;
+            }
+          }
+        }
+        if (bestId) meal.recipeRef = bestId;
       }
     }
   }
 
-  /** Returns a normalized prefix of the title's first significant word, used to fuzzy-match meal text. */
-  private recipeMatchStem(title: string): string {
+  /**
+   * Distinctive 5-char stems from a recipe title, used to fuzzy-match meal text. Drops
+   * parenthetical asides, generic dish-category words ("salata") and serving-size boilerplate
+   * ("mera", "porcija"), so a multi-word title matches on any of its meaningful words — e.g.
+   * "Pileća pašteta" matches both "Pileća pašteta sendvič" and the shorter "Pašteta sendvič".
+   */
+  private recipeMatchStems(title: string): string[] {
     const cleaned = title.replace(/\([^)]*\)/g, ' ');
     const words = normalizeText(cleaned).split(/[^a-z]+/).filter(w => w.length >= 4);
-    if (words.length === 0) return '';
-    return words[0].slice(0, 5);
+    const distinctive = words.filter(w => !GENERIC_LEADING_WORDS.has(w) && !MATCH_STOPWORDS.has(w));
+    const chosen = distinctive.length > 0 ? distinctive : words.slice(0, 1);
+    return [...new Set(chosen.map(w => w.slice(0, 5)))].filter(s => s.length >= 4);
   }
 
   private fillDaysFromOdtTable(table: Element, days: DayPlan[]): void {
@@ -231,6 +266,13 @@ export class DocxImportService {
    *  3. Short block that follows an instruction-like block and itself has no quantity pattern.
    */
   private findRecipeTitleIndices(blocks: string[]): number[] {
+    // When the document delimits every recipe with an explicit "Sastojci" header
+    // (a normalized export), title detection is unambiguous via signal #2 alone.
+    // The fuzzy "short line after an instruction" heuristic (#3) is only needed for
+    // messy documents lacking those headers — there it would otherwise misread a
+    // trailing instruction or a lone ingredient as a new recipe title.
+    const hasSastojciHeaders = blocks.some(b => SASTOJCI_RE.test(b));
+
     const indices: number[] = [];
     for (let i = 0; i < blocks.length; i++) {
       const b = blocks[i];
@@ -250,6 +292,8 @@ export class DocxImportService {
         continue;
       }
 
+      if (hasSastojciHeaders) continue;
+
       const prev = blocks[i - 1] ?? '';
       if (
         this.looksLikeInstruction(prev) &&
@@ -264,7 +308,7 @@ export class DocxImportService {
   }
 
   private isStructuralHeader(text: string): boolean {
-    return SASTOJCI_RE.test(text) || UPUTSTVO_RE.test(text);
+    return SASTOJCI_RE.test(text) || UPUTSTVO_RE.test(text) || RECEPTI_HEADER_RE.test(text);
   }
 
   private hasQuantityPattern(text: string): boolean {
