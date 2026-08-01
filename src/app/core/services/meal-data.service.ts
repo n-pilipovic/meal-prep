@@ -2,7 +2,7 @@ import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
-import { WeeklyPlan, DayPlan, Meal, MealType } from '../models/meal.model';
+import { WeeklyPlan, DayPlan, Meal, MealType, Recipe } from '../models/meal.model';
 import { HouseholdService } from './household.service';
 import { ApiService } from './api.service';
 
@@ -133,6 +133,12 @@ export class MealDataService {
   getDayPlanForUser(userId: string, dayIndex: number): DayPlan | null {
     const plan = this.householdPlans()[userId];
     return plan?.days[dayIndex] ?? null;
+  }
+
+  /** Resolve a recipe from a specific user's plan (recipes live per-plan) */
+  getRecipeForUser(userId: string, recipeRef: string): Recipe | null {
+    const plan = this.householdPlans()[userId];
+    return plan?.recipes.find(r => r.id === recipeRef) ?? null;
   }
 
   savePlanToLocalStorage(plan: WeeklyPlan): void {
