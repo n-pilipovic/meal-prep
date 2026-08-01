@@ -1,11 +1,26 @@
-import { Component, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Meal, MEAL_LABELS, MealType, Ingredient, IngredientCategory } from '../../core/models/meal.model';
+import {
+  Component,
+  effect,
+  input,
+  linkedSignal,
+  output,
+  untracked,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import {
+  Meal,
+  MEAL_LABELS,
+  MealType,
+  Ingredient,
+  IngredientCategory,
+} from '../../core/models/meal.model';
 import { IngredientRowComponent } from './ingredient-row.component';
 
 @Component({
   selector: 'app-meal-form',
-  imports: [FormsModule, IngredientRowComponent],
+  imports: [FormField, IngredientRowComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="bg-white rounded-2xl shadow-sm p-4 mb-3">
       <div class="flex items-center justify-between mb-3">
@@ -16,17 +31,17 @@ import { IngredientRowComponent } from './ingredient-row.component';
 
       <input
         type="text"
-        [ngModel]="meal().name"
-        (ngModelChange)="updateField('name', $event)"
+        [formField]="mealForm.name"
         placeholder="Naziv obroka"
-        class="w-full px-3 py-2 bg-cream-light border border-gray-200 rounded-lg text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-green-primary/30" />
+        class="w-full px-3 py-2 bg-cream-light border border-gray-200 rounded-lg text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-green-primary/30"
+      />
 
       <textarea
-        [ngModel]="meal().description"
-        (ngModelChange)="updateField('description', $event)"
+        [formField]="mealForm.description"
         placeholder="Opis / napomena"
         rows="2"
-        class="w-full px-3 py-2 bg-cream-light border border-gray-200 rounded-lg text-sm mb-3 resize-none focus:outline-none focus:ring-2 focus:ring-green-primary/30">
+        class="w-full px-3 py-2 bg-cream-light border border-gray-200 rounded-lg text-sm mb-3 resize-none focus:outline-none focus:ring-2 focus:ring-green-primary/30"
+      >
       </textarea>
 
       <p class="text-xs text-text-muted mb-2">Sastojci</p>
@@ -35,14 +50,16 @@ import { IngredientRowComponent } from './ingredient-row.component';
           <app-ingredient-row
             [ingredient]="ing"
             (change)="updateIngredient($index, $event)"
-            (remove)="removeIngredient($index)" />
+            (remove)="removeIngredient($index)"
+          />
         }
       </div>
 
       <button
         (click)="addIngredient()"
         type="button"
-        class="text-green-primary text-sm font-medium px-3 py-2 rounded-lg hover:bg-green-primary/5 transition-colors min-h-11">
+        class="text-green-primary text-sm font-medium px-3 py-2 rounded-lg hover:bg-green-primary/5 transition-colors min-h-11"
+      >
         + Dodaj sastojak
       </button>
     </div>
@@ -52,12 +69,31 @@ export class MealFormComponent {
   readonly meal = input.required<Meal>();
   readonly change = output<Meal>();
 
-  mealLabel(): string {
-    return MEAL_LABELS[this.meal().type as MealType] ?? this.meal().type;
+  /**
+   * The plan lives in the editor, so this form edits a local copy that is
+   * re-seeded whenever the parent pushes a new meal. Text fields go through
+   * Signal Forms; the ingredient list is structural and stays on the existing
+   * add/remove handlers so the editor keeps owning array shape.
+   */
+  readonly model = linkedSignal<Meal, Meal>({
+    source: () => this.meal(),
+    computation: (incoming) => ({ ...incoming }),
+  });
+
+  readonly mealForm = form(this.model);
+
+  constructor() {
+    effect(() => {
+      const edited = this.model();
+      const incoming = untracked(() => this.meal());
+      if (edited.name !== incoming.name || edited.description !== incoming.description) {
+        this.change.emit({ ...incoming, name: edited.name, description: edited.description });
+      }
+    });
   }
 
-  updateField(field: keyof Meal, value: string): void {
-    this.change.emit({ ...this.meal(), [field]: value });
+  mealLabel(): string {
+    return MEAL_LABELS[this.meal().type as MealType] ?? this.meal().type;
   }
 
   updateIngredient(index: number, updated: Ingredient): void {
