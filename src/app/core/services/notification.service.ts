@@ -6,7 +6,8 @@ import { ApiService } from './api.service';
 import { HouseholdService } from './household.service';
 import { PwaInstallService } from './pwa-install.service';
 import { MealDataService } from './meal-data.service';
-import { MealType, MEAL_LABELS, MEAL_TIMES } from '../models/meal.model';
+import { MealTimeService } from './meal-time.service';
+import { MealType, MEAL_LABELS } from '../models/meal.model';
 import { NotificationPreferences } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
@@ -19,6 +20,7 @@ export class NotificationService {
   private readonly householdService = inject(HouseholdService);
   private readonly pwaInstall = inject(PwaInstallService);
   private readonly mealData = inject(MealDataService);
+  private readonly mealTimes = inject(MealTimeService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -111,17 +113,45 @@ export class NotificationService {
   updatePreferences(prefs: NotificationPreferences): void {
     this.preferences.set(prefs);
     localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(prefs));
-
-    // Sync preferences to KV so the worker knows what to send
-    const userId = this.householdService.currentUserId();
-    if (userId) {
-      this.api.saveNotificationPrefs(userId, prefs).subscribe();
-    }
+    this.syncPreferencesToApi(prefs);
 
     if (prefs.enabled) {
       this.scheduleForegroundReminders();
     } else {
       this.clearForegroundTimers();
+    }
+  }
+
+  /**
+   * Re-sends preferences after the user edits a meal time. The times live in
+   * MealTimeService, but the worker reads them off the notification-prefs
+   * record, so a schedule change has to be pushed from here.
+   */
+  syncMealTimes(): void {
+    this.syncPreferencesToApi(this.preferences());
+  }
+
+  /**
+   * The worker cron ticks every few minutes and needs two things the toggles
+   * do not carry: the user's meal-time overrides and their IANA zone. Without
+   * the zone a wall-clock time like "08:30" cannot be turned into an instant.
+   */
+  private syncPreferencesToApi(prefs: NotificationPreferences): void {
+    const userId = this.householdService.currentUserId();
+    if (!userId) return;
+
+    this.api.saveNotificationPrefs(userId, {
+      ...prefs,
+      mealTimes: this.mealTimes.overrides(),
+      timeZone: this.deviceTimeZone(),
+    }).subscribe();
+  }
+
+  private deviceTimeZone(): string | undefined {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+    } catch {
+      return undefined;
     }
   }
 
@@ -138,8 +168,14 @@ export class NotificationService {
     if (prefs.mealReminders) {
       const mealTypes = [MealType.Breakfast, MealType.Snack, MealType.Lunch, MealType.AfternoonSnack, MealType.Dinner];
 
+      const day = this.mealData.currentDayPlan();
+
       for (const mealType of mealTypes) {
-        const time = MEAL_TIMES[mealType];
+        // Personal override > this day's plan time > fallback
+        const planTime = day?.meals.find(m => m.type === mealType)?.time;
+        const time = this.mealTimes.resolve(mealType, planTime);
+        if (!time) continue;
+
         const [hours, minutes] = time.split(':').map(Number);
         const reminderTime = new Date(now);
         reminderTime.setHours(hours, minutes - 30, 0, 0);
@@ -182,7 +218,7 @@ export class NotificationService {
       .map(i => i.quantity != null ? `☐ ${i.name} ${i.quantity}${i.unit}` : `☐ ${i.name}`)
       .join('\n');
 
-    new Notification(`${label} za 30 min (${meal.time})`, {
+    new Notification(`${label} za 30 min (${this.mealTimes.resolve(mealType, meal.time)})`, {
       body: body || meal.name,
       icon: '/meal-prep/icons/icon-192x192.png',
       tag: `meal-${mealType}`,

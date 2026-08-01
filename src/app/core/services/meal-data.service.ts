@@ -58,6 +58,10 @@ export class MealDataService {
 
   private seedAssigned = false;
 
+  /** True when the active plan came from this device rather than the bundled seed. */
+  private planFromStorage = false;
+  private uploadedOwnPlan = false;
+
   constructor() {
     this.loadPlan();
 
@@ -69,6 +73,24 @@ export class MealDataService {
         this.weeklyPlan.set(plans[userId]);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(plans[userId]));
       }
+    });
+
+    // Push a locally-held plan up to KV when the cloud has none for this user.
+    // The scheduled-push worker skips any member without `plan:{userId}`, so a
+    // plan that only ever lived in localStorage means silently no reminders.
+    effect(() => {
+      const remote = this.remotePlans.value();
+      const userId = this.householdService.currentUserId();
+      const plan = this.weeklyPlan();
+
+      // `undefined` means the fetch has not resolved yet — uploading now would
+      // race the remote plan and could clobber it.
+      if (remote === undefined || !userId || !plan) return;
+      if (!this.planFromStorage || this.uploadedOwnPlan) return;
+      if (remote?.[userId]) return;
+
+      this.uploadedOwnPlan = true;
+      this.savePlanForUser(userId, plan);
     });
 
     // Auto-assign seed plan to Ivana/Ica on first login
@@ -144,6 +166,7 @@ export class MealDataService {
     if (stored) {
       try {
         this.weeklyPlan.set(JSON.parse(stored));
+        this.planFromStorage = true;
         this.loading.set(false);
         return;
       } catch {

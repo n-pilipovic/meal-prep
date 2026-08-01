@@ -44,4 +44,42 @@ test.describe('Settings', () => {
     await expect(page.getByText('Danas')).toBeVisible();
     await expect(page.getByText('Kupovina')).toBeVisible();
   });
+
+  test.describe('Meal times', () => {
+    const lunchInput = (page: any) => page.getByLabel('Vreme — Ručak');
+
+    test('should show a time input seeded from the plan for every meal type', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: 'Vreme obroka' })).toBeVisible();
+
+      for (const label of ['Doručak', 'Užina', 'Ručak', 'Užina 2', 'Večera']) {
+        await expect(page.getByLabel(`Vreme — ${label}`, { exact: true })).toBeVisible();
+      }
+      // seed plan declares 14:00 for lunch
+      await expect(lunchInput(page)).toHaveValue('14:00');
+    });
+
+    test('should apply an override to the meal card on the daily view', async ({ page }) => {
+      await lunchInput(page).fill('12:15');
+      await expect(lunchInput(page)).toHaveValue('12:15');
+
+      await page.goto('/');
+      await expect(page.getByText('12:15')).toBeVisible();
+    });
+
+    test('should keep the override after a reload', async ({ page }) => {
+      await lunchInput(page).fill('12:15');
+      await page.reload();
+      await expect(lunchInput(page)).toHaveValue('12:15');
+    });
+
+    test('should restore the plan time via "Vrati sve na plan"', async ({ page }) => {
+      await lunchInput(page).fill('12:15');
+      await expect(page.getByText('Plan: 14:00')).toBeVisible();
+
+      await page.getByRole('button', { name: 'Vrati sve na plan' }).click();
+
+      await expect(lunchInput(page)).toHaveValue('14:00');
+      await expect(page.getByRole('button', { name: 'Vrati sve na plan' })).toHaveCount(0);
+    });
+  });
 });

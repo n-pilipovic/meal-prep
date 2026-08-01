@@ -29,6 +29,13 @@ export interface NotificationPreferences {
   dailySummary: boolean;
   mealReminders: boolean;
   issueUpdates?: boolean;
+  /**
+   * Sent to the worker so its cron can fire in the user's own local time.
+   * Both are derived at save time rather than stored in `preferences`, so the
+   * user's toggles stay the single source of truth for the toggles alone.
+   */
+  mealTimes?: Record<string, string>;
+  timeZone?: string;
 }
 
 export const USER_COLORS = [

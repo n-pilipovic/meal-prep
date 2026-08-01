@@ -18,10 +18,17 @@ interface VapidKeys {
 
 /**
  * Send a push notification to a subscriber.
+ *
+ * The wire payload MUST be `{ notification: { title, ... } }`. The client runs
+ * Angular's `ngsw-worker.js`, whose push handler bails out on
+ * `if (!data.notification || !data.notification.title) return;` — a flat
+ * `{ title, body }` body is delivered, decrypted, and then silently dropped
+ * without ever calling `showNotification`. Wrapping happens here so no caller
+ * can get the shape wrong.
  */
 export async function sendPushNotification(
   subscription: PushSubscription,
-  payload: {
+  notification: {
     title: string;
     body: string;
     icon?: string;
@@ -34,7 +41,7 @@ export async function sendPushNotification(
   vapidSubject: string,
 ): Promise<boolean> {
   try {
-    const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+    const payloadBytes = new TextEncoder().encode(JSON.stringify({ notification }));
 
     // Encrypt the payload using the subscription's keys
     const encrypted = await encryptPayload(
@@ -116,6 +123,43 @@ async function createVapidToken(
 }
 
 /**
+ * ECDH parameters for `deriveBits`, with the property spelled as the WebCrypto
+ * spec (and workerd) actually reads it: `public`.
+ *
+ * `@cloudflare/workers-types` generates `SubtleCryptoDeriveKeyAlgorithm` with
+ * `$public`, because `public` is a TypeScript keyword and their IDL generator
+ * escapes it. The runtime name is unaffected, so renaming the property to match
+ * the types would break encryption. Passing this as a *variable* rather than an
+ * inline object literal is what makes it compile: excess-property checking only
+ * applies to fresh literals, and structurally this satisfies the parameter type
+ * (which requires nothing beyond `name: string`).
+ */
+interface EcdhDeriveParams {
+  name: 'ECDH';
+  public: CryptoKey;
+}
+
+/**
+ * `generateKey` is typed as returning `CryptoKey | CryptoKeyPair` because the
+ * result depends on the algorithm, which the signature does not track. ECDH
+ * always yields a pair — checked at runtime rather than asserted blindly.
+ */
+function asKeyPair(key: CryptoKey | CryptoKeyPair): CryptoKeyPair {
+  if (!('privateKey' in key)) {
+    throw new Error('crypto.subtle.generateKey did not return an ECDH key pair');
+  }
+  return key;
+}
+
+/** Same shape of problem: `exportKey` returns `ArrayBuffer | JsonWebKey`; 'raw' gives the buffer. */
+function asArrayBuffer(exported: ArrayBuffer | JsonWebKey): ArrayBuffer {
+  if (!(exported instanceof ArrayBuffer)) {
+    throw new Error("crypto.subtle.exportKey('raw') did not return an ArrayBuffer");
+  }
+  return exported;
+}
+
+/**
  * Encrypt payload using the subscriber's public key and auth secret.
  * Uses aes128gcm content encoding as per RFC 8291.
  */
@@ -128,10 +172,8 @@ async function encryptPayload(
   const clientAuth = base64urlDecode(authSecret);
 
   // Generate ephemeral ECDH key pair
-  const serverKeys = await crypto.subtle.generateKey(
-    { name: 'ECDH', namedCurve: 'P-256' },
-    true,
-    ['deriveBits'],
+  const serverKeys = asKeyPair(
+    await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']),
   );
 
   // Import client's public key
@@ -143,15 +185,14 @@ async function encryptPayload(
     [],
   );
 
-  // Derive shared secret
-  const sharedSecret = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: clientKey },
-    serverKeys.privateKey,
-    256,
-  );
+  // Derive shared secret. Declared as a variable on purpose — see EcdhDeriveParams.
+  const ecdhParams: EcdhDeriveParams = { name: 'ECDH', public: clientKey };
+  const sharedSecret = await crypto.subtle.deriveBits(ecdhParams, serverKeys.privateKey, 256);
 
   // Export server public key
-  const serverPublicKeyRaw = await crypto.subtle.exportKey('raw', serverKeys.publicKey);
+  const serverPublicKeyRaw = asArrayBuffer(
+    await crypto.subtle.exportKey('raw', serverKeys.publicKey),
+  );
   const serverPublicKeyBytes = new Uint8Array(serverPublicKeyRaw);
 
   // Generate salt
@@ -233,20 +274,47 @@ async function hkdf(
   return new Uint8Array(okm).slice(0, length);
 }
 
+/**
+ * Wrap a raw 32-byte P-256 private scalar in PKCS#8 so WebCrypto can import it.
+ *
+ * The previous encoding declared an outer SEQUENCE of 138 bytes and a trailing
+ * `[1] BIT STRING` holding a 65-byte public point, but only ever emitted 73
+ * bytes and never appended that public key. Every conformant ASN.1 parser
+ * rejected it with "not enough data", so `importKey` threw, `createVapidToken`
+ * threw, and `sendPushNotification` swallowed it and returned false — no push
+ * was ever delivered.
+ *
+ * The public key is an optional element of ECPrivateKey (RFC 5915) and cannot
+ * be derived from the scalar via WebCrypto anyway, so it is simply omitted:
+ *
+ *   SEQUENCE (0x41)
+ *     INTEGER 0                                  -- version
+ *     SEQUENCE (0x13)                            -- AlgorithmIdentifier
+ *       OID 1.2.840.10045.2.1                    -- id-ecPublicKey
+ *       OID 1.2.840.10045.3.1.7                  -- prime256v1
+ *     OCTET STRING (0x27)
+ *       SEQUENCE (0x25)                          -- ECPrivateKey
+ *         INTEGER 1
+ *         OCTET STRING (0x20) <32-byte scalar>
+ */
 function privateKeyToPkcs8(rawKey: Uint8Array): ArrayBuffer {
-  // Wrap raw 32-byte EC private key in PKCS#8 ASN.1 structure for P-256
+  if (rawKey.length !== 32) {
+    throw new Error(`VAPID private key must be 32 bytes, got ${rawKey.length}`);
+  }
+
   const pkcs8Header = new Uint8Array([
-    0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13,
-    0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
-    0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d,
-    0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02,
-    0x01, 0x01, 0x04, 0x20,
-  ]);
-  const pkcs8Footer = new Uint8Array([
-    0xa1, 0x44, 0x03, 0x42, 0x00,
+    0x30, 0x41,
+    0x02, 0x01, 0x00,
+    0x30, 0x13,
+    0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01,
+    0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07,
+    0x04, 0x27,
+    0x30, 0x25,
+    0x02, 0x01, 0x01,
+    0x04, 0x20,
   ]);
 
-  return concatBytes(pkcs8Header, rawKey, pkcs8Footer).buffer;
+  return concatBytes(pkcs8Header, rawKey).buffer;
 }
 
 function derToRaw(der: Uint8Array): Uint8Array {
