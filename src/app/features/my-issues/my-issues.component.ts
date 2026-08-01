@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { HouseholdService } from '../../core/services/household.service';
@@ -26,11 +26,13 @@ const TYPE_ICON: Record<string, string> = {
 @Component({
   selector: 'app-my-issues',
   imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4 pb-24 max-w-xl mx-auto">
       <button
         (click)="back()"
-        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2">
+        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2"
+      >
         ‹ Nazad
       </button>
 
@@ -39,16 +41,22 @@ const TYPE_ICON: Record<string, string> = {
       <div class="grid grid-cols-2 gap-2 mb-4 bg-cream-light p-1 rounded-2xl">
         <button
           (click)="tab.set('mine')"
-          [class]="tab() === 'mine'
-            ? 'py-2.5 rounded-xl bg-white text-text-primary font-medium min-h-11 shadow-sm'
-            : 'py-2.5 rounded-xl text-text-secondary min-h-11'">
+          [class]="
+            tab() === 'mine'
+              ? 'py-2.5 rounded-xl bg-white text-text-primary font-medium min-h-11 shadow-sm'
+              : 'py-2.5 rounded-xl text-text-secondary min-h-11'
+          "
+        >
           Moje prijave
         </button>
         <button
           (click)="tab.set('suggestions')"
-          [class]="tab() === 'suggestions'
-            ? 'py-2.5 rounded-xl bg-white text-text-primary font-medium min-h-11 shadow-sm'
-            : 'py-2.5 rounded-xl text-text-secondary min-h-11'">
+          [class]="
+            tab() === 'suggestions'
+              ? 'py-2.5 rounded-xl bg-white text-text-primary font-medium min-h-11 shadow-sm'
+              : 'py-2.5 rounded-xl text-text-secondary min-h-11'
+          "
+        >
           Predlozi domaćinstva
         </button>
       </div>
@@ -66,16 +74,20 @@ const TYPE_ICON: Record<string, string> = {
               Još nema predloga u domaćinstvu.
             }
           </p>
-          <a routerLink="/report-issue"
-             class="inline-block px-4 py-2 bg-green-primary text-white text-sm font-medium rounded-xl min-h-11">
+          <a
+            routerLink="/report-issue"
+            class="inline-block px-4 py-2 bg-green-primary text-white text-sm font-medium rounded-xl min-h-11"
+          >
             Pošalji povratnu informaciju
           </a>
         </div>
       } @else {
         <div class="flex flex-col gap-2">
           @for (issue of visibleIssues(); track issue.number) {
-            <a [routerLink]="['/issue', issue.number]"
-               class="bg-white rounded-2xl shadow-sm p-4 active:bg-cream-light transition-colors flex items-start gap-3">
+            <a
+              [routerLink]="['/issue', issue.number]"
+              class="bg-white rounded-2xl shadow-sm p-4 active:bg-cream-light transition-colors flex items-start gap-3"
+            >
               <span class="text-2xl" aria-hidden="true">{{ typeIcon(issue.type) }}</span>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
@@ -93,9 +105,12 @@ const TYPE_ICON: Record<string, string> = {
                     <button
                       type="button"
                       (click)="upvote($event, issue)"
-                      [class]="issue.upvotedByMe
-                        ? 'flex items-center gap-1 px-2 py-1 bg-green-primary text-white rounded-full text-xs min-h-8'
-                        : 'flex items-center gap-1 px-2 py-1 bg-cream-light text-text-secondary rounded-full text-xs min-h-8 active:opacity-70'">
+                      [class]="
+                        issue.upvotedByMe
+                          ? 'flex items-center gap-1 px-2 py-1 bg-green-primary text-white rounded-full text-xs min-h-8'
+                          : 'flex items-center gap-1 px-2 py-1 bg-cream-light text-text-secondary rounded-full text-xs min-h-8 active:opacity-70'
+                      "
+                    >
                       👍 {{ issue.upvotes }}
                     </button>
                   }

@@ -1,5 +1,5 @@
-import { Component, inject, input, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { form, maxLength, FormField } from '@angular/forms/signals';
 import { Location } from '@angular/common';
 import { HouseholdService } from '../../core/services/household.service';
 import { IssueReportService } from '../../core/services/issue-report.service';
@@ -20,12 +20,14 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
 
 @Component({
   selector: 'app-issue-detail',
-  imports: [FormsModule],
+  imports: [FormField],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4 pb-24 max-w-xl mx-auto">
       <button
         (click)="back()"
-        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2">
+        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2"
+      >
         ‹ Nazad
       </button>
 
@@ -38,7 +40,9 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
           <div class="bg-white rounded-2xl shadow-sm p-4">
             <div class="flex items-center gap-2 mb-2">
               <span class="text-xs font-mono text-text-muted">#{{ detail()!.issue.number }}</span>
-              <span [class]="'px-2 py-0.5 text-xs rounded-full ' + stateBadge(detail()!.issue.state)">
+              <span
+                [class]="'px-2 py-0.5 text-xs rounded-full ' + stateBadge(detail()!.issue.state)"
+              >
                 {{ stateLabels[detail()!.issue.state] }}
               </span>
               <span class="text-xs text-text-muted">{{ typeLabels[detail()!.issue.type] }}</span>
@@ -51,7 +55,9 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
 
           <div class="bg-white rounded-2xl shadow-sm p-4">
             <h2 class="font-semibold text-text-primary mb-2">Opis</h2>
-            <p class="text-sm text-text-secondary whitespace-pre-wrap">{{ detail()!.description }}</p>
+            <p class="text-sm text-text-secondary whitespace-pre-wrap">
+              {{ detail()!.description }}
+            </p>
           </div>
 
           @if (detail()!.attachments.length > 0) {
@@ -60,7 +66,11 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
               <div class="grid grid-cols-2 gap-2">
                 @for (att of detail()!.attachments; track att.url) {
                   <a [href]="att.url" target="_blank" rel="noopener" class="block aspect-square">
-                    <img [src]="att.url" [alt]="att.name" class="w-full h-full object-cover rounded-xl" />
+                    <img
+                      [src]="att.url"
+                      [alt]="att.name"
+                      class="w-full h-full object-cover rounded-xl"
+                    />
                   </a>
                 }
               </div>
@@ -72,7 +82,13 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
               <h2 class="font-semibold text-text-primary mb-2">Odgovori</h2>
               <div class="flex flex-col gap-3">
                 @for (c of detail()!.comments; track c.createdAt) {
-                  <div [class]="c.author === 'developer' ? 'bg-cream-light rounded-xl p-3' : 'bg-white border border-border rounded-xl p-3'">
+                  <div
+                    [class]="
+                      c.author === 'developer'
+                        ? 'bg-cream-light rounded-xl p-3'
+                        : 'bg-white border border-border rounded-xl p-3'
+                    "
+                  >
                     <p class="text-xs text-text-muted mb-1">
                       {{ commentAuthorLabel(c) }} · {{ formatDate(c.createdAt) }}
                     </p>
@@ -87,13 +103,12 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
           <div class="bg-white rounded-2xl shadow-sm p-4">
             <h2 class="font-semibold text-text-primary mb-2">Dodaj komentar</h2>
             <textarea
-              [(ngModel)]="commentDraft"
-              name="comment"
+              [formField]="commentForm.text"
               rows="3"
-              maxlength="2000"
               placeholder="Napiši komentar..."
-              class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary resize-none"></textarea>
-            <p class="text-xs text-text-muted mt-1 text-right">{{ commentDraft().length }}/2000</p>
+              class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary resize-none"
+            ></textarea>
+            <p class="text-xs text-text-muted mt-1 text-right">{{ draft().text.length }}/2000</p>
 
             @if (commentError()) {
               <p role="alert" class="text-red-500 text-xs mt-2">{{ commentError() }}</p>
@@ -103,7 +118,8 @@ const STATE_BADGE_CLASS: Record<IssueState, string> = {
               type="button"
               (click)="postComment()"
               [disabled]="!canPostComment()"
-              class="mt-2 w-full py-3 bg-green-primary text-white font-medium rounded-xl active:scale-[0.98] transition-transform disabled:opacity-40 min-h-11">
+              class="mt-2 w-full py-3 bg-green-primary text-white font-medium rounded-xl active:scale-[0.98] transition-transform disabled:opacity-40 min-h-11"
+            >
               {{ posting() ? 'Šaljem...' : 'Pošalji komentar' }}
             </button>
           </div>
@@ -126,7 +142,10 @@ export class IssueDetailComponent {
   readonly loading = signal(true);
   readonly error = signal('');
 
-  readonly commentDraft = signal('');
+  readonly draft = signal({ text: '' });
+  readonly commentForm = form(this.draft, (path) => {
+    maxLength(path.text, 2000);
+  });
   readonly commentError = signal('');
   readonly posting = signal(false);
 
@@ -135,7 +154,7 @@ export class IssueDetailComponent {
   }
 
   canPostComment(): boolean {
-    return !this.posting() && this.commentDraft().trim().length > 0;
+    return !this.posting() && this.draft().text.trim().length > 0;
   }
 
   commentAuthorLabel(c: IssueComment): string {
@@ -145,7 +164,7 @@ export class IssueDetailComponent {
 
   async postComment(): Promise<void> {
     if (!this.canPostComment()) return;
-    const text = this.commentDraft().trim();
+    const text = this.draft().text.trim();
     const n = Number(this.number());
     if (!Number.isFinite(n)) return;
 
@@ -160,10 +179,8 @@ export class IssueDetailComponent {
       body: text,
       createdAt: new Date().toISOString(),
     };
-    this.detail.update((d) =>
-      d ? { ...d, comments: [...d.comments, optimistic] } : d,
-    );
-    this.commentDraft.set('');
+    this.detail.update((d) => (d ? { ...d, comments: [...d.comments, optimistic] } : d));
+    this.draft.set({ text: '' });
 
     try {
       await this.issueReport.addComment(n, text);
@@ -172,7 +189,7 @@ export class IssueDetailComponent {
       this.detail.update((d) =>
         d ? { ...d, comments: d.comments.filter((c) => c !== optimistic) } : d,
       );
-      this.commentDraft.set(text);
+      this.draft.set({ text });
       this.commentError.set(err?.error?.error ?? 'Slanje nije uspelo.');
     } finally {
       this.posting.set(false);

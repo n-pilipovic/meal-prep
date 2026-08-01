@@ -1,4 +1,4 @@
-import { Component, inject, input, computed, signal } from '@angular/core';
+import { Component, inject, input, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Location } from '@angular/common';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
@@ -30,9 +30,14 @@ interface PrepUserSection {
 @Component({
   selector: 'app-prep-checklist',
   imports: [QuantityPipe, AssignmentBadgeComponent, UserAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4">
-      <button (click)="goBack()" aria-label="Nazad" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-11 flex items-center">
+      <button
+        (click)="goBack()"
+        aria-label="Nazad"
+        class="mb-3 text-green-primary font-medium active:opacity-70 min-h-11 flex items-center"
+      >
         <span aria-hidden="true">‹</span>&nbsp;Nazad
       </button>
 
@@ -52,7 +57,8 @@ interface PrepUserSection {
                 [class.bg-green-primary]="filter() === opt.value"
                 [class.text-white]="filter() === opt.value"
                 [class.bg-white]="filter() !== opt.value"
-                [class.text-text-muted]="filter() !== opt.value">
+                [class.text-text-muted]="filter() !== opt.value"
+              >
                 {{ opt.label }}
               </button>
             }
@@ -67,14 +73,18 @@ interface PrepUserSection {
               {{ checkedCount() }}/{{ totalCount() }}
             </span>
           </div>
-          <div class="mt-2 h-2 bg-cream-dark rounded-full overflow-hidden"
-               role="progressbar"
-               [attr.aria-valuenow]="progressPercent()"
-               aria-valuemin="0"
-               aria-valuemax="100"
-               [attr.aria-label]="'Priprema ' + progressPercent().toFixed(0) + '% završena'">
-            <div class="h-full bg-green-primary rounded-full transition-all duration-300"
-                 [style.width.%]="progressPercent()"></div>
+          <div
+            class="mt-2 h-2 bg-cream-dark rounded-full overflow-hidden"
+            role="progressbar"
+            [attr.aria-valuenow]="progressPercent()"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="'Priprema ' + progressPercent().toFixed(0) + '% završena'"
+          >
+            <div
+              class="h-full bg-green-primary rounded-full transition-all duration-300"
+              [style.width.%]="progressPercent()"
+            ></div>
           </div>
         </div>
 
@@ -89,7 +99,8 @@ interface PrepUserSection {
                 [class.bg-orange-primary]="divisionMode() === opt.value"
                 [class.text-white]="divisionMode() === opt.value"
                 [class.bg-white]="divisionMode() !== opt.value"
-                [class.text-text-muted]="divisionMode() !== opt.value">
+                [class.text-text-muted]="divisionMode() !== opt.value"
+              >
                 {{ opt.label }}
               </button>
             }
@@ -102,7 +113,9 @@ interface PrepUserSection {
             <div class="mb-4">
               <!-- User plan-level assignment -->
               @if (divisionMode() === 'byUserPlan') {
-                <div class="flex items-center justify-between mb-2 bg-white rounded-xl px-4 py-2 shadow-sm">
+                <div
+                  class="flex items-center justify-between mb-2 bg-white rounded-xl px-4 py-2 shadow-sm"
+                >
                   <div class="flex items-center gap-2">
                     <app-user-avatar [user]="section.user" size="sm" />
                     <span class="text-sm font-semibold" [style.color]="section.user.color">
@@ -111,7 +124,8 @@ interface PrepUserSection {
                   </div>
                   <app-assignment-badge
                     [assignedUserId]="getUserPlanAssignee(section.user.id)"
-                    (assign)="assignUserPlan(section.user.id, $event)" />
+                    (assign)="assignUserPlan(section.user.id, $event)"
+                  />
                 </div>
               } @else {
                 <div class="flex items-center gap-2 mb-2">
@@ -131,7 +145,8 @@ interface PrepUserSection {
                   @if (divisionMode() === 'byMeal') {
                     <app-assignment-badge
                       [assignedUserId]="getMealAssignee(group.mealType)"
-                      (assign)="assignMeal(group.mealType, $event)" />
+                      (assign)="assignMeal(group.mealType, $event)"
+                    />
                   }
                 </div>
                 <ul class="flex flex-col gap-1.5">
@@ -139,13 +154,17 @@ interface PrepUserSection {
                     <li class="bg-white rounded-xl shadow-sm">
                       <div class="flex items-center gap-3 px-4 py-3">
                         <label class="flex items-center gap-3 flex-1 cursor-pointer">
-                          <input type="checkbox"
-                                 [checked]="isChecked(item.key)"
-                                 (change)="toggleCheck(item.key)"
-                                 class="w-5 h-5 rounded accent-green-primary shrink-0" />
-                          <span [class.line-through]="isChecked(item.key)"
-                                [class.text-text-muted]="isChecked(item.key)"
-                                class="text-sm">
+                          <input
+                            type="checkbox"
+                            [checked]="isChecked(item.key)"
+                            (change)="toggleCheck(item.key)"
+                            class="w-5 h-5 rounded accent-green-primary shrink-0"
+                          />
+                          <span
+                            [class.line-through]="isChecked(item.key)"
+                            [class.text-text-muted]="isChecked(item.key)"
+                            class="text-sm"
+                          >
                             {{ item.ingredient | quantity }}
                           </span>
                         </label>
@@ -153,7 +172,8 @@ interface PrepUserSection {
                         @if (divisionMode() === 'byItem') {
                           <app-assignment-badge
                             [assignedUserId]="getItemAssignee(item.key)"
-                            (assign)="assignItem(item.key, $event)" />
+                            (assign)="assignItem(item.key, $event)"
+                          />
                         }
                       </div>
                     </li>
@@ -172,13 +192,17 @@ interface PrepUserSection {
               @for (item of group.items; track item.key) {
                 <li class="bg-white rounded-xl shadow-sm">
                   <label class="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                    <input type="checkbox"
-                           [checked]="isChecked(item.key)"
-                           (change)="toggleCheck(item.key)"
-                           class="w-5 h-5 rounded accent-green-primary shrink-0" />
-                    <span [class.line-through]="isChecked(item.key)"
-                          [class.text-text-muted]="isChecked(item.key)"
-                          class="text-sm">
+                    <input
+                      type="checkbox"
+                      [checked]="isChecked(item.key)"
+                      (change)="toggleCheck(item.key)"
+                      class="w-5 h-5 rounded accent-green-primary shrink-0"
+                    />
+                    <span
+                      [class.line-through]="isChecked(item.key)"
+                      [class.text-text-muted]="isChecked(item.key)"
+                      class="text-sm"
+                    >
                       {{ item.ingredient | quantity }}
                     </span>
                   </label>
@@ -225,10 +249,10 @@ export class PrepChecklistComponent {
   readonly mealGroups = computed<PrepMealGroup[]>(() => {
     const day = this.dayPlan();
     if (!day) return [];
-    return day.meals.map(m => ({
+    return day.meals.map((m) => ({
       mealType: m.type as MealType,
       label: MEAL_LABELS[m.type as MealType] ?? m.type,
-      items: m.ingredients.map(ing => ({
+      items: m.ingredients.map((ing) => ({
         ingredient: ing,
         key: `${this.dayIndex()}_${m.type}_${ing.name}`,
         userId: 'local',
@@ -251,11 +275,11 @@ export class PrepChecklistComponent {
       if (!day) continue;
 
       const mealGroups: PrepMealGroup[] = day.meals
-        .filter(m => m.ingredients.length > 0)
-        .map(m => ({
+        .filter((m) => m.ingredients.length > 0)
+        .map((m) => ({
           mealType: m.type as MealType,
           label: MEAL_LABELS[m.type as MealType] ?? m.type,
-          items: m.ingredients.map(ing => ({
+          items: m.ingredients.map((ing) => ({
             ingredient: ing,
             key: `${idx}_${member.id}_${m.type}_${ing.name}`,
             userId: member.id,
@@ -294,12 +318,13 @@ export class PrepChecklistComponent {
     const assignments = this.syncService.sharedState().prepAssignments;
 
     return sections
-      .map(section => ({
+      .map((section) => ({
         ...section,
         mealGroups: section.mealGroups
-          .filter(group => {
+          .filter((group) => {
             // byUserPlan: show section if I'm assigned to this user's plan
-            const userPlanAssignee = assignments.byUserPlan[`${this.dayIndex()}_${section.user.id}`];
+            const userPlanAssignee =
+              assignments.byUserPlan[`${this.dayIndex()}_${section.user.id}`];
             if (userPlanAssignee && userPlanAssignee !== myId) return false;
 
             // byMeal: show meal if I'm assigned
@@ -308,33 +333,33 @@ export class PrepChecklistComponent {
 
             return true;
           })
-          .map(group => ({
+          .map((group) => ({
             ...group,
-            items: group.items.filter(item => {
+            items: group.items.filter((item) => {
               // byItem: show item if I'm assigned
               const itemAssignee = assignments.byItem[item.key];
               if (itemAssignee && itemAssignee !== myId) return false;
               return true;
             }),
           }))
-          .filter(group => group.items.length > 0),
+          .filter((group) => group.items.length > 0),
       }))
-      .filter(section => section.mealGroups.length > 0);
+      .filter((section) => section.mealGroups.length > 0);
   });
 
   /** All items across all visible sections */
   private readonly allVisibleItems = computed<PrepItem[]>(() => {
     if (this.isMultiUser()) {
-      return this.filteredUserSections().flatMap(s => s.mealGroups.flatMap(g => g.items));
+      return this.filteredUserSections().flatMap((s) => s.mealGroups.flatMap((g) => g.items));
     }
-    return this.mealGroups().flatMap(g => g.items);
+    return this.mealGroups().flatMap((g) => g.items);
   });
 
   readonly totalCount = computed(() => this.allVisibleItems().length);
 
   readonly checkedCount = computed(() => {
     const prepChecked = this.syncService.sharedState().prepChecked;
-    return this.allVisibleItems().filter(item => prepChecked[item.key]).length;
+    return this.allVisibleItems().filter((item) => prepChecked[item.key]).length;
   });
 
   readonly progressPercent = computed(() => {
@@ -347,7 +372,7 @@ export class PrepChecklistComponent {
   }
 
   toggleCheck(key: string): void {
-    this.syncService.updateSharedState(state => ({
+    this.syncService.updateSharedState((state) => ({
       ...state,
       prepChecked: {
         ...state.prepChecked,
@@ -363,7 +388,7 @@ export class PrepChecklistComponent {
 
   assignUserPlan(targetUserId: string, assigneeId: string | null): void {
     const key = `${this.dayIndex()}_${targetUserId}`;
-    this.syncService.updateSharedState(state => {
+    this.syncService.updateSharedState((state) => {
       const newByUserPlan = { ...state.prepAssignments.byUserPlan };
       if (assigneeId) {
         newByUserPlan[key] = assigneeId;
@@ -384,7 +409,7 @@ export class PrepChecklistComponent {
 
   assignMeal(mealType: MealType, assigneeId: string | null): void {
     const key = `${this.dayIndex()}_${mealType}`;
-    this.syncService.updateSharedState(state => {
+    this.syncService.updateSharedState((state) => {
       const newByMeal = { ...state.prepAssignments.byMeal };
       if (assigneeId) {
         newByMeal[key] = assigneeId;
@@ -403,7 +428,7 @@ export class PrepChecklistComponent {
   }
 
   assignItem(itemKey: string, assigneeId: string | null): void {
-    this.syncService.updateSharedState(state => {
+    this.syncService.updateSharedState((state) => {
       const newByItem = { ...state.prepAssignments.byItem };
       if (assigneeId) {
         newByItem[itemKey] = assigneeId;

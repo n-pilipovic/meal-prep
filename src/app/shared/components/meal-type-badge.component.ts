@@ -1,11 +1,15 @@
-import { Component, input } from '@angular/core';
-import { MealType, MEAL_LABELS, MEAL_TIMES } from '../../core/models/meal.model';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { MealType, MEAL_LABELS } from '../../core/models/meal.model';
+import { MealTimeService } from '../../core/services/meal-time.service';
 
 @Component({
   selector: 'app-meal-type-badge',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-          [class]="badgeClass()">
+    <span
+      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+      [class]="badgeClass()"
+    >
       <span>{{ icon() }}</span>
       <span>{{ label() }}</span>
       <span class="text-text-muted">{{ time() }}</span>
@@ -13,14 +17,16 @@ import { MealType, MEAL_LABELS, MEAL_TIMES } from '../../core/models/meal.model'
   `,
 })
 export class MealTypeBadgeComponent {
+  private readonly mealTimes = inject(MealTimeService);
+
   readonly mealType = input.required<MealType>();
+  /** The rendered meal's own `time`, when the caller has it. */
+  readonly planTime = input<string | null>(null);
+
+  readonly time = computed(() => this.mealTimes.resolve(this.mealType(), this.planTime()));
 
   label(): string {
     return MEAL_LABELS[this.mealType()] ?? '';
-  }
-
-  time(): string {
-    return MEAL_TIMES[this.mealType()] ?? '';
   }
 
   icon(): string {

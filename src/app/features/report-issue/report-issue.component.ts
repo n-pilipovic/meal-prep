@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { form, required, maxLength, FormField } from '@angular/forms/signals';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { IssueReportService } from '../../core/services/issue-report.service';
@@ -10,7 +10,10 @@ interface ThumbnailEntry {
   url: string;
 }
 
-const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; attachmentHint: string; placeholder: string }> = {
+const TYPE_PROMPTS: Record<
+  IssueType,
+  { titleLabel: string; descLabel: string; attachmentHint: string; placeholder: string }
+> = {
   bug: {
     titleLabel: 'Kratko opiši grešku',
     descLabel: 'Šta se desilo? Šta si očekivao?',
@@ -33,19 +36,23 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
 
 @Component({
   selector: 'app-report-issue',
-  imports: [FormsModule],
+  imports: [FormField],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4 pb-24 max-w-xl mx-auto">
       <button
         (click)="back()"
-        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2">
+        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2"
+      >
         ‹ Nazad
       </button>
 
       <h1 class="text-xl font-bold text-text-primary mb-4">Povratna informacija</h1>
 
       @if (submitted()) {
-        <div class="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center gap-3">
+        <div
+          class="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center gap-3"
+        >
           <span class="text-4xl" aria-hidden="true">✓</span>
           <h2 class="font-semibold text-text-primary text-lg">Hvala!</h2>
           <p class="text-sm text-text-secondary">Tvoja prijava je poslata.</p>
@@ -55,12 +62,11 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
           <p class="text-xs text-text-muted">Sačuvaj broj reference za praćenje.</p>
           <button
             (click)="goToMyIssues()"
-            class="mt-2 px-4 py-2 bg-green-primary text-white font-medium rounded-xl min-h-11">
+            class="mt-2 px-4 py-2 bg-green-primary text-white font-medium rounded-xl min-h-11"
+          >
             Moje prijave
           </button>
-          <button
-            (click)="back()"
-            class="text-text-muted text-sm active:opacity-70 min-h-11">
+          <button (click)="back()" class="text-text-muted text-sm active:opacity-70 min-h-11">
             Nazad
           </button>
         </div>
@@ -74,9 +80,12 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
                 <button
                   type="button"
                   (click)="type.set(t)"
-                  [class]="t === type()
-                    ? 'py-3 rounded-xl bg-green-primary text-white font-medium min-h-11'
-                    : 'py-3 rounded-xl bg-cream-light text-text-primary min-h-11 active:opacity-70'">
+                  [class]="
+                    t === type()
+                      ? 'py-3 rounded-xl bg-green-primary text-white font-medium min-h-11'
+                      : 'py-3 rounded-xl bg-cream-light text-text-primary min-h-11 active:opacity-70'
+                  "
+                >
                   {{ typeLabels[t] }}
                 </button>
               }
@@ -90,11 +99,10 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
             </label>
             <input
               type="text"
-              [(ngModel)]="title"
-              name="title"
-              maxlength="100"
+              [formField]="reportForm.title"
               class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary min-h-11"
-              placeholder="Naslov" />
+              placeholder="Naslov"
+            />
           </div>
 
           <!-- Description -->
@@ -103,13 +111,12 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
               {{ prompts().descLabel }}
             </label>
             <textarea
-              [(ngModel)]="description"
-              name="description"
+              [formField]="reportForm.description"
               rows="5"
-              maxlength="4000"
               [placeholder]="prompts().placeholder"
-              class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary resize-none"></textarea>
-            <p class="text-xs text-text-muted mt-1 text-right">{{ description().length }}/4000</p>
+              class="w-full px-3 py-2.5 bg-cream-light rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-green-primary resize-none"
+            ></textarea>
+            <p class="text-xs text-text-muted mt-1 text-right">{{ model().description.length }}/4000</p>
           </div>
 
           <!-- Attachments -->
@@ -126,12 +133,14 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
               accept="image/jpeg,image/png,image/webp"
               multiple
               (change)="onFiles($event)"
-              class="hidden" />
+              class="hidden"
+            />
             <button
               type="button"
               (click)="fileInput.click()"
               [disabled]="thumbnails().length >= 3 || compressing()"
-              class="w-full py-3 rounded-xl border border-dashed border-border text-text-secondary disabled:opacity-40 min-h-11 active:opacity-70">
+              class="w-full py-3 rounded-xl border border-dashed border-border text-text-secondary disabled:opacity-40 min-h-11 active:opacity-70"
+            >
               {{ compressing() ? 'Obrada...' : '+ Dodaj sliku' }}
             </button>
 
@@ -144,7 +153,8 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
                       type="button"
                       (click)="removeThumbnail(i)"
                       aria-label="Ukloni sliku"
-                      class="absolute top-1 right-1 w-7 h-7 bg-black/60 text-white rounded-full text-sm leading-none flex items-center justify-center active:opacity-70">
+                      class="absolute top-1 right-1 w-7 h-7 bg-black/60 text-white rounded-full text-sm leading-none flex items-center justify-center active:opacity-70"
+                    >
                       ×
                     </button>
                   </div>
@@ -159,8 +169,8 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
 
           <!-- Disclosure -->
           <p class="text-xs text-text-muted px-2">
-            Uz prijavu se šalju: tvoje ime, verzija aplikacije, trenutna stranica, tip uređaja i prikačene slike.
-            Prijave se čuvaju javno u GitHub repozitorijumu aplikacije.
+            Uz prijavu se šalju: tvoje ime, verzija aplikacije, trenutna stranica, tip uređaja i
+            prikačene slike. Prijave se čuvaju javno u GitHub repozitorijumu aplikacije.
           </p>
 
           @if (error()) {
@@ -170,13 +180,15 @@ const TYPE_PROMPTS: Record<IssueType, { titleLabel: string; descLabel: string; a
           <button
             type="submit"
             [disabled]="!canSubmit()"
-            class="w-full py-4 bg-green-primary text-white font-semibold rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-40 min-h-13">
+            class="w-full py-4 bg-green-primary text-white font-semibold rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-40 min-h-13"
+          >
             {{ issueReport.submitting() ? 'Šaljem...' : 'Pošalji' }}
           </button>
           <button
             type="button"
             (click)="back()"
-            class="w-full py-3 text-text-muted text-sm active:opacity-70 min-h-11">
+            class="w-full py-3 text-text-muted text-sm active:opacity-70 min-h-11"
+          >
             Otkaži
           </button>
         </form>
@@ -193,8 +205,13 @@ export class ReportIssueComponent {
   readonly typeLabels = ISSUE_TYPE_LABELS;
 
   readonly type = signal<IssueType>('bug');
-  readonly title = signal('');
-  readonly description = signal('');
+  readonly model = signal({ title: '', description: '' });
+  readonly reportForm = form(this.model, (path) => {
+    required(path.title);
+    maxLength(path.title, 100);
+    required(path.description);
+    maxLength(path.description, 4000);
+  });
   readonly thumbnails = signal<ThumbnailEntry[]>([]);
   readonly compressing = signal(false);
   readonly attachmentError = signal('');
@@ -208,8 +225,8 @@ export class ReportIssueComponent {
     return (
       !this.issueReport.submitting() &&
       !this.compressing() &&
-      this.title().trim().length > 0 &&
-      this.description().trim().length > 0
+      this.model().title.trim().length > 0 &&
+      this.model().description.trim().length > 0
     );
   });
 
@@ -264,8 +281,8 @@ export class ReportIssueComponent {
     try {
       const result = await this.issueReport.submit({
         type: this.type(),
-        title: this.title().trim(),
-        description: this.description().trim(),
+        title: this.model().title.trim(),
+        description: this.model().description.trim(),
         attachments: this.thumbnails().map((t) => t.blob),
         context,
       });

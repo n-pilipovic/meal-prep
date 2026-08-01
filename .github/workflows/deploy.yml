@@ -85,6 +85,9 @@ jobs:
       - name: Install worker dependencies
         run: cd cf-worker && npm ci
 
+      - name: Run worker tests
+        run: cd cf-worker && npm test
+
       - name: Deploy Cloudflare Worker
         run: cd cf-worker && npx wrangler deploy
         env:

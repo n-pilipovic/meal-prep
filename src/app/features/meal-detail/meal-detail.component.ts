@@ -1,8 +1,16 @@
-import { Component, inject, input, computed, signal, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  computed,
+  signal,
+  OnDestroy,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { Location } from '@angular/common';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
-import { MealType, MEAL_LABELS, MEAL_TIMES, Recipe } from '../../core/models/meal.model';
+import { MealType, MEAL_LABELS, Recipe } from '../../core/models/meal.model';
 import { UserProfile } from '../../core/models/user.model';
 import { QuantityPipe } from '../../shared/pipes/quantity.pipe';
 import { MealTypeBadgeComponent } from '../../shared/components/meal-type-badge.component';
@@ -14,14 +22,18 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
   template: `
     <div class="px-4 py-4" [class.cook-mode]="cookMode()">
       @if (!cookMode()) {
-        <button (click)="goBack()" aria-label="Nazad" class="mb-3 text-green-primary font-medium active:opacity-70 min-h-[44px] flex items-center">
+        <button
+          (click)="goBack()"
+          aria-label="Nazad"
+          class="mb-3 text-green-primary font-medium active:opacity-70 min-h-[44px] flex items-center"
+        >
           <span aria-hidden="true">‹</span>&nbsp;Nazad
         </button>
       }
 
       @if (meal(); as m) {
         @if (!cookMode()) {
-          <app-meal-type-badge [mealType]="m.type" />
+          <app-meal-type-badge [mealType]="m.type" [planTime]="m.time" />
 
           @if (mealOwner(); as owner) {
             <div class="flex items-center gap-2 mt-2 mb-1">
@@ -38,13 +50,17 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
             @for (ing of m.ingredients; track ing.name) {
               <li class="bg-white rounded-xl shadow-sm">
                 <label class="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                  <input type="checkbox"
-                         [checked]="!!checked()[ing.name]"
-                         (change)="toggleIngredient(ing.name)"
-                         class="w-5 h-5 rounded accent-green-primary" />
-                  <span [class.line-through]="checked()[ing.name]"
-                        [class.text-text-muted]="checked()[ing.name]"
-                        class="text-sm">
+                  <input
+                    type="checkbox"
+                    [checked]="!!checked()[ing.name]"
+                    (change)="toggleIngredient(ing.name)"
+                    class="w-5 h-5 rounded accent-green-primary"
+                  />
+                  <span
+                    [class.line-through]="checked()[ing.name]"
+                    [class.text-text-muted]="checked()[ing.name]"
+                    class="text-sm"
+                  >
                     {{ ing | quantity }}
                   </span>
                 </label>
@@ -60,7 +76,8 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
               <button
                 (click)="enterCookMode()"
                 class="px-4 py-2 bg-orange-primary text-white text-sm font-medium rounded-xl active:scale-95 transition-transform min-h-[44px]"
-                aria-label="Uđi u režim kuvanja">
+                aria-label="Uđi u režim kuvanja"
+              >
                 🍳 Kuvaj
               </button>
             </div>
@@ -72,20 +89,29 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
                   class="flex gap-3 bg-white rounded-xl px-4 py-3 shadow-sm cursor-pointer transition-all duration-200"
                   [class.ring-2]="activeStep() === $index"
                   [class.ring-green-primary]="activeStep() === $index"
-                  [class.opacity-40]="activeStep() !== null && completedSteps()[$index]">
-                  <span class="text-green-primary font-semibold text-sm shrink-0">{{ $index + 1 }}.</span>
-                  <span class="text-sm text-text-secondary"
-                        [class.line-through]="completedSteps()[$index]">{{ step }}</span>
+                  [class.opacity-40]="activeStep() !== null && completedSteps()[$index]"
+                >
+                  <span class="text-green-primary font-semibold text-sm shrink-0"
+                    >{{ $index + 1 }}.</span
+                  >
+                  <span
+                    class="text-sm text-text-secondary"
+                    [class.line-through]="completedSteps()[$index]"
+                    >{{ step }}</span
+                  >
                 </li>
               }
             </ol>
           } @else {
             <!-- Cook Mode UI -->
-            <div class="cook-mode-header flex items-center justify-between mb-4 sticky top-0 bg-cream z-10 py-3 -mx-4 px-4">
+            <div
+              class="cook-mode-header flex items-center justify-between mb-4 sticky top-0 bg-cream z-10 py-3 -mx-4 px-4"
+            >
               <button
                 (click)="exitCookMode()"
                 class="text-green-primary font-medium active:opacity-70 min-h-[44px] flex items-center"
-                aria-label="Izađi iz režima kuvanja">
+                aria-label="Izađi iz režima kuvanja"
+              >
                 <span aria-hidden="true">‹</span>&nbsp;Nazad
               </button>
               <span class="text-sm font-semibold text-text-primary">{{ r.name }}</span>
@@ -103,15 +129,30 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
                   class="rounded-2xl px-5 py-4 shadow-sm cursor-pointer transition-all duration-200"
                   [class]="cookStepClasses($index)"
                   role="button"
-                  [attr.aria-label]="'Korak ' + ($index + 1) + (completedSteps()[$index] ? ', završen' : activeStep() === $index ? ', trenutni' : '')">
+                  [attr.aria-label]="
+                    'Korak ' +
+                    ($index + 1) +
+                    (completedSteps()[$index]
+                      ? ', završen'
+                      : activeStep() === $index
+                        ? ', trenutni'
+                        : '')
+                  "
+                >
                   <div class="flex gap-3 items-start">
-                    <span class="font-bold shrink-0 text-lg" [class.text-white]="activeStep() === $index" [class.text-green-primary]="activeStep() !== $index">
+                    <span
+                      class="font-bold shrink-0 text-lg"
+                      [class.text-white]="activeStep() === $index"
+                      [class.text-green-primary]="activeStep() !== $index"
+                    >
                       {{ $index + 1 }}.
                     </span>
-                    <span class="leading-relaxed"
-                          [class.text-lg]="activeStep() === $index"
-                          [class.text-base]="activeStep() !== $index"
-                          [class.line-through]="completedSteps()[$index]">
+                    <span
+                      class="leading-relaxed"
+                      [class.text-lg]="activeStep() === $index"
+                      [class.text-base]="activeStep() !== $index"
+                      [class.line-through]="completedSteps()[$index]"
+                    >
                       {{ step }}
                     </span>
                   </div>
@@ -124,19 +165,22 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
               <button
                 (click)="prevStep()"
                 [disabled]="activeStep() === 0 || activeStep() === null"
-                class="flex-1 py-3 bg-white text-green-primary font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12 disabled:opacity-30">
+                class="flex-1 py-3 bg-white text-green-primary font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12 disabled:opacity-30"
+              >
                 ← Prethodni
               </button>
               @if (activeStep() !== null && activeStep()! < r.instructions.length - 1) {
                 <button
                   (click)="nextStep()"
-                  class="flex-1 py-3 bg-green-primary text-white font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12">
+                  class="flex-1 py-3 bg-green-primary text-white font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12"
+                >
                   Sledeći →
                 </button>
               } @else {
                 <button
                   (click)="exitCookMode()"
-                  class="flex-1 py-3 bg-orange-primary text-white font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12">
+                  class="flex-1 py-3 bg-orange-primary text-white font-medium rounded-2xl shadow-sm active:scale-[0.98] transition-transform min-h-12"
+                >
                   Završi ✓
                 </button>
               }
@@ -148,6 +192,7 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar.compone
       }
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     :host {
       display: block;
@@ -189,7 +234,7 @@ export class MealDetailComponent implements OnDestroy {
     if (!this.householdService.isLoggedIn()) return null;
     const otherUid = this.user();
     if (otherUid) {
-      return this.householdService.members().find(m => m.id === otherUid) ?? null;
+      return this.householdService.members().find((m) => m.id === otherUid) ?? null;
     }
     return this.householdService.currentUser();
   });
@@ -212,7 +257,7 @@ export class MealDetailComponent implements OnDestroy {
       // Recipes live per-plan — resolve against the meal owner's plan, not ours
       return this.mealData.getRecipeForUser(otherUid, m.recipeRef);
     }
-    return this.mealData.recipes().find(r => r.id === m.recipeRef) ?? null;
+    return this.mealData.recipes().find((r) => r.id === m.recipeRef) ?? null;
   });
 
   ngOnDestroy(): void {
@@ -236,7 +281,7 @@ export class MealDetailComponent implements OnDestroy {
   }
 
   toggleStepComplete(index: number): void {
-    this.completedSteps.update(s => ({ ...s, [index]: !s[index] }));
+    this.completedSteps.update((s) => ({ ...s, [index]: !s[index] }));
     // Auto-advance to next incomplete step
     const recipe = this.recipe();
     if (recipe && !this.completedSteps()[index]) {
@@ -280,7 +325,7 @@ export class MealDetailComponent implements OnDestroy {
   }
 
   toggleIngredient(name: string): void {
-    this.checked.update(c => ({ ...c, [name]: !c[name] }));
+    this.checked.update((c) => ({ ...c, [name]: !c[name] }));
   }
 
   goBack(): void {
@@ -296,7 +341,9 @@ export class MealDetailComponent implements OnDestroy {
 
   private scrollToStep(index: number): void {
     setTimeout(() => {
-      document.getElementById(`cook-step-${index}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document
+        .getElementById(`cook-step-${index}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }
 

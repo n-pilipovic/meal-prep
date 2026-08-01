@@ -105,7 +105,8 @@
               "unit": "",
               "category": "produce"
             }
-          ]
+          ],
+          "recipeRef": "bolonjeze"
         },
         {
           "type": "uzina2",
@@ -308,7 +309,8 @@
               "unit": "",
               "category": "produce"
             }
-          ]
+          ],
+          "recipeRef": "piletina-senf"
         }
       ]
     },
@@ -736,7 +738,8 @@
               "unit": "g",
               "category": "grain"
             }
-          ]
+          ],
+          "recipeRef": "bela-corba"
         }
       ]
     },
@@ -856,7 +859,8 @@
               "unit": "",
               "category": "produce"
             }
-          ]
+          ],
+          "recipeRef": "svinjski-file"
         },
         {
           "type": "uzina2",
@@ -1230,6 +1234,207 @@
         "Dodati lovorov list i ruzmarin po volji.",
         "Spremljene makarone u tanjiru preliti sa gulašem.",
         "Služiti sa zelenom salatom + kašičica ulja i limuna."
+      ]
+    },
+    {
+      "id": "bolonjeze",
+      "name": "Bolonjeze špagete",
+      "servings": "1 porcija",
+      "ingredients": [
+        {
+          "name": "Crni luk",
+          "quantity": 1,
+          "unit": "kom",
+          "category": "produce"
+        },
+        {
+          "name": "Ulje",
+          "quantity": 2,
+          "unit": "kašičica",
+          "category": "oil"
+        },
+        {
+          "name": "Mlevena junetina",
+          "quantity": 100,
+          "unit": "g",
+          "category": "meat"
+        },
+        {
+          "name": "Pelat",
+          "quantity": 100,
+          "unit": "g",
+          "category": "pantry"
+        },
+        {
+          "name": "Špagete",
+          "quantity": 80,
+          "unit": "g",
+          "category": "grain"
+        },
+        {
+          "name": "Čeri paradajz",
+          "quantity": null,
+          "unit": "",
+          "category": "produce"
+        }
+      ],
+      "instructions": [
+        "Izdinstati seckani crni luk na 2 kašičice ulja.",
+        "Dodati mlevenu junetinu i dinstati dok ne promeni boju.",
+        "Pri kraju dodati pelat i kratko prokuvati.",
+        "Skuvati špagete (80g suvo premereno) prema uputstvu.",
+        "Špagete preliti sosom i poslužiti uz čeri paradajz."
+      ]
+    },
+    {
+      "id": "piletina-senf",
+      "name": "Piletina sa senfom",
+      "servings": "1 porcija",
+      "ingredients": [
+        {
+          "name": "Pileće meso",
+          "quantity": 130,
+          "unit": "g",
+          "category": "meat"
+        },
+        {
+          "name": "Senf",
+          "quantity": 2,
+          "unit": "kašičica",
+          "category": "pantry"
+        },
+        {
+          "name": "Biljni začini",
+          "quantity": null,
+          "unit": "",
+          "category": "spice"
+        },
+        {
+          "name": "Crni luk",
+          "quantity": 1,
+          "unit": "kom",
+          "category": "produce"
+        },
+        {
+          "name": "Paprika",
+          "quantity": null,
+          "unit": "",
+          "category": "produce"
+        },
+        {
+          "name": "Susam",
+          "quantity": 1,
+          "unit": "kašičica",
+          "category": "pantry"
+        }
+      ],
+      "instructions": [
+        "Piletinu operite i iseckajte na kockice.",
+        "Razmutite 2 kašičice senfa sa 100ml vode i biljnim začinima.",
+        "Luk izdinstajte na vodi i dodajte sitno seckanu papriku.",
+        "Dodajte meso i dinstajte, dolivajući vodu sa senfom i začinima.",
+        "Na kraju dodajte kašičicu susama i dinstajte dok susam ne promeni boju.",
+        "Služite uz grilovano povrće (tikvica, pečurke, paprika), salatu i integralni hleb."
+      ]
+    },
+    {
+      "id": "bela-corba",
+      "name": "Bela čorba",
+      "servings": "1 porcija",
+      "ingredients": [
+        {
+          "name": "Mešavina za belu čorbu",
+          "quantity": null,
+          "unit": "",
+          "category": "produce"
+        },
+        {
+          "name": "Jaje",
+          "quantity": 1,
+          "unit": "kom",
+          "category": "dairy"
+        },
+        {
+          "name": "Grčki jogurt",
+          "quantity": 150,
+          "unit": "g",
+          "category": "dairy"
+        },
+        {
+          "name": "Maslinovo ulje",
+          "quantity": 1,
+          "unit": "kašičica",
+          "category": "oil"
+        }
+      ],
+      "instructions": [
+        "Smrznutu mešavinu za belu čorbu prokuvajte prema uputstvu 5–10 minuta.",
+        "Umutite 1 jaje sa 150g grčkog jogurta.",
+        "Polako dodajte malo tople čorbe u jogurt i jaje da se temperira.",
+        "Vratite smesu u šerpu i mešajte na laganoj vatri.",
+        "Dodajte kašičicu maslinovog ulja.",
+        "Služite uz prepečen hleb (70g)."
+      ]
+    },
+    {
+      "id": "svinjski-file",
+      "name": "Svinjski file",
+      "servings": "1 porcija",
+      "ingredients": [
+        {
+          "name": "Svinjski file",
+          "quantity": 150,
+          "unit": "g",
+          "category": "meat"
+        },
+        {
+          "name": "Ulje",
+          "quantity": 1.5,
+          "unit": "kašika",
+          "category": "oil"
+        },
+        {
+          "name": "Crni luk",
+          "quantity": 1,
+          "unit": "kom",
+          "category": "produce"
+        },
+        {
+          "name": "Biber",
+          "quantity": null,
+          "unit": "",
+          "category": "spice"
+        },
+        {
+          "name": "Majčina dušica",
+          "quantity": null,
+          "unit": "",
+          "category": "spice"
+        },
+        {
+          "name": "Peršun",
+          "quantity": null,
+          "unit": "",
+          "category": "spice"
+        },
+        {
+          "name": "Kupus",
+          "quantity": null,
+          "unit": "",
+          "category": "produce"
+        },
+        {
+          "name": "Integralni hleb",
+          "quantity": 80,
+          "unit": "g",
+          "category": "grain"
+        }
+      ],
+      "instructions": [
+        "Svinjski file isecite na kockice.",
+        "Izdinstajte meso, dodajte crni luk pa nastavite da dinstate zajedno.",
+        "Začinite biberom, majčinom dušicom i peršunom.",
+        "Služite uz salatu od kupusa i integralni hleb (80g)."
       ]
     }
   ],

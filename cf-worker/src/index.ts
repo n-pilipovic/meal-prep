@@ -546,20 +546,12 @@ export default {
     return json({ error: 'Not found' }, 404);
   },
 
+  /**
+   * Fires every TICK_MINUTES. Which notifications are due is decided per user
+   * in their own time zone — the cron no longer encodes meal times itself.
+   */
   async scheduled(event: ScheduledEvent, env: Env): Promise<void> {
-    const hour = new Date(event.scheduledTime).getUTCHours();
-    const minute = new Date(event.scheduledTime).getUTCMinutes();
-
-    let cronType: 'daily' | 'dorucak' | 'uzina' | 'rucak' | 'uzina2' | 'vecera';
-    if (hour === 7 && minute === 0) cronType = 'daily';
-    else if (hour === 8 && minute === 30) cronType = 'dorucak';
-    else if (hour === 10 && minute === 30) cronType = 'uzina';
-    else if (hour === 13 && minute === 30) cronType = 'rucak';
-    else if (hour === 15 && minute === 30) cronType = 'uzina2';
-    else if (hour === 17 && minute === 30) cronType = 'vecera';
-    else return;
-
-    await sendScheduledPush(env.KV, cronType, {
+    await sendScheduledPush(env.KV, new Date(event.scheduledTime), {
       publicKey: env.VAPID_PUBLIC_KEY,
       privateKey: env.VAPID_PRIVATE_KEY,
       subject: env.VAPID_SUBJECT,

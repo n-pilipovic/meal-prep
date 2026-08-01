@@ -1,6 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
 import { DocxImportService } from './docx-import.service';
@@ -10,8 +9,14 @@ import { RecipeFormComponent } from './recipe-form.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar.component';
 import { AiPlanFormComponent } from './ai-plan-form.component';
 import {
-  WeeklyPlan, DayPlan, Meal, MealType, Recipe,
-  DAY_NAMES, MEAL_TIMES, IngredientCategory,
+  WeeklyPlan,
+  DayPlan,
+  Meal,
+  MealType,
+  Recipe,
+  DAY_NAMES,
+  MEAL_TIMES,
+  IngredientCategory,
 } from '../../core/models/meal.model';
 import { UserProfile } from '../../core/models/user.model';
 
@@ -19,12 +24,19 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
 @Component({
   selector: 'app-editor',
-  imports: [FormsModule, MealFormComponent, RecipeFormComponent, UserAvatarComponent, AiPlanFormComponent],
+  imports: [
+    MealFormComponent,
+    RecipeFormComponent,
+    UserAvatarComponent,
+    AiPlanFormComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <button
         (click)="goBack()"
-        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2 -ml-1 px-1">
+        class="text-green-primary font-medium text-sm active:opacity-70 min-h-11 mb-2 -ml-1 px-1"
+      >
         ‹ Nazad
       </button>
       <div class="flex items-center justify-between mb-4">
@@ -32,12 +44,14 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
         <div class="flex gap-2">
           <button
             (click)="exportJson()"
-            class="px-3 py-2 bg-white rounded-lg text-sm text-text-secondary shadow-sm min-h-11">
+            class="px-3 py-2 bg-white rounded-lg text-sm text-text-secondary shadow-sm min-h-11"
+          >
             Izvezi JSON
           </button>
           <button
             (click)="savePlan()"
-            class="px-4 py-2 bg-green-primary text-white rounded-lg text-sm font-medium shadow-sm min-h-11">
+            class="px-4 py-2 bg-green-primary text-white rounded-lg text-sm font-medium shadow-sm min-h-11"
+          >
             Sačuvaj
           </button>
         </div>
@@ -53,7 +67,8 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
             [class.bg-green-primary]="activeTab() === tab.value"
             [class.text-white]="activeTab() === tab.value"
             [class.bg-white]="activeTab() !== tab.value"
-            [class.text-text-secondary]="activeTab() !== tab.value">
+            [class.text-text-secondary]="activeTab() !== tab.value"
+          >
             {{ tab.label }}
           </button>
         }
@@ -71,7 +86,8 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                 [class.bg-orange-primary]="selectedDay() === day.index"
                 [class.text-white]="selectedDay() === day.index"
                 [class.bg-white]="selectedDay() !== day.index"
-                [class.text-text-muted]="selectedDay() !== day.index">
+                [class.text-text-muted]="selectedDay() !== day.index"
+              >
                 {{ day.short }}
               </button>
             }
@@ -80,9 +96,7 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
           <!-- Meal forms for selected day -->
           @if (currentDayPlan(); as day) {
             @for (meal of day.meals; track meal.type) {
-              <app-meal-form
-                [meal]="meal"
-                (change)="updateMeal(day.dayIndex, meal.type, $event)" />
+              <app-meal-form [meal]="meal" (change)="updateMeal(day.dayIndex, meal.type, $event)" />
             }
           }
         }
@@ -92,11 +106,13 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
             <app-recipe-form
               [recipe]="recipe"
               (change)="updateRecipe($index, $event)"
-              (remove)="removeRecipe($index)" />
+              (remove)="removeRecipe($index)"
+            />
           }
           <button
             (click)="addRecipe()"
-            class="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-sm text-text-muted hover:border-green-primary hover:text-green-primary transition-colors min-h-11">
+            class="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-sm text-text-muted hover:border-green-primary hover:text-green-primary transition-colors min-h-11"
+          >
             + Dodaj recept
           </button>
         }
@@ -107,9 +123,9 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
             <div class="bg-white rounded-2xl shadow-sm p-4">
               <h2 class="font-semibold text-text-primary mb-2">Uvezi iz .docx ili .odt fajla</h2>
               <p class="text-sm text-text-muted mb-3">
-                Učitaj plan ishrane iz Word (.docx) ili OpenDocument (.odt) dokumenta.
-                .docx: sekcije D 9h / U 11h / R 14h / V 18h sa po 7 stavki.
-                .odt: tabela 5×7 (D, U, R, U2, V) — četvrti red je užina 2 (isto za sve dane).
+                Učitaj plan ishrane iz Word (.docx) ili OpenDocument (.odt) dokumenta. .docx:
+                sekcije D 9h / U 11h / R 14h / V 18h sa po 7 stavki. .odt: tabela 5×7 (D, U, R, U2,
+                V) — četvrti red je užina 2 (isto za sve dane).
               </p>
 
               <!-- User assignment for import -->
@@ -125,9 +141,12 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                         [class.ring-2]="importTargetUser()?.id === member.id"
                         [style.--tw-ring-color]="member.color"
                         [class.bg-white]="importTargetUser()?.id !== member.id"
-                        [class.shadow-sm]="importTargetUser()?.id === member.id">
+                        [class.shadow-sm]="importTargetUser()?.id === member.id"
+                      >
                         <app-user-avatar [user]="member" size="sm" />
-                        <span [style.color]="importTargetUser()?.id === member.id ? member.color : ''">
+                        <span
+                          [style.color]="importTargetUser()?.id === member.id ? member.color : ''"
+                        >
                           {{ member.name }}
                         </span>
                       </button>
@@ -142,11 +161,18 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                   type="file"
                   accept=".docx,.odt"
                   (change)="onDocxSelected($event)"
-                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11"
+                />
               </label>
 
               @if (importStatus()) {
-                <p role="status" aria-live="polite" class="mt-2 text-sm" [class.text-green-primary]="!importError()" [class.text-red-500]="importError()">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  class="mt-2 text-sm"
+                  [class.text-green-primary]="!importError()"
+                  [class.text-red-500]="importError()"
+                >
                   {{ importStatus() }}
                 </p>
               }
@@ -171,9 +197,12 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                         [class.ring-2]="importTargetUser()?.id === member.id"
                         [style.--tw-ring-color]="member.color"
                         [class.bg-white]="importTargetUser()?.id !== member.id"
-                        [class.shadow-sm]="importTargetUser()?.id === member.id">
+                        [class.shadow-sm]="importTargetUser()?.id === member.id"
+                      >
                         <app-user-avatar [user]="member" size="sm" />
-                        <span [style.color]="importTargetUser()?.id === member.id ? member.color : ''">
+                        <span
+                          [style.color]="importTargetUser()?.id === member.id ? member.color : ''"
+                        >
                           {{ member.name }}
                         </span>
                       </button>
@@ -188,7 +217,8 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
                   type="file"
                   accept=".json"
                   (change)="onJsonSelected($event)"
-                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11" />
+                  class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-primary file:text-white file:font-medium file:cursor-pointer file:min-h-11"
+                />
               </label>
             </div>
           </div>
@@ -201,7 +231,11 @@ type EditorTab = 'meals' | 'recipes' | 'import' | 'ai';
 
       <!-- Save status -->
       @if (saveStatus()) {
-        <div role="status" aria-live="polite" class="fixed left-4 right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse">
+        <div
+          role="status"
+          aria-live="polite"
+          class="fixed left-4 right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] bg-green-primary text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg text-center z-50 animate-pulse"
+        >
           {{ saveStatus() }}
         </div>
       }
@@ -253,10 +287,10 @@ export class EditorComponent {
   }
 
   updateMeal(dayIndex: number, mealType: MealType, updated: Meal): void {
-    this.editingPlan.update(plan => {
+    this.editingPlan.update((plan) => {
       const days = [...plan.days];
       const day = { ...days[dayIndex], meals: [...days[dayIndex].meals] };
-      const mealIdx = day.meals.findIndex(m => m.type === mealType);
+      const mealIdx = day.meals.findIndex((m) => m.type === mealType);
       if (mealIdx >= 0) {
         day.meals[mealIdx] = updated;
       }
@@ -266,7 +300,7 @@ export class EditorComponent {
   }
 
   updateRecipe(index: number, updated: Recipe): void {
-    this.editingPlan.update(plan => {
+    this.editingPlan.update((plan) => {
       const recipes = [...plan.recipes];
       recipes[index] = updated;
       return { ...plan, recipes };
@@ -274,14 +308,14 @@ export class EditorComponent {
   }
 
   removeRecipe(index: number): void {
-    this.editingPlan.update(plan => ({
+    this.editingPlan.update((plan) => ({
       ...plan,
       recipes: plan.recipes.filter((_, i) => i !== index),
     }));
   }
 
   addRecipe(): void {
-    this.editingPlan.update(plan => ({
+    this.editingPlan.update((plan) => ({
       ...plan,
       recipes: [
         ...plan.recipes,
@@ -307,7 +341,9 @@ export class EditorComponent {
     try {
       const plan = await this.docxImport.parseFile(file);
       this.applyImportedPlan(plan);
-      this.importStatus.set(`Uspešno uvezeno! ${plan.days.filter(d => d.meals.some(m => m.name)).length} dana sa obrocima.`);
+      this.importStatus.set(
+        `Uspešno uvezeno! ${plan.days.filter((d) => d.meals.some((m) => m.name)).length} dana sa obrocima.`,
+      );
       this.activeTab.set('meals');
     } catch (err) {
       this.importError.set(true);
@@ -393,11 +429,41 @@ export class EditorComponent {
         dayIndex: i,
         dayName: DAY_NAMES[i],
         meals: [
-          { type: MealType.Breakfast, time: MEAL_TIMES[MealType.Breakfast], name: '', description: '', ingredients: [] },
-          { type: MealType.Snack, time: MEAL_TIMES[MealType.Snack], name: '', description: '', ingredients: [] },
-          { type: MealType.Lunch, time: MEAL_TIMES[MealType.Lunch], name: '', description: '', ingredients: [] },
-          { type: MealType.AfternoonSnack, time: MEAL_TIMES[MealType.AfternoonSnack], name: '', description: '', ingredients: [] },
-          { type: MealType.Dinner, time: MEAL_TIMES[MealType.Dinner], name: '', description: '', ingredients: [] },
+          {
+            type: MealType.Breakfast,
+            time: MEAL_TIMES[MealType.Breakfast],
+            name: '',
+            description: '',
+            ingredients: [],
+          },
+          {
+            type: MealType.Snack,
+            time: MEAL_TIMES[MealType.Snack],
+            name: '',
+            description: '',
+            ingredients: [],
+          },
+          {
+            type: MealType.Lunch,
+            time: MEAL_TIMES[MealType.Lunch],
+            name: '',
+            description: '',
+            ingredients: [],
+          },
+          {
+            type: MealType.AfternoonSnack,
+            time: MEAL_TIMES[MealType.AfternoonSnack],
+            name: '',
+            description: '',
+            ingredients: [],
+          },
+          {
+            type: MealType.Dinner,
+            time: MEAL_TIMES[MealType.Dinner],
+            name: '',
+            description: '',
+            ingredients: [],
+          },
         ],
       })),
       recipes: [],

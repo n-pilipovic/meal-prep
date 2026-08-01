@@ -1,4 +1,4 @@
-import { Component, input, output, inject, computed } from '@angular/core';
+import { Component, input, output, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { HouseholdService } from '../../core/services/household.service';
 import { UserProfile } from '../../core/models/user.model';
 import { UserAvatarComponent } from './user-avatar.component';
@@ -6,6 +6,7 @@ import { UserAvatarComponent } from './user-avatar.component';
 @Component({
   selector: 'app-assignment-badge',
   imports: [UserAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (members().length > 1) {
       <div class="flex items-center gap-1">
@@ -15,7 +16,8 @@ import { UserAvatarComponent } from './user-avatar.component';
             [attr.aria-label]="'Dodeljeno: ' + user.name + '. Tapni za promenu.'"
             class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium min-h-11 min-w-11"
             [style.background-color]="user.color + '15'"
-            [style.color]="user.color">
+            [style.color]="user.color"
+          >
             <app-user-avatar [user]="user" size="sm" />
             {{ user.name }}
           </button>
@@ -23,7 +25,8 @@ import { UserAvatarComponent } from './user-avatar.component';
           <button
             (click)="cycleAssignment()"
             aria-label="Dodeli osobu za pripremu"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-text-muted bg-gray-100 min-h-11 min-w-11">
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-text-muted bg-gray-100 min-h-11 min-w-11"
+          >
             Dodeli
           </button>
         }
@@ -44,7 +47,7 @@ export class AssignmentBadgeComponent {
   readonly assignedUser = computed<UserProfile | null>(() => {
     const uid = this.assignedUserId();
     if (!uid) return null;
-    return this.members().find(m => m.id === uid) ?? null;
+    return this.members().find((m) => m.id === uid) ?? null;
   });
 
   /** Cycle through: unassigned → user1 → user2 → ... → unassigned */
@@ -57,7 +60,7 @@ export class AssignmentBadgeComponent {
       // Assign to first member
       this.assign.emit(allMembers[0].id);
     } else {
-      const idx = allMembers.findIndex(m => m.id === currentId);
+      const idx = allMembers.findIndex((m) => m.id === currentId);
       if (idx < allMembers.length - 1) {
         // Next member
         this.assign.emit(allMembers[idx + 1].id);

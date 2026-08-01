@@ -1,4 +1,11 @@
-import { Component, computed, inject, signal, output } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { ApiService } from '../../core/services/api.service';
 import { WeeklyPlan } from '../../core/models/meal.model';
@@ -21,6 +28,7 @@ interface AiPlanFormModel {
 @Component({
   selector: 'app-ai-plan-form',
   imports: [FormField],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="flex flex-col gap-4">
       <div class="bg-white rounded-2xl shadow-sm p-4">
@@ -41,7 +49,8 @@ interface AiPlanFormModel {
                 [class.bg-green-primary]="selectedAgeGroup() === ag.key"
                 [class.text-white]="selectedAgeGroup() === ag.key"
                 [class.bg-cream-light]="selectedAgeGroup() !== ag.key"
-                [class.text-text-secondary]="selectedAgeGroup() !== ag.key">
+                [class.text-text-secondary]="selectedAgeGroup() !== ag.key"
+              >
                 {{ ag.label }}
               </button>
             }
@@ -60,7 +69,8 @@ interface AiPlanFormModel {
             [step]="100"
             [value]="formModel().calories"
             (input)="formModel.update(m => ({ ...m, calories: +$any($event.target).value }))"
-            class="w-full accent-green-primary" />
+            class="w-full accent-green-primary"
+          />
           <div class="flex justify-between text-xs text-text-muted mt-1">
             <span>{{ activeAgeGroup().minCal }}</span>
             <span>{{ activeAgeGroup().maxCal }}</span>
@@ -79,7 +89,8 @@ interface AiPlanFormModel {
                 [class.bg-green-primary]="selectedRestrictions().includes(r.key)"
                 [class.text-white]="selectedRestrictions().includes(r.key)"
                 [class.bg-cream-light]="!selectedRestrictions().includes(r.key)"
-                [class.text-text-secondary]="!selectedRestrictions().includes(r.key)">
+                [class.text-text-secondary]="!selectedRestrictions().includes(r.key)"
+              >
                 {{ r.label }}
               </button>
             }
@@ -88,9 +99,7 @@ interface AiPlanFormModel {
 
         <!-- Allergies -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-text-primary mb-2">
-            Alergije
-          </label>
+          <label class="block text-sm font-medium text-text-primary mb-2"> Alergije </label>
           <div class="flex flex-wrap gap-2 mb-2">
             @for (a of allergens; track a.key) {
               <button
@@ -100,7 +109,8 @@ interface AiPlanFormModel {
                 [class.bg-red-500]="selectedAllergens().includes(a.key)"
                 [class.text-white]="selectedAllergens().includes(a.key)"
                 [class.bg-cream-light]="!selectedAllergens().includes(a.key)"
-                [class.text-text-secondary]="!selectedAllergens().includes(a.key)">
+                [class.text-text-secondary]="!selectedAllergens().includes(a.key)"
+              >
                 {{ a.label }}
               </button>
             }
@@ -111,20 +121,30 @@ interface AiPlanFormModel {
               [formField]="planForm.allergyInput"
               (keydown.enter)="addCustomAllergy()"
               placeholder="npr. jagode, med..."
-              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
+              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11"
+            />
             <button
               (click)="addCustomAllergy()"
               aria-label="Dodaj alergiju"
-              class="px-3 py-2 bg-red-500 text-white rounded-lg text-sm min-h-11">
+              class="px-3 py-2 bg-red-500 text-white rounded-lg text-sm min-h-11"
+            >
               +
             </button>
           </div>
           @if (customAllergies().length > 0) {
             <div class="flex flex-wrap gap-1.5 mt-2">
               @for (item of customAllergies(); track item) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs"
+                >
                   {{ item }}
-                  <button (click)="removeCustomAllergy(item)" [attr.aria-label]="'Ukloni alergiju ' + item" class="text-red-600 hover:text-red-900">&times;</button>
+                  <button
+                    (click)="removeCustomAllergy(item)"
+                    [attr.aria-label]="'Ukloni alergiju ' + item"
+                    class="text-red-600 hover:text-red-900"
+                  >
+                    &times;
+                  </button>
                 </span>
               }
             </div>
@@ -142,20 +162,30 @@ interface AiPlanFormModel {
               [formField]="planForm.preferredInput"
               (keydown.enter)="addPreferred()"
               placeholder="npr. piletina, brokoli..."
-              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
+              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11"
+            />
             <button
               (click)="addPreferred()"
               aria-label="Dodaj poželjni sastojak"
-              class="px-3 py-2 bg-green-primary text-white rounded-lg text-sm min-h-11">
+              class="px-3 py-2 bg-green-primary text-white rounded-lg text-sm min-h-11"
+            >
               +
             </button>
           </div>
           @if (preferred().length > 0) {
             <div class="flex flex-wrap gap-1.5 mt-2">
               @for (item of preferred(); track item) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-800 rounded-full text-xs">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-800 rounded-full text-xs"
+                >
                   {{ item }}
-                  <button (click)="removePreferred(item)" [attr.aria-label]="'Ukloni ' + item" class="text-green-600 hover:text-green-900">&times;</button>
+                  <button
+                    (click)="removePreferred(item)"
+                    [attr.aria-label]="'Ukloni ' + item"
+                    class="text-green-600 hover:text-green-900"
+                  >
+                    &times;
+                  </button>
                 </span>
               }
             </div>
@@ -164,29 +194,37 @@ interface AiPlanFormModel {
 
         <!-- Avoid ingredients -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-text-primary mb-1">
-            Izbegavati
-          </label>
+          <label class="block text-sm font-medium text-text-primary mb-1"> Izbegavati </label>
           <div class="flex gap-2">
             <input
               type="text"
               [formField]="planForm.avoidInput"
               (keydown.enter)="addAvoid()"
               placeholder="npr. ljuto, gljive..."
-              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11" />
+              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-11"
+            />
             <button
               (click)="addAvoid()"
               aria-label="Dodaj sastojak za izbegavanje"
-              class="px-3 py-2 bg-orange-primary text-white rounded-lg text-sm min-h-11">
+              class="px-3 py-2 bg-orange-primary text-white rounded-lg text-sm min-h-11"
+            >
               +
             </button>
           </div>
           @if (avoided().length > 0) {
             <div class="flex flex-wrap gap-1.5 mt-2">
               @for (item of avoided(); track item) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-800 rounded-full text-xs">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-800 rounded-full text-xs"
+                >
                   {{ item }}
-                  <button (click)="removeAvoid(item)" [attr.aria-label]="'Ukloni ' + item" class="text-red-600 hover:text-red-900">&times;</button>
+                  <button
+                    (click)="removeAvoid(item)"
+                    [attr.aria-label]="'Ukloni ' + item"
+                    class="text-red-600 hover:text-red-900"
+                  >
+                    &times;
+                  </button>
                 </span>
               }
             </div>
@@ -195,14 +233,13 @@ interface AiPlanFormModel {
 
         <!-- Free-text note -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-text-primary mb-1">
-            Napomena
-          </label>
+          <label class="block text-sm font-medium text-text-primary mb-1"> Napomena </label>
           <textarea
             [formField]="planForm.note"
             rows="2"
             placeholder="npr. više proteina, budžet prijateljski, brza priprema..."
-            class="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none">
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none"
+          >
           </textarea>
         </div>
 
@@ -210,9 +247,13 @@ interface AiPlanFormModel {
         <button
           (click)="generate()"
           [disabled]="loading()"
-          class="w-full py-3 bg-green-primary text-white font-medium rounded-xl min-h-11 disabled:opacity-40 flex items-center justify-center gap-2">
+          class="w-full py-3 bg-green-primary text-white font-medium rounded-xl min-h-11 disabled:opacity-40 flex items-center justify-center gap-2"
+        >
           @if (loading()) {
-            <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
+            <span
+              class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              aria-hidden="true"
+            ></span>
             <span>Generisanje...</span>
           } @else {
             <span>Generiši plan</span>
@@ -245,8 +286,10 @@ export class AiPlanFormComponent {
   readonly planForm = form(this.formModel);
 
   readonly selectedAgeGroup = signal(DEFAULT_PREFERENCES.ageGroup);
-  readonly activeAgeGroup = computed(() =>
-    AGE_GROUPS.find(ag => ag.key === this.selectedAgeGroup()) ?? AGE_GROUPS[AGE_GROUPS.length - 1],
+  readonly activeAgeGroup = computed(
+    () =>
+      AGE_GROUPS.find((ag) => ag.key === this.selectedAgeGroup()) ??
+      AGE_GROUPS[AGE_GROUPS.length - 1],
   );
   readonly selectedRestrictions = signal<string[]>([]);
   readonly selectedAllergens = signal<string[]>([]);
@@ -259,56 +302,56 @@ export class AiPlanFormComponent {
 
   selectAgeGroup(key: string): void {
     this.selectedAgeGroup.set(key);
-    const ag = AGE_GROUPS.find(g => g.key === key)!;
-    this.formModel.update(m => ({ ...m, calories: ag.defaultCal }));
+    const ag = AGE_GROUPS.find((g) => g.key === key)!;
+    this.formModel.update((m) => ({ ...m, calories: ag.defaultCal }));
   }
 
   toggleRestriction(key: string): void {
-    this.selectedRestrictions.update(list =>
-      list.includes(key) ? list.filter(k => k !== key) : [...list, key],
+    this.selectedRestrictions.update((list) =>
+      list.includes(key) ? list.filter((k) => k !== key) : [...list, key],
     );
   }
 
   toggleAllergen(key: string): void {
-    this.selectedAllergens.update(list =>
-      list.includes(key) ? list.filter(k => k !== key) : [...list, key],
+    this.selectedAllergens.update((list) =>
+      list.includes(key) ? list.filter((k) => k !== key) : [...list, key],
     );
   }
 
   addCustomAllergy(): void {
     const val = this.formModel().allergyInput.trim();
     if (val && !this.customAllergies().includes(val)) {
-      this.customAllergies.update(list => [...list, val]);
+      this.customAllergies.update((list) => [...list, val]);
     }
-    this.formModel.update(m => ({ ...m, allergyInput: '' }));
+    this.formModel.update((m) => ({ ...m, allergyInput: '' }));
   }
 
   removeCustomAllergy(item: string): void {
-    this.customAllergies.update(list => list.filter(i => i !== item));
+    this.customAllergies.update((list) => list.filter((i) => i !== item));
   }
 
   addPreferred(): void {
     const val = this.formModel().preferredInput.trim();
     if (val && !this.preferred().includes(val)) {
-      this.preferred.update(list => [...list, val]);
+      this.preferred.update((list) => [...list, val]);
     }
-    this.formModel.update(m => ({ ...m, preferredInput: '' }));
+    this.formModel.update((m) => ({ ...m, preferredInput: '' }));
   }
 
   removePreferred(item: string): void {
-    this.preferred.update(list => list.filter(i => i !== item));
+    this.preferred.update((list) => list.filter((i) => i !== item));
   }
 
   addAvoid(): void {
     const val = this.formModel().avoidInput.trim();
     if (val && !this.avoided().includes(val)) {
-      this.avoided.update(list => [...list, val]);
+      this.avoided.update((list) => [...list, val]);
     }
-    this.formModel.update(m => ({ ...m, avoidInput: '' }));
+    this.formModel.update((m) => ({ ...m, avoidInput: '' }));
   }
 
   removeAvoid(item: string): void {
-    this.avoided.update(list => list.filter(i => i !== item));
+    this.avoided.update((list) => list.filter((i) => i !== item));
   }
 
   generate(): void {
@@ -317,7 +360,7 @@ export class AiPlanFormComponent {
 
     const { calories, note } = this.formModel();
     const allergenLabels = this.selectedAllergens().map(
-      key => COMMON_ALLERGENS.find(a => a.key === key)?.label ?? key,
+      (key) => COMMON_ALLERGENS.find((a) => a.key === key)?.label ?? key,
     );
     const prefs: MealPlanPreferences = {
       calories,

@@ -50,3 +50,13 @@ Thumbs.db
 # Playwright
 /playwright-report/
 /test-results/
+
+# Personal health records — this repository is PUBLIC.
+# Lab results, body composition and medical protocols must never be committed:
+# git history is permanent and survives deletion, forks and caches.
+/novica/
+
+# Source documents for docx/odt import testing — contain real people's names
+# and meal plans. Keep them local.
+/Ivana Krsmanovic*
+/src/app/features/editor/_normalized_tmp.spec.ts
