@@ -247,3 +247,68 @@ describe('sendScheduledPush', () => {
     expect(sent).toHaveLength(1);
   });
 });
+
+describe('cook plan reminder', () => {
+  beforeEach(() => {
+    sent.length = 0;
+  });
+
+  /** Friday 20:00 in Belgrade (CEST) = 18:00Z; Saturday (dayIndex 5) is the cook day. */
+  const FRIDAY_20_LOCAL = utc('2026-08-07T18:00:00Z');
+
+  function seedWithCookDays(cookDayIndexes: number[], prefs: Record<string, unknown> = {}) {
+    return {
+      ...seedUser(prefs),
+      'shared:ABC': { cookPlanSettings: { cookDayIndexes } },
+    };
+  }
+
+  it('fires at 20:00 local the evening before a cook day', async () => {
+    await sendScheduledPush(makeKv(seedWithCookDays([5])), FRIDAY_20_LOCAL, VAPID);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].tag).toBe('cook-reminder');
+    expect(sent[0].title).toContain('Sutra je dan kuvanja');
+  });
+
+  it('stays silent when tomorrow is not a cook day', async () => {
+    await sendScheduledPush(makeKv(seedWithCookDays([2])), FRIDAY_20_LOCAL, VAPID);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('stays silent for households that never opened the cook plan', async () => {
+    await sendScheduledPush(makeKv(seedUser()), FRIDAY_20_LOCAL, VAPID);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('respects the cookPlanReminders opt-out', async () => {
+    const kv = makeKv(seedWithCookDays([5], { cookPlanReminders: false }));
+    await sendScheduledPush(kv, FRIDAY_20_LOCAL, VAPID);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('is independent of the mealReminders toggle', async () => {
+    const kv = makeKv(seedWithCookDays([5], { mealReminders: false }));
+    await sendScheduledPush(kv, FRIDAY_20_LOCAL, VAPID);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].tag).toBe('cook-reminder');
+  });
+
+  it('wraps the week: Sunday evening reminds for a Monday cook day', async () => {
+    // Sunday 2026-08-09 20:00 local = 18:00Z; Monday is dayIndex 0
+    const kv = makeKv(seedWithCookDays([0]));
+    await sendScheduledPush(kv, utc('2026-08-09T18:00:00Z'), VAPID);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].tag).toBe('cook-reminder');
+  });
+
+  it('sends only once per local day', async () => {
+    const kv = makeKv(seedWithCookDays([5]));
+    await sendScheduledPush(kv, FRIDAY_20_LOCAL, VAPID);
+    await sendScheduledPush(kv, utc('2026-08-07T18:04:00Z'), VAPID);
+
+    expect(sent).toHaveLength(1);
+  });
+});

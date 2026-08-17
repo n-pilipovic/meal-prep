@@ -31,11 +31,17 @@ interface NotificationPreferences {
   enabled: boolean;
   dailySummary: boolean;
   mealReminders: boolean;
+  /** Absent on prefs saved before the cook-plan feature — treated as enabled. */
+  cookPlanReminders?: boolean;
   /** Per-user overrides set in Podešavanja, keyed by meal type. */
   mealTimes?: Record<string, string>;
   /** IANA zone reported by the browser. Without it we cannot turn "08:30" into an instant. */
   timeZone?: string;
   dailySummaryTime?: string;
+}
+
+interface SharedHouseholdState {
+  cookPlanSettings?: { cookDayIndexes?: number[] };
 }
 
 interface VapidConfig {
@@ -52,6 +58,9 @@ const REMINDER_LEAD_MINUTES = 30;
 const DEFAULT_TIME_ZONE = 'Europe/Belgrade';
 
 const DEFAULT_DAILY_SUMMARY = '07:00';
+
+/** Night-before nudge: prep (chop, peel, soak) happens after dinner. */
+const COOK_REMINDER_TIME = '20:00';
 
 const MEAL_ORDER = ['dorucak', 'uzina', 'rucak', 'uzina2', 'vecera'] as const;
 
@@ -93,9 +102,14 @@ export async function sendScheduledPush(
     const household = await getJSON<Household>(kv, key.name);
     if (!household) continue;
 
+    // Cook days live in household-shared state; absent until someone opens
+    // the cook-plan feature, and then reminders start for the whole household.
+    const shared = await getJSON<SharedHouseholdState>(kv, `shared:${household.code}`);
+    const cookDays = shared?.cookPlanSettings?.cookDayIndexes ?? null;
+
     for (const member of household.members) {
       try {
-        await processMember(kv, member.id, now, vapid);
+        await processMember(kv, member.id, now, vapid, cookDays);
       } catch (err) {
         // One bad subscription must not stop the rest of the household.
         console.error(`Scheduled push failed for ${member.id}:`, err);
@@ -109,6 +123,7 @@ async function processMember(
   userId: string,
   now: Date,
   vapid: VapidConfig,
+  cookDays: number[] | null = null,
 ): Promise<void> {
   const sub = await getJSON<PushSubscription>(kv, `subscription:${userId}`);
   if (!sub) return;
@@ -138,6 +153,21 @@ async function processMember(
         data: { url: '/meal-prep/today' },
       });
     }
+  }
+
+  if (
+    cookDays &&
+    cookDays.length > 0 &&
+    prefs?.cookPlanReminders !== false &&
+    cookDays.includes((local.dayIndex + 1) % 7) &&
+    isDue(local.minutes, toMinutes(COOK_REMINDER_TIME))
+  ) {
+    await deliver(kv, userId, local.date, 'cook-reminder', sub, vapid, {
+      title: 'Sutra je dan kuvanja 🍳',
+      body: 'Večeras možeš da pripremiš sastojke: operi, iseckaj, potopi. Pogledaj plan kuvanja.',
+      tag: 'cook-reminder',
+      data: { url: '/meal-prep/cook-plan' },
+    });
   }
 
   if (prefs && !prefs.mealReminders) return;

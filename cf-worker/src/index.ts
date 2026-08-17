@@ -9,6 +9,13 @@ import {
 } from './shopping-summary';
 import { resolveGeminiModel, resolveGroqModel } from './ai-models';
 import {
+  MAX_REFINE_DISHES,
+  refineCookPlanCached,
+  refineCookPlanGemini,
+  refineCookPlanGroq,
+  type DishRefineInput,
+} from './cook-plan';
+import {
   ATTACHMENT_LIMITS,
   createIssueFlow,
   getIssueDetail,
@@ -344,6 +351,47 @@ export default {
       }
 
       return json({ error: 'No AI provider configured' }, 500);
+    }
+
+    // POST /api/cook-plan/refine — AI dish classification for the batch-cooking
+    // planner (KV-cached per dish; Gemini primary, Groq fallback)
+    if (request.method === 'POST' && path === '/api/cook-plan/refine') {
+      const body = (await request.json()) as { dishes?: DishRefineInput[] };
+      const dishes = body.dishes;
+      if (!Array.isArray(dishes) || dishes.length === 0) {
+        return json({ error: 'Lista jela je prazna.' }, 400);
+      }
+      if (dishes.length > MAX_REFINE_DISHES) {
+        return json({ error: `Previše jela (max ${MAX_REFINE_DISHES}).` }, 400);
+      }
+      if (dishes.some(d => typeof d?.key !== 'string' || typeof d?.name !== 'string')) {
+        return json({ error: 'Neispravan format jela.' }, 400);
+      }
+
+      const callProvider = async (uncached: DishRefineInput[]) => {
+        if (env.GEMINI_API_KEY) {
+          try {
+            return await refineCookPlanGemini(
+              env.GEMINI_API_KEY,
+              uncached,
+              resolveGeminiModel(env),
+            );
+          } catch (err: any) {
+            console.error('Gemini cook-plan refine failed, falling back to Groq:', err.message);
+          }
+        }
+        if (env.GROQ_API_KEY) {
+          return await refineCookPlanGroq(env.GROQ_API_KEY, uncached, resolveGroqModel(env));
+        }
+        throw new Error('No AI provider configured');
+      };
+
+      try {
+        const result = await refineCookPlanCached(env.KV, dishes, callProvider);
+        return json(result);
+      } catch (err: any) {
+        return json({ error: err.message ?? 'Analiza jela nije uspela.' }, 500);
+      }
     }
 
     // POST /api/issues — submit a new issue (multipart/form-data)
