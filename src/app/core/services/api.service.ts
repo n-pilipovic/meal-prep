@@ -9,6 +9,7 @@ import {
   ShoppingSummaryInputItem,
   ShoppingSummaryResponse,
 } from '../models/shopping-summary.model';
+import { CookPlanRefineResponse, DishRefineInput } from '../models/cook-plan.model';
 
 import { environment } from '../../../environments/environment';
 
@@ -103,6 +104,13 @@ export class ApiService {
     return this.http.post<ShoppingSummaryResponse>(
       `${this.baseUrl}/api/shopping-list/summarize`,
       { items },
+    );
+  }
+
+  refineCookPlan(dishes: DishRefineInput[]): Observable<CookPlanRefineResponse> {
+    return this.http.post<CookPlanRefineResponse>(
+      `${this.baseUrl}/api/cook-plan/refine`,
+      { dishes },
     );
   }
 

@@ -1,3 +1,5 @@
+import { CookPlanSettings } from './cook-plan.model';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -22,6 +24,12 @@ export interface SharedState {
   shoppingAssignments: Record<string, string>;
   prepChecked: Record<string, boolean>;
   prepAssignments: PrepAssignments;
+  /**
+   * Optional so states persisted before the cook-plan feature (localStorage,
+   * KV, worker fallback) keep parsing — readers must default when absent.
+   */
+  cookPrepChecked?: Record<string, boolean>;
+  cookPlanSettings?: CookPlanSettings;
 }
 
 export interface NotificationPreferences {
@@ -29,6 +37,8 @@ export interface NotificationPreferences {
   dailySummary: boolean;
   mealReminders: boolean;
   issueUpdates?: boolean;
+  /** Night-before reminder (20:00) when tomorrow is a cook-plan day. */
+  cookPlanReminders?: boolean;
   /**
    * Sent to the worker so its cron can fire in the user's own local time.
    * Both are derived at save time rather than stored in `preferences`, so the
@@ -56,5 +66,6 @@ export function createEmptySharedState(): SharedState {
       byMeal: {},
       byItem: {},
     },
+    cookPrepChecked: {},
   };
 }

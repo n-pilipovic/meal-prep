@@ -137,6 +137,23 @@ const MEAL_ICONS: Record<MealType, string> = {
                   />
                 </label>
 
+                <!-- Podsetnik za kuvanje toggle (night before a cook-plan day) -->
+                <label class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-text-primary block"
+                      >Podsetnik za kuvanje</span
+                    >
+                    <span class="text-xs text-text-muted"
+                      >Uveče u 20:00, dan pre bloka kuvanja</span
+                    >
+                  </div>
+                  <input
+                    type="checkbox"
+                    [formField]="notifyForm.cookPlanReminders"
+                    class="w-5 h-5 accent-green-primary"
+                  />
+                </label>
+
                 <!-- Odgovori na moje prijave toggle (issue reply notifications) -->
                 <label class="flex items-center justify-between">
                   <div>
@@ -252,6 +269,18 @@ const MEAL_ICONS: Record<MealType, string> = {
           <span class="text-text-muted text-lg">›</span>
         </a>
 
+        <!-- Cook plan link -->
+        <a
+          routerLink="/cook-plan"
+          class="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between active:bg-cream-light transition-colors"
+        >
+          <div>
+            <h2 class="font-semibold text-text-primary">Plan kuvanja</h2>
+            <p class="text-sm text-text-muted">Grupiši kuvanje u 2–3 bloka nedeljno</p>
+          </div>
+          <span class="text-text-muted text-lg">›</span>
+        </a>
+
         <!-- Editor link -->
         <a
           routerLink="/editor"
@@ -313,6 +342,7 @@ export class SettingsComponent {
       dailySummary: prefs.dailySummary,
       mealReminders: prefs.mealReminders,
       issueUpdates: prefs.issueUpdates ?? true,
+      cookPlanReminders: prefs.cookPlanReminders ?? true,
     };
   });
 
@@ -341,7 +371,8 @@ export class SettingsComponent {
       if (
         edited.dailySummary === prefs.dailySummary &&
         edited.mealReminders === prefs.mealReminders &&
-        edited.issueUpdates === (prefs.issueUpdates ?? true)
+        edited.issueUpdates === (prefs.issueUpdates ?? true) &&
+        edited.cookPlanReminders === (prefs.cookPlanReminders ?? true)
       ) {
         return;
       }

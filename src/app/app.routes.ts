@@ -33,6 +33,12 @@ export const routes: Routes = [
       import('./features/weekly-view/weekly-view.component').then(m => m.WeeklyViewComponent),
   },
   {
+    path: 'cook-plan',
+    canActivate: [onboardingGuard],
+    loadComponent: () =>
+      import('./features/cook-plan/cook-plan.component').then(m => m.CookPlanComponent),
+  },
+  {
     path: 'shopping',
     canActivate: [onboardingGuard],
     loadComponent: () =>

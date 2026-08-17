@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MealDataService } from '../../core/services/meal-data.service';
 import { HouseholdService } from '../../core/services/household.service';
 import { UserSwitcherComponent } from '../../shared/components/user-switcher.component';
@@ -7,7 +7,7 @@ import { MEAL_LABELS, MealType, DayPlan } from '../../core/models/meal.model';
 
 @Component({
   selector: 'app-weekly-view',
-  imports: [UserSwitcherComponent],
+  imports: [UserSwitcherComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="px-4 py-4">
@@ -17,6 +17,17 @@ import { MEAL_LABELS, MealType, DayPlan } from '../../core/models/meal.model';
         [selectedUserId]="viewingUserId()"
         (selectUser)="viewingUserId.set($event)"
       />
+
+      <a
+        routerLink="/cook-plan"
+        class="bg-white rounded-2xl shadow-sm p-4 mt-3 flex items-center justify-between active:bg-cream-light transition-colors"
+      >
+        <div>
+          <h2 class="font-semibold text-text-primary">🍳 Plan kuvanja</h2>
+          <p class="text-sm text-text-muted">Skuvaj celu nedelju u 2–3 bloka</p>
+        </div>
+        <span class="text-text-muted text-lg" aria-hidden="true">›</span>
+      </a>
 
       <div class="flex flex-col gap-3 mt-3">
         @for (day of activeDays(); track day.dayIndex) {
